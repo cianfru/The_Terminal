@@ -243,6 +243,9 @@ details.cty{border-bottom:1px solid var(--sep)}details.cty[open]{background:rgba
 .dchart .cumfill{fill:var(--live);opacity:.12}
 .dchart .ma{fill:none;stroke:#fbbf24;stroke-width:1.8;opacity:.95;pointer-events:none}
 .dchart .uq{fill:none;stroke:#38bdf8;stroke-width:1.8;opacity:.95;pointer-events:none}
+.dchart.uniq .ubars rect{fill:#38bdf8;opacity:.62}
+.dchart.uniq .ubars rect:hover{opacity:1}
+.dchart .uqma{fill:none;stroke:#7dd3fc;stroke-width:1.8;opacity:.95;pointer-events:none}
 .dchart .dhit{fill:transparent;cursor:crosshair}
 .dtip{position:fixed;z-index:60;pointer-events:none;display:none;background:var(--panel);border:1px solid var(--live);border-radius:8px;padding:7px 10px;box-shadow:0 8px 24px rgba(0,0,0,.55);white-space:nowrap;transform:translate(-50%,calc(-100% - 12px));font-variant-numeric:tabular-nums}
 .dtip .d{color:var(--dim);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
@@ -331,22 +334,40 @@ function growthCard(daily,uniq){
   const show=days.slice(-90), off=N-show.length, dmax=Math.max(1,Math.max.apply(null,show.map(function(x){return x[1];})));
   const W=960,H=150,pB=22,pT=8,bw=W/show.length;
   const anyU=show.some(function(d){return umap[d[0]]>0;});
-  let bars='',mline='',uline='',uPrev=false,dt='',hits='';lastMon=-1;
+  let bars='',mline='',dt='',hits='';lastMon=-1;
   show.forEach(function(d,i){ var h=(d[1]/dmax)*(H-pB-pT), x=i*bw, y=H-pB-h;
     bars+='<rect x="'+(x+0.6).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+Math.max(1,bw-1.2).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1"/>';
     var mv=ma[off+i], my=H-pB-(mv/dmax)*(H-pB-pT); mline+=(i?'L':'M')+(x+bw/2).toFixed(1)+','+my.toFixed(1);
-    // unique line only where a set exists (tracking started mid-history) — break the path on gaps
-    var uv=umap[d[0]]; if(uv>0){ var uy=H-pB-(uv/dmax)*(H-pB-pT); uline+=(uPrev?'L':'M')+(x+bw/2).toFixed(1)+','+uy.toFixed(1); uPrev=true; } else uPrev=false;
-    // full-height transparent hit target per day, drawn LAST (on top of the bars + lines) so hovering
-    // anywhere in a day's column shows its value — the native <title> was getting swallowed by the bars/lines.
-    hits+='<rect class="dhit" x="'+x.toFixed(1)+'" y="0" width="'+bw.toFixed(1)+'" height="'+H+'" data-d="'+d[0]+'" data-v="'+d[1]+'" data-u="'+(uv>0?uv:0)+'"></rect>';
+    // full-height transparent hit target per day, drawn LAST (on top of the bars + line) so hovering
+    // anywhere in a day's column shows its value — the native <title> was getting swallowed by the bars/line.
+    var uv=umap[d[0]]||0;
+    hits+='<rect class="dhit" x="'+x.toFixed(1)+'" y="0" width="'+bw.toFixed(1)+'" height="'+H+'" data-d="'+d[0]+'" data-v="'+d[1]+'" data-u="'+uv+'"></rect>';
     var mo=+d[0].slice(5,7); if(mo!==lastMon){lastMon=mo; dt+='<text x="'+x.toFixed(1)+'" y="'+(H-6)+'" font-size="10" fill="var(--faint)">'+MON[mo]+'</text>';} });
-  const dailySvg='<svg viewBox="0 0 '+W+' '+H+'" class="dchart daily"><line x1="0" y1="'+(H-pB)+'" x2="'+W+'" y2="'+(H-pB)+'" stroke="var(--sep)"/><g class="bars">'+bars+'</g><path class="ma" d="'+mline+'"/>'+(uline?'<path class="uq" d="'+uline+'"/>':'')+dt+'<g class="hits">'+hits+'</g></svg>';
-  const dLegend='last '+show.length+'d · <span style="color:#fbbf24">━</span> 7-day avg'+(anyU?' · <span style="color:#38bdf8">━</span> unique/day':'')+' · peak '+peak[1]+' ('+peak[0]+')';
+  const dailySvg='<svg viewBox="0 0 '+W+' '+H+'" class="dchart daily"><line x1="0" y1="'+(H-pB)+'" x2="'+W+'" y2="'+(H-pB)+'" stroke="var(--sep)"/><g class="bars">'+bars+'</g><path class="ma" d="'+mline+'"/>'+dt+'<g class="hits">'+hits+'</g></svg>';
+  const dLegend='last '+show.length+'d · <span style="color:#fbbf24">━</span> 7-day avg · peak '+peak[1]+' ('+peak[0]+')';
+  // DEDICATED unique-visitors-per-day chart — its OWN y-axis, so the ~40/day unique count isn't
+  // crushed flat against the ~hundreds/day pageview scale. Spans only the days uniques were tracked.
+  let uSvg='',uLegend='';
+  if(uDates.length){
+    const uStart=dp(uDates[0]), uArr=[];
+    for(let t=uStart;t<=last;t+=DAY){ const ds=new Date(t).toISOString().slice(0,10); uArr.push([ds,umap[ds]||0]); }
+    const un=uArr.length, umax=Math.max(1,Math.max.apply(null,uArr.map(function(x){return x[1];})));
+    const uma=uArr.map(function(_,i){var a=Math.max(0,i-6),w=uArr.slice(a,i+1);return w.reduce(function(s,x){return s+x[1];},0)/w.length;});
+    const UW=960,UH=150,ubw=UW/un; let ub='',uml='',udt='',uh='',ulm=-1;
+    uArr.forEach(function(d,i){ var h=(d[1]/umax)*(UH-pB-pT), x=i*ubw, y=UH-pB-h;
+      ub+='<rect x="'+(x+0.6).toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+Math.max(1,ubw-1.2).toFixed(1)+'" height="'+h.toFixed(1)+'" rx="1"/>';
+      var mv=uma[i], my=UH-pB-(mv/umax)*(UH-pB-pT); uml+=(i?'L':'M')+(x+ubw/2).toFixed(1)+','+my.toFixed(1);
+      uh+='<rect class="dhit" x="'+x.toFixed(1)+'" y="0" width="'+ubw.toFixed(1)+'" height="'+UH+'" data-d="'+d[0]+'" data-v="'+d[1]+'" data-uonly="1"></rect>';
+      var mo=+d[0].slice(5,7); if(mo!==ulm){ulm=mo; udt+='<text x="'+x.toFixed(1)+'" y="'+(UH-6)+'" font-size="10" fill="var(--faint)">'+MON[mo]+'</text>';} });
+    const uPk=uArr.reduce(function(m,x){return x[1]>m[1]?x:m;},uArr[0]);
+    uSvg='<svg viewBox="0 0 '+UW+' '+UH+'" class="dchart uniq"><line x1="0" y1="'+(UH-pB)+'" x2="'+UW+'" y2="'+(UH-pB)+'" stroke="var(--sep)"/><g class="ubars">'+ub+'</g><path class="uqma" d="'+uml+'"/>'+udt+'<g class="hits">'+uh+'</g></svg>';
+    uLegend='last '+un+'d · <span style="color:#7dd3fc">━</span> 7-day avg · peak '+uPk[1]+' ('+uPk[0]+') · today '+(uLast||0);
+  }
   return kpis
     +'<div class="card"><h2>How the page is developing <span class="c">cumulative visits · '+total.toLocaleString()+' total since '+days[0][0]+'</span></h2>'+cumSvg+'</div>'
-    +'<div class="card"><h2>Visits per day <span class="c">'+dLegend+'</span></h2>'+dailySvg
-    +(anyU?'':'<div class="note" style="margin-top:8px">Unique-visitor tracking just switched on — the unique line will fill in from today forward; pageviews go back further.</div>')+'</div>';
+    +'<div class="card"><h2>Visits per day <span class="c">'+dLegend+'</span></h2>'+dailySvg+'</div>'
+    +(uSvg?'<div class="card"><h2>Unique visitors per day <span class="c">'+uLegend+'</span></h2>'+uSvg+'</div>'
+         :'<div class="card"><h2>Unique visitors per day</h2><div class="note">Unique-visitor tracking just switched on — this fills in from today forward; pageviews go back further.</div></div>');
 }
 // FUNNEL — page → chart → wallet lookup, from the per-type totals. Each step's % is of pageviews.
 function funnelCard(types){
@@ -369,17 +390,18 @@ function heatmapCard(hod){
 // Hover tooltip for the "Visits per day" chart — a full-height hit rect per day drives a floating tip
 // (date · visits · unique) and highlights the matching bar. Runs after the dashboard HTML is injected.
 function wireDailyTip(){
-  const svg=document.querySelector('.dchart.daily'); if(!svg) return;
   let tip=document.querySelector('.dtip'); if(!tip){ tip=document.createElement('div'); tip.className='dtip'; document.body.appendChild(tip); }
-  const bars=svg.querySelectorAll('.bars rect'); const hits=[].slice.call(svg.querySelectorAll('.dhit')); let cur=-1;
-  const clear=()=>{ if(cur>=0&&bars[cur]) bars[cur].style.opacity=''; cur=-1; };
-  const hide=()=>{ tip.style.display='none'; clear(); };
-  svg.addEventListener('mousemove',function(e){ const t=e.target.closest?e.target.closest('.dhit'):null; if(!t){ hide(); return; }
-    const i=hits.indexOf(t); if(i!==cur){ clear(); cur=i; if(bars[i]) bars[i].style.opacity='1'; }
-    const d=t.getAttribute('data-d'), v=+t.getAttribute('data-v'), u=+t.getAttribute('data-u');
-    tip.innerHTML='<div class="d">'+d+'</div><div class="v">'+v.toLocaleString()+' visits</div>'+(u>0?'<div class="u">'+u.toLocaleString()+' unique</div>':'');
-    tip.style.display='block'; tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px'; });
-  svg.addEventListener('mouseleave',hide);
+  [].slice.call(document.querySelectorAll('.dchart.daily, .dchart.uniq')).forEach(function(svg){
+    const bars=svg.querySelectorAll('.bars rect, .ubars rect'); const hits=[].slice.call(svg.querySelectorAll('.dhit')); let cur=-1;
+    const clear=()=>{ if(cur>=0&&bars[cur]) bars[cur].style.opacity=''; cur=-1; };
+    const hide=()=>{ tip.style.display='none'; clear(); };
+    svg.addEventListener('mousemove',function(e){ const t=e.target.closest?e.target.closest('.dhit'):null; if(!t){ hide(); return; }
+      const i=hits.indexOf(t); if(i!==cur){ clear(); cur=i; if(bars[i]) bars[i].style.opacity='1'; }
+      const d=t.getAttribute('data-d'), v=+t.getAttribute('data-v'), u=+t.getAttribute('data-u'), uonly=t.getAttribute('data-uonly');
+      tip.innerHTML='<div class="d">'+d+'</div>'+(uonly?'<div class="u">'+v.toLocaleString()+' unique visitors</div>':'<div class="v">'+v.toLocaleString()+' visits</div>'+(u>0?'<div class="u">'+u.toLocaleString()+' unique</div>':''));
+      tip.style.display='block'; tip.style.left=e.clientX+'px'; tip.style.top=e.clientY+'px'; });
+    svg.addEventListener('mouseleave',hide);
+  });
 }
 async function load(){ const pw=$('#pw')?$('#pw').value:''; $('#out').innerHTML='<p class="muted">loading…</p>';
   let r;
