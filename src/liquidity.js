@@ -2,12 +2,15 @@
 // actually likely to move" metric. NOT "free float" (for a fair-launch token ~88% is technically
 // tradable → uninteresting), NOT "locked" (self-custody isn't locked). Definitions:
 //   ILLIQUID = long-term holders, self-custody, held > 155 DAYS (Glassnode's empirical LTH bar).
-//   LIQUID   = short-term holders (< 155d) + always-liquid supply (CEX + LP + custody + BRIDGED).
-// ⭐ The Wormhole-bridged supply (~109M) is LIQUID, not locked: it's minted and actively traded on
-// Solana/Base, so it belongs in the liquid bucket, not excluded from the universe. Only the 69M burn
-// is truly gone. (Caveat: some bridged supply is itself long-held on Solana/Base; we don't yet fold
-// that chain-native age in, so this counts all bridged as liquid — a slight over-count of liquid.)
-// Reproducible from the FIFO engine's per-row fields (heldTokens/liqEx/bridgeBal/lth in SPX_ONCHAIN).
+//   LIQUID   = short-term holders (< 155d) + always-liquid supply (CEX + LP + custody).
+// ⭐ SCOPE = ETH-native (holders + CEX/LP), which is directly comparable to Bitcoin (also single-chain).
+// The ~109M Wormhole-bridged supply is NOT counted as illiquid (it isn't held by an ETH holder) NOR as
+// liquid — it's left out of this ETH-native universe, along with the 69M burn. We tested whether that
+// under- or over-states the whole-asset picture: the bridged supply is measured on its own chains
+// (solana-onchain.json ≈ 91% held >155d, base-onchain.json ≈ 94%), i.e. AT LEAST AS STICKY as ETH's
+// ~62%. So folding it in barely moves the number (~63%) — the ETH-native figure is a faithful proxy for
+// the whole asset, not an artefact of dropping the bridge. Treating bridged as fully liquid (which we
+// briefly did) was wrong: it's mostly long-held there too. Reproducible from heldTokens/liqEx/lth.
 
 export function spxLiquidity(onchain) {
   return (onchain || [])
@@ -17,8 +20,7 @@ export function spxLiquidity(onchain) {
       const illiq = r.heldTokens * lthPct / 100;              // long-term holder tokens
       const liqHolders = r.heldTokens - illiq;                // short-term holder tokens
       const liqEx = r.liqEx || 0;                             // CEX + LP + custody (always liquid)
-      const bridged = r.bridgeBal || 0;                       // bridged to Solana/Base — liquid, trades there
-      const liq = liqHolders + liqEx + bridged;
+      const liq = liqHolders + liqEx;
       const denom = illiq + liq || 1;
       return { ts: Date.parse(r.d), illiq, liq, illiqPct: 100 * illiq / denom, liqPct: 100 * liq / denom };
     })
