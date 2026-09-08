@@ -41,11 +41,14 @@ jobs:
             echo "No change"; echo "deploy=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # The board fetches /whale-campaigns.json, so the fresh file needs a deploy (a GITHUB_TOKEN commit
-  # can't trigger deploy.yml). Mirrors the other data workflows' deploy job.
+  # The board fetches /whale-campaigns.json, so the fresh file needs a deploy. But this cron commits at
+  # 04:47 and the on-chain refresh (onchain-dune.yml) deploys at ~05:23 — 36 min later — and every deploy
+  # ships the whole current main, so that deploy already publishes this file. Its own deploy job is
+  # therefore redundant and just burns one of Vercel's limited daily deploys + Function Storage. Disabled
+  # (`if: false`) so the commit rides the on-chain deploy. Re-enable by restoring the output gate below.
   deploy:
     needs: build
-    if: needs.build.outputs.deploy == 'true'
+    if: false   # was: needs.build.outputs.deploy == 'true' — rides the ~05:23 on-chain deploy instead
     runs-on: ubuntu-latest
     concurrency:
       group: vercel-production
