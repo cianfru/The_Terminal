@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-07",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-08",
+  "lastId": "freefloat",
   "recent": [
-    {
-      "date": "2026-07-24",
-      "id": "hodlcompare"
-    },
     {
       "date": "2026-07-25",
       "id": "concentration"
@@ -81,6 +77,10 @@
     {
       "date": "2026-08-30",
       "id": "floormodel"
+    },
+    {
+      "date": "2026-09-08",
+      "id": "freefloat"
     }
   ],
   "lanes": {
