@@ -2,7 +2,7 @@
 // The Glassnode-aligned "how much supply is likely to actually move" metric — NOT "free float"
 // (~88% is technically tradable for a fair launch → uninteresting) and NOT "locked" (self-custody
 // isn't locked). ILLIQUID = long-term holders held >155d (Glassnode's LTH bar); LIQUID = short-term
-// holders + exchange + LP. Plotted vs Bitcoin on the SAME method, aligned by age, then BTC carried
+// holders + exchange + LP + bridged (liquid on Solana/Base). Plotted vs Bitcoin on the SAME method, aligned by age, then BTC carried
 // 24 months forward. The honest reveal: at the same age SPX's supply is STICKIER than Bitcoin's was.
 // Data: stats.onchain (FIFO 155d) via src/liquidity.js; BTC from src/btc-hodl-waves.js. A holder-
 // behaviour POSITION, not a signal.
@@ -70,8 +70,8 @@ export function freeFloatSvg(stats, opts = {}) {
     ? `${curIlliq.toFixed(0)}% illiquid — ${stickier ? "stickier than Bitcoin at the same age" : "vs Bitcoin at the same age"}`
     : `${curIlliq.toFixed(0)}% of supply is illiquid — held long-term, unlikely to move`;
   const foot = multi
-    ? "illiquid = held 155 days+ · liquid = short-term + exchanges + LP · dashed = Bitcoin's next 24 months"
-    : "illiquid = held 155 days+ by long-term holders · liquid = short-term + exchanges + LP · on-chain, reproducible";
+    ? "illiquid = held 155 days+ · liquid = short-term + exchanges + LP + bridged · dashed = Bitcoin's next 24 months"
+    : "illiquid = held 155 days+ · liquid = short-term + exchanges + LP + bridged (trades on Solana/Base) · reproducible";
   const curX = x(spxLastDay), curY = y(curIlliq);
 
   return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">

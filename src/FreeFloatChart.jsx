@@ -75,7 +75,7 @@ export default function FreeFloatChart({ isMobile, preview = false }) {
   return (
     <div style={{ maxWidth: MAX_W, margin: "0 auto" }}>
       <Explain q="How much of SPX6900's supply is actually likely to move?" accent={SPX}>
-        <strong style={{ color: "#e2e8f0" }}>Illiquid</strong> = held by long-term holders (over 155 days, Glassnode&apos;s standard), unlikely to come to market. <strong style={{ color: "#e2e8f0" }}>Liquid</strong> = short-term holders + exchanges + LP.
+        <strong style={{ color: "#e2e8f0" }}>Illiquid</strong> = held by long-term holders (over 155 days, Glassnode&apos;s standard), unlikely to come to market. <strong style={{ color: "#e2e8f0" }}>Liquid</strong> = short-term holders + exchanges + LP + the bridged supply (it trades on Solana/Base, so it counts as liquid, not locked). Only the 69M burn is out of the universe.
         Not "locked" (self-custody can move any time) and not "free float" (~88% is technically tradable), this is the behaviour that matters. SPX is at <strong style={{ color: SPX }}>{curIlliq != null ? curIlliq.toFixed(0) : "-"}%</strong> illiquid; Bitcoin was <strong style={{ color: BTC }}>{btcSameAge != null ? btcSameAge.toFixed(0) : "-"}%</strong> at the same age. The <strong style={{ color: BTC }}>dashed line</strong> is Bitcoin&apos;s next 24 months.
       </Explain>
       <div style={{ display: "flex", gap: isMobile ? 14 : 26, justifyContent: "center", marginBottom: 14, flexWrap: "wrap" }}>

@@ -2,9 +2,12 @@
 // actually likely to move" metric. NOT "free float" (for a fair-launch token ~88% is technically
 // tradable → uninteresting), NOT "locked" (self-custody isn't locked). Definitions:
 //   ILLIQUID = long-term holders, self-custody, held > 155 DAYS (Glassnode's empirical LTH bar).
-//   LIQUID   = short-term holders (< 155d) + always-liquid excluded supply (CEX + LP + custody).
-// Denominator = ETH-native tradable universe (holders + CEX/LP), excl bridge-locked + the 69M burn.
-// Reproducible from the FIFO engine's per-lot age (heldTokens/liqEx/lth fields in SPX_ONCHAIN).
+//   LIQUID   = short-term holders (< 155d) + always-liquid supply (CEX + LP + custody + BRIDGED).
+// ⭐ The Wormhole-bridged supply (~109M) is LIQUID, not locked: it's minted and actively traded on
+// Solana/Base, so it belongs in the liquid bucket, not excluded from the universe. Only the 69M burn
+// is truly gone. (Caveat: some bridged supply is itself long-held on Solana/Base; we don't yet fold
+// that chain-native age in, so this counts all bridged as liquid — a slight over-count of liquid.)
+// Reproducible from the FIFO engine's per-row fields (heldTokens/liqEx/bridgeBal/lth in SPX_ONCHAIN).
 
 export function spxLiquidity(onchain) {
   return (onchain || [])
@@ -14,7 +17,8 @@ export function spxLiquidity(onchain) {
       const illiq = r.heldTokens * lthPct / 100;              // long-term holder tokens
       const liqHolders = r.heldTokens - illiq;                // short-term holder tokens
       const liqEx = r.liqEx || 0;                             // CEX + LP + custody (always liquid)
-      const liq = liqHolders + liqEx;
+      const bridged = r.bridgeBal || 0;                       // bridged to Solana/Base — liquid, trades there
+      const liq = liqHolders + liqEx + bridged;
       const denom = illiq + liq || 1;
       return { ts: Date.parse(r.d), illiq, liq, illiqPct: 100 * illiq / denom, liqPct: 100 * liq / denom };
     })
