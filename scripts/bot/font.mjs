@@ -18,9 +18,11 @@ import { SERIF_REGULAR_B64, SERIF_BOLD_B64 } from "./font-data-serif.js";
 
 let here = "";
 try { here = dirname(fileURLToPath(import.meta.url)); } catch { /* bundled */ }
-// Last-resort: read the on-disk .ttf if the embedded base64 is somehow empty.
+// Last-resort: read the on-disk .ttf if the embedded base64 is somehow empty. The .ttf source lives in
+// tools/fonts/ (NOT scripts/bot/), so it is not bundled into the serverless functions — the base64 in
+// font-data.js is what ships and is always used; this fallback only ever matters for local runs.
 const fromDisk = name => {
-  for (const p of [here && join(here, name), join(process.cwd(), "scripts/bot", name)].filter(Boolean)) {
+  for (const p of [here && join(here, "../../tools/fonts", name), join(process.cwd(), "tools/fonts", name)].filter(Boolean)) {
     try { return readFileSync(p); } catch { /* next */ }
   }
   return null;
