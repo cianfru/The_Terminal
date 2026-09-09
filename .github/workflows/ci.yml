@@ -18,6 +18,10 @@ jobs:
         with:
           node-version: 20
       - run: npm ci
+      - name: Install City 2.0 prototype dependencies
+        run: npm ci --prefix prototypes/spx-city-2.0
+      - name: Build City 2.0 prototype
+        run: npm run build --prefix prototypes/spx-city-2.0
       - name: Run tests
         run: npm test
       - name: Build

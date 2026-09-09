@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import {SILHOUETTES,MANHATTAN_FAMILIES,silhouetteParts} from '../src/district/silhouettes.js';
+import {cohort} from '../src/district/model.js';
+import fs from 'node:fs';
+test('50 distinct named families have the planned 10/15/15/10 catalogue split',()=>{assert.equal(SILHOUETTES.length,50);assert.equal(new Set(SILHOUETTES.map(f=>f.name)).size,50);for(const [group,count]of [['Expressive high-rise',10],['Ordinary tower',15],['Mid-rise / residential',15],['Low-rise / special',10]])assert.equal(SILHOUETTES.filter(f=>f.group===group).length,count);});
+test('all family variations are finite grounded geometry within their assigned envelope',()=>{for(const f of SILHOUETTES)for(let variant=0;variant<3;variant++){const parts=silhouetteParts(f.id,{width:1.65,depth:2.3,height:13,variant}),bounds=new THREE.Box3();assert.ok(parts.length);for(const {geometry:g}of parts){assert.ok([...g.attributes.position.array].every(Number.isFinite),f.name);g.computeBoundingBox();bounds.union(g.boundingBox);g.dispose();}assert.ok(Math.abs(bounds.min.y)<.0001,f.name);assert.ok(Math.abs(bounds.max.y-13)<.0001,f.name);assert.ok(bounds.max.x-bounds.min.x<=1.6501,f.name);assert.ok(bounds.max.z-bounds.min.z<=2.3001,f.name);}});
+test('Manhattan deterministically uses its subset while retaining all 384 wallets and 12 landmarks',()=>{const data=JSON.parse(fs.readFileSync(new URL('../src/fullcity/wallets.json',import.meta.url))),a=cohort(data),b=cohort(data);assert.deepEqual(a,b);assert.equal(a.length,384);assert.equal(a.filter(w=>w.landmark).length,12);const ids=new Set(a.slice(12).map(w=>w.identity.silhouette));assert.ok(ids.size>=30);assert.ok([...ids].every(id=>MANHATTAN_FAMILIES.includes(id)));assert.ok(!ids.has(3)&&!ids.has(4)&&!ids.has(34));});
+
+test('rounded and retro forms remain a small minority',()=>{const data=JSON.parse(fs.readFileSync(new URL('../src/fullcity/wallets.json',import.meta.url))),w=cohort(data).slice(12);assert.ok(w.filter(x=>[7,8,48].includes(x.identity.silhouette)).length/w.length<.065);});
+
+test('horizontal-band roof has one exposed top surface without a coplanar body lid',()=>{for(const height of [7,13,19]){const parts=silhouetteParts(45,{height});for(const p of parts)p.geometry.computeBoundingBox();const body=parts.find(p=>p.role==='wall').geometry.boundingBox,cap=parts.filter(p=>p.role==='structure').at(-1).geometry.boundingBox;assert.ok(body.max.y>cap.min.y);assert.ok(cap.max.y-body.max.y>height*.01);assert.ok(Math.abs(cap.max.y-height)<.0001);parts.forEach(p=>p.geometry.dispose());}});

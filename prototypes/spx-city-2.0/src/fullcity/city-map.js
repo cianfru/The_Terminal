@@ -1,0 +1,846 @@
+// AEON CITY / WHALE CITY — wallets laid out on the real Manhattan.
+//
+// WHAT IS REAL AND WHAT IS PLAY. The building is data: its size is the wallet's holding, its glow
+// is that wallet's recent buying or selling. The ADDRESS is a game — the neighbourhood comes from
+// the wallet's own hash, so a wallet always lands on the same lot and can be looked up, but it
+// says nothing about where anyone actually is. Fun on top, never a claim the data can't make.
+//
+// The island itself is REAL: src/nyc-geo.js is a one-time bake of OpenStreetMap's coastline
+// (© OpenStreetMap contributors, ODbL), so the shape, the tilt, Central Park and the surrounding
+// boroughs are true geometry rather than a sketch — with no map dependency, key or per-load cost.
+import { NYC } from "./nyc-geo.js";
+
+const MANHATTAN = NYC.manhattan[0];
+
+// ── island axis ───────────────────────────────────────────────────────────────────────────────
+// Manhattan runs about 29° off north, and that tilt is most of what makes it recognisable. Rather
+// than straighten it, everything downstream works in AXIS space: `t` runs 0 (Battery) → 1 (Inwood)
+// along the island's length, `u` runs across its width. Neighbourhoods are bands of `t`.
+const AXIS = (() => {
+  let cx = 0, cz = 0;
+  for (const [x, z] of MANHATTAN) { cx += x; cz += z; }
+  cx /= MANHATTAN.length; cz /= MANHATTAN.length;
+  // ⭐ THE GRID ANGLE COMES FROM CENTRAL PARK, NOT FROM THE ISLAND'S SHAPE.
+  //
+  // This used to be the principal axis of the coastline via covariance, which is a reasonable guess
+  // at "which way does Manhattan point" and is about 8 degrees off the thing that actually matters.
+  // The Commissioners' grid — the real avenues and streets — runs at its own bearing, and Central
+  // Park is a precise rectangle aligned to it. So a street grid built on the coastline sat visibly
+  // skewed against the park, which is what gives the game away: the park looked crooked when it was
+  // the streets that were.
+  //
+  // The park's own long edge IS the grid bearing, measured from real geometry we already hold, so
+  // it costs nothing and cannot drift from the park it has to line up with.
+  const park = NYC.centralpark?.[0];
+  let theta;
+  if (park?.length >= 4) {
+    // longest edge of the park outline — its length, which runs 110th to 59th along the avenues
+    let best = -1, bx = 1, bz = 0;
+    for (let i = 0; i < park.length; i++) {
+      const a = park[i], b = park[(i + 1) % park.length];
+      const dx = b[0] - a[0], dz = b[1] - a[1], d2 = dx * dx + dz * dz;
+      if (d2 > best) { best = d2; bx = dx; bz = dz; }
+    }
+    theta = Math.atan2(bz, bx);
+  } else {
+    // fallback: principal axis of the coastline via covariance
+    let sxx = 0, szz = 0, sxz = 0;
+    for (const [x, z] of MANHATTAN) { const dx = x - cx, dz = z - cz; sxx += dx * dx; szz += dz * dz; sxz += dx * dz; }
+    theta = 0.5 * Math.atan2(2 * sxz, sxx - szz);
+  }
+  let ax = Math.cos(theta), az = Math.sin(theta);
+  // orient south → north
+  if (az < 0) { ax = -ax; az = -az; }
+  let lo = Infinity, hi = -Infinity;
+  for (const [x, z] of MANHATTAN) { const p = (x - cx) * ax + (z - cz) * az; if (p < lo) lo = p; if (p > hi) hi = p; }
+  return { cx, cz, ax, az, lo, hi, len: hi - lo };
+})();
+
+export const CITY_LENGTH = AXIS.len;
+export const toAxis = (x, z) => {
+  const dx = x - AXIS.cx, dz = z - AXIS.cz;
+  return { t: ((dx * AXIS.ax + dz * AXIS.az) - AXIS.lo) / AXIS.len, u: -dx * AXIS.az + dz * AXIS.ax };
+};
+export const fromAxis = (t, u) => {
+  const p = AXIS.lo + t * AXIS.len;
+  return { x: AXIS.cx + p * AXIS.ax - u * AXIS.az, z: AXIS.cz + p * AXIS.az + u * AXIS.ax };
+};
+
+// ── geometry helpers ──────────────────────────────────────────────────────────────────────────
+export function pointInRing(x, z, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, zi] = ring[i], [xj, zj] = ring[j];
+    if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi + 1e-12) + xi) inside = !inside;
+  }
+  return inside;
+}
+const inManhattan = (x, z) => pointInRing(x, z, MANHATTAN);
+const PARK_RING = NYC.centralpark?.[0];
+const inPark = (x, z) => (PARK_RING ? pointInRing(x, z, PARK_RING) : false);
+
+// ⭐ THE BRIDGE NEEDS AN APPROACH, AND THE LOT GRID HAS TO KNOW ABOUT IT.
+//
+// The span's Manhattan end lands in the Financial District — a dense tower district — so the grid
+// happily issued the lot the roadway comes down on and the deck drove straight into a building.
+// A real bridge has a plaza at its foot; this is that plaza, and it is subtracted from the
+// buildable land exactly the way Central Park is.
+//
+// ⚠ THE LINE LIVES HERE, not in city-infra, because the lot grid needs it and city-infra already
+// imports this module — a second copy of the coordinates is precisely the drift that would let the
+// road and the cleared strip part company. city-infra reads BRIDGE_LINE for SITES.bridge.
+export const BRIDGE_LINE = { from: [40.7115, -74.0038], to: [40.7003, -73.9903] };
+// Half-width of the cleared strip. The deck is ~0.5 out, a building reaches ~0.55 from its centre,
+// and the setback jitter can pull a lot ~0.1 back toward the road after it passes this test — so
+// this is sized well past the point of contact rather than exactly at it.
+const BRIDGE_CLEAR = 2.5;        // world units either side of the roadway's centre line
+const BRIDGE_APPROACH = 3.0;     // and beyond each end, where the deck ramps down to grade
+const bridgeAxis = () => {
+  const a = fromLatLon(...BRIDGE_LINE.from), b = fromLatLon(...BRIDGE_LINE.to);
+  return { a, b, dx: b.x - a.x, dz: b.z - a.z };
+};
+// Distance from the segment, but with the ends EXTENDED — the ramp occupies ground past the
+// abutment, which is exactly where the first version still let a building through.
+const underBridge = (x, z) => {
+  const { a, dx, dz } = bridgeAxis();
+  const len2 = dx * dx + dz * dz;
+  if (!len2) return false;
+  const t = ((x - a.x) * dx + (z - a.z) * dz) / len2;
+  const ext = BRIDGE_APPROACH / Math.sqrt(len2);
+  if (t < -ext || t > 1 + ext) return false;
+  const cl = Math.max(0, Math.min(1, t));
+  return Math.hypot(x - (a.x + dx * cl), z - (a.z + dz * cl)) < BRIDGE_CLEAR;
+};
+
+// ── neighbourhoods ────────────────────────────────────────────────────────────────────────────
+// Bands along the island axis, with a POPULATION WEIGHT. Weighting matters: an even spread put as
+// many buildings in Inwood as in Midtown, which is why the city read as detached clusters rather
+// than a place. These roughly track where density and towers actually are.
+export const NEIGHBOURHOODS = [
+  { id: "fidi", name: "Financial District", t0: 0.00, t1: 0.075, weight: 10, towers: true },
+  { id: "tribeca", name: "Tribeca & SoHo", t0: 0.075, t1: 0.14, weight: 8 },
+  { id: "village", name: "Greenwich Village", t0: 0.14, t1: 0.20, weight: 9 },
+  { id: "chelsea", name: "Chelsea & Flatiron", t0: 0.20, t1: 0.26, weight: 9 },
+  { id: "midtown", name: "Midtown", t0: 0.26, t1: 0.40, weight: 18, towers: true },
+  // `prime` = Central Park frontage. Tower-ELIGIBLE but not core-packed, so the big holders who
+  // don't fit downtown scatter along the park the way the real ones do, instead of spilling into
+  // whichever district happens to be emptiest — which was putting lone skyscrapers in Inwood.
+  { id: "ues", name: "Upper East Side", t0: 0.40, t1: 0.58, weight: 13, side: "east", prime: true },
+  { id: "uws", name: "Upper West Side", t0: 0.40, t1: 0.58, weight: 11, side: "west", prime: true },
+  { id: "harlem", name: "Harlem", t0: 0.58, t1: 0.75, weight: 10 },
+  { id: "heights", name: "Washington Heights", t0: 0.75, t1: 0.90, weight: 8 },
+  { id: "inwood", name: "Inwood", t0: 0.90, t1: 1.00, weight: 4 },
+];
+export const HOOD_BY_ID = Object.fromEntries(NEIGHBOURHOODS.map(n => [n.id, n]));
+
+// ⭐ DISTRICTS ARE WEIGHTED BY THE LAND THEY ACTUALLY HAVE, not by a hand-set number.
+//
+// The weights above are how built-up each district feels, and they did not match how many lots the
+// geography yields: Harlem came out with 123 lots and 60 wallets — half empty, whole blocks of bare
+// pavement in the middle of the island — while the Financial District was oversubscribed almost
+// threefold and spilled its overflow elsewhere. Density now comes from area, so every district
+// fills to about the same level and no block is left paved and vacant.
+//
+// The skyline's character does NOT depend on these weights: the biggest holders are still drawn
+// into the tower districts by the bigT rule below, which is what actually puts the towers downtown.
+// Measured once at k=1; the relative proportions barely move with scale.
+let LOT_W = null;
+const lotWeights = () => {
+  if (!LOT_W) {
+    LOT_W = new Map();
+    for (const h of NEIGHBOURHOODS) LOT_W.set(h.id, Math.max(1, hoodGrid(h, 1).lots.length));
+  }
+  return LOT_W;
+};
+const TOWER_HOODS = NEIGHBOURHOODS.filter(n => n.towers || n.prime);
+
+// ⭐⭐ TOWERS NEED ROOM, OR THEY STOP BEING TOWERS.
+//
+// Dense districts fill from the core outward in conviction order, so ranks 1,2,3… used to take
+// adjacent innermost lots — the tallest buildings in the city were neighbours BY CONSTRUCTION.
+// At 21 units tall on a 1.15 pitch they merged into one dark slab south of Central Park with no
+// sky between them: not a skyline, a wall.
+//
+// The honest lever here is PLACEMENT, not height. Where a wallet lives is already declared a game
+// (the address comes from its own hash, and the page says so), while height is the data and must
+// never be touched — capping a tower because a taller one stands nearby would be a lie about that
+// wallet. So the tall cohort simply claims a radius, and the mid-rise fills in around it.
+//
+// Lots sit 1.15 apart inside a block: 2.6 leaves a clear lot between towers, 5.2 leaves a block.
+function clearanceFor(rank) {
+  if (rank < 8) return 5.2;     // the landmarks — a block of sky each
+  if (rank < 40) return 3.6;
+  if (rank < 120) return 2.6;   // roughly the glass cohort
+  if (rank < 320) return 1.8;
+  return 0;                     // everyone else packs normally; the mass IS the city
+}
+const clears = (towers, x, z, need) =>
+  need <= 0 || !towers.some(p => (p.x - x) ** 2 + (p.z - z) ** 2 < need * need);
+function weightedPick(list, h) {
+  const w = lotWeights();
+  const total = list.reduce((s, n) => s + w.get(n.id), 0);
+  let acc = 0;
+  for (const n of list) { acc += w.get(n.id) / total; if (h <= acc) return n; }
+  return list[list.length - 1];
+}
+
+// deterministic 0..1 from an address — the same wallet always gets the same home
+export const hash01 = s => {
+  let h = 2166136261;
+  const str = String(s || "").toLowerCase();
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) / 4294967296;
+};
+
+// Which neighbourhood a wallet lives in — its own hash, weighted by how built-up each district is.
+// The biggest holders are drawn from the tower districts, or the skyscrapers scatter into Inwood
+// and the skyline stops reading as New York. `bigT` is 0..1, the size rank (1 = biggest).
+export function neighbourhoodFor(address, bigT = 0) {
+  const h = hash01(address);
+  return bigT > 0.9 ? weightedPick(TOWER_HOODS, h) : weightedPick(NEIGHBOURHOODS, h);
+}
+
+// ── lots ──────────────────────────────────────────────────────────────────────────────────────
+// A street grid in AXIS space, clipped to the real coastline (and to Central Park, which is not
+// buildable). Avenues run along the island, streets across it — the same way Manhattan is laid out.
+// ⭐ ONE GRID DRIVES BOTH THE LOTS AND THE STREETS. They used to be independent: lots were a solid
+// lattice with no gaps at 1.45 x 1.25, while the painted street lines were drawn on unrelated
+// 1.9 x 2.2 spacing. So buildings abutted each other in an unbroken carpet AND the streets ran
+// underneath them — the city had no blocks and no avenues, just a field of towers with decorative
+// lines painted under it.
+//
+// Now lots are grouped into BLOCKS with real gaps between them, and streetGrid draws down the
+// middle of those gaps, so the corridors you see are the corridors the buildings left.
+//
+// The proportions are Manhattan's: blocks are LONG across the island (avenue to avenue, ~274 m in
+// reality) and SHORT along it (street to street, ~80 m). Buildings nearly touch inside a block —
+// which is correct, that's a city block — and the space is all in the streets between them.
+export const GRID = {
+  lotU: 1.15,      // lot width across the island
+  lotT: 1.15,      // lot depth along the island
+  blkU: 5,         // lots per block across — the long side
+  blkT: 2,         // lots per block along — the short side
+  street: 1.20,    // gap between blocks along the island
+  avenue: 2.10,    // gap between block columns — wider, these are the avenues
+};
+const PERIOD_U = GRID.blkU * GRID.lotU + GRID.avenue;
+const PERIOD_T = GRID.blkT * GRID.lotT + GRID.street;
+const SHORE = 1.0;
+
+// Block columns are indexed from the island's centre line, so every district lands on the SAME
+// grid. Letting each neighbourhood start its own lattice made the avenues jog at every boundary.
+const COLS = Math.ceil(24 / PERIOD_U);
+
+// The grid, as both the lots buildings stand on AND the block slabs they stand on top of. The
+// pavement is per BLOCK, never per building: one tile each would need roughly double the pitch in
+// both axes to fit a road around it, which is a quarter of the capacity and turns Manhattan into an
+// office park. Buildings share a block the way they share a street — the road is the gap BETWEEN
+// blocks, which the grid already leaves.
+export function hoodGrid(hood, k = 1) {
+  const lots = [], blocks = [];
+  const perT = PERIOD_T / (AXIS.len * k);          // one block row, in t units
+  const lotT = GRID.lotT / (AXIS.len * k);
+  // ⚠ EACH ROW BELONGS TO EXACTLY ONE DISTRICT — decided by its MIDPOINT.
+  //
+  // Districts used to snap their own start with ceil(t0 / perT) and stop at `< t1`, which loses a
+  // whole row wherever a boundary lands on a row edge: Chelsea ends and Midtown begins at t=0.260,
+  // but 0.260 / perT evaluates to 10.0000001, so ceil sent Midtown to row 11 while Chelsea's test
+  // excluded row 10. Nobody claimed it, and a bare band ran clean across the island.
+  //
+  // Testing the midpoint makes coverage exhaustive by construction: every row falls inside exactly
+  // one district's t-range, so none can be dropped and none double-claimed, whatever the floats do.
+  const nRows = Math.ceil(1 / perT) + 1;
+  for (let bi = 0; bi < nRows; bi++) {
+    const mid = bi * perT + (GRID.blkT / 2) * lotT;
+    if (mid < hood.t0 || mid >= hood.t1) continue;
+    for (let bu = -COLS; bu <= COLS; bu++) {
+      // Collect this block's buildable lots FIRST, then size the pavement to them. Sizing the slab
+      // to the nominal block instead — and testing only its centre for land — hung full slabs out
+      // over the river all down the waterfront, because a block can sit on land while half its
+      // footprint is water. Fitting the slab to real lots makes an overhang impossible.
+      const mine = [];
+      for (let li = 0; li < GRID.blkT; li++) {
+        const t = bi * perT + (li + 0.5) * lotT;
+        if (t >= 1) break;
+        for (let lu = 0; lu < GRID.blkU; lu++) {
+          const u = bu * PERIOD_U + (lu + 0.5 - GRID.blkU / 2) * GRID.lotU;
+          const { x, z } = fromAxis(t, u / k);     // lots sit on the real island at scale k
+          if (!inManhattan(x, z) || inPark(x, z) || underBridge(x, z)) continue;
+          // keep a margin off the waterfront so buildings don't hang over the edge
+          if (!inManhattan(x + SHORE, z) || !inManhattan(x - SHORE, z) ||
+              !inManhattan(x, z + SHORE) || !inManhattan(x, z - SHORE)) continue;
+          // ⚠ The boundary must belong to exactly ONE side. These were `u < 0` and `u > 0`, so the
+          // lot sitting exactly on the centre line passed both tests and was handed out twice —
+          // two wallets standing in the identical spot, rendering as one fused building.
+          if (hood.side === "east" && u < 0) continue;
+          if (hood.side === "west" && u >= 0) continue;
+          mine.push({ t, u, x: x * k, z: z * k });
+        }
+      }
+      if (!mine.length) continue;
+      for (const l of mine) lots.push({ x: l.x, z: l.z });
+
+      const tMin = Math.min(...mine.map(l => l.t)), tMax = Math.max(...mine.map(l => l.t));
+      const uMin = Math.min(...mine.map(l => l.u)), uMax = Math.max(...mine.map(l => l.u));
+      const c = fromAxis((tMin + tMax) / 2, ((uMin + uMax) / 2) / k);
+      blocks.push({
+        x: c.x * k, z: c.z * k,
+        w: (uMax - uMin) + GRID.lotU * 1.05,                      // across, plus a kerb margin
+        d: (tMax - tMin) * AXIS.len * k + GRID.lotT * 1.05,       // along, back into world units
+      });
+    }
+  }
+  return { lots, blocks };
+}
+
+// Lots only — the shape every existing caller expects.
+export function hoodLots(hood, k = 1) { return hoodGrid(hood, k).lots; }
+
+// The whole grid is rotated to the island's true tilt, so slabs need the same angle.
+export const AXIS_ANGLE = Math.atan2(AXIS.az, AXIS.ax);
+
+// Scale the whole city to the population so it always looks built-up rather than empty. The
+// divisor is tuned so blocks come out ~85% FULL. Two failures either side of that: too sparse and
+// each block holds three buildings in a big empty rectangle, which reads as suburbia; too tight and
+// the placer runs out of island. Manhattan blocks are solid — the space in a real city is in the
+// streets between blocks, not inside them, which is why the grid gaps do this job now instead.
+// Manhattan stays at TRUE scale — it never inflates past the real island. Growing it to fit was
+// the other option and it's worse: the island's proportions are the one thing anyone can check.
+// Overflow goes to the outer boroughs instead, which are real land already drawn and doing nothing.
+export const cityScale = n => Math.min(1, Math.max(0.4, Math.sqrt((n || 1) / 1450)));
+
+// One lot per wallet, never two.
+//
+// Two behaviours on purpose. Residential districts SCATTER: the address hash picks a lot, and if
+// it's taken we step by a large stride co-prime with the lot count instead of +1. Probing by +1
+// makes every collision pile onto the next lot, which is what produced solid rectangular blocks
+// with dead space between them. A co-prime stride visits the whole neighbourhood, so the same
+// number of buildings spreads out like a real residential street instead of clumping.
+//
+// The TOWER districts do the opposite and cluster on purpose — downtown should read as a dense
+// core, so their lots are ordered from the centre of the district outward and filled from the
+// middle. That's the "unless it's the financial part" case.
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+function strideFor(n) {
+  if (n < 3) return 1;
+  let s = Math.max(2, Math.floor(n * 0.618));      // golden-ratio step spreads probes evenly
+  while (gcd(s, n) !== 1) s++;                     // co-prime ⇒ the probe visits every lot
+  return s % n || 1;
+}
+
+export function placeCity(items, k = 1) {
+  const n = items.length;
+  const cache = new Map();
+  const lotsOf = h => {
+    let e = cache.get(h.id);
+    if (!e) {
+      let lots = hoodLots(h, k);
+      if (h.towers && lots.length) {                // downtown: fill from the core outward
+        let cx = 0, cz = 0;
+        for (const l of lots) { cx += l.x; cz += l.z; }
+        cx /= lots.length; cz /= lots.length;
+        lots = lots.slice().sort((a, b) => ((a.x - cx) ** 2 + (a.z - cz) ** 2) - ((b.x - cx) ** 2 + (b.z - cz) ** 2));
+      }
+      e = { lots, used: new Set(), stride: strideFor(lots.length), dense: !!h.towers, next: 0, towers: [] };
+      cache.set(h.id, e);
+    }
+    return e;
+  };
+  const free = h => { const e = lotsOf(h); return e.used.size < e.lots.length ? e : null; };
+
+  // ⭐ MANHATTAN IS THE HIGHEST-CONVICTION WALLETS; everyone else is across the river.
+  //
+  // This used to pick by TENURE alone, which read wrong: a large holder who had been in for a few
+  // months landed in the Bronx, so lone towers stood over low-rise while the island missed the
+  // buildings people most want to look at. `items` arrives sorted by the conviction score — size
+  // weighted by holding time — so taking the tail keeps BOTH ideas: big gets you the island, and
+  // holding longer gets you there on less.
+  //
+  // The cost, stated plainly: the boundary is now sensitive to balance, so a wallet near rank 1,693
+  // can cross the river when it trades. That is real churn, but it is a MOVE rather than an
+  // eviction — the building still exists and is still searchable — and it only touches the middle
+  // of the distribution, never the big holders who are the reason anyone opens the page.
+  const manCap = NEIGHBOURHOODS.reduce((s, h) => s + lotsOf(h).lots.length, 0);
+  let outer = null, boro = null;
+  if (n > manCap) {
+    outer = new Set(items.map((_, i) => i).slice(manCap));
+    const lots = boroughLots(k);
+    boro = { lots, used: new Set(), stride: strideFor(lots.length) };
+  }
+
+  return items.map((it, i) => {
+    if (outer?.has(i) && boro?.lots.length) {
+      let j = Math.floor(hash01(it.a + "|boro") * boro.lots.length) % boro.lots.length;
+      for (let sN = 0; sN < boro.lots.length; sN++) {
+        if (!boro.used.has(j)) { boro.used.add(j); const l = boro.lots[j];
+          return { ...it, hood: l.hood, x: l.x, z: l.z }; }
+        j = (j + boro.stride) % boro.lots.length;
+      }
+    }
+    const bigT = n > 1 ? 1 - i / (n - 1) : 1;
+    let hood = neighbourhoodFor(it.a, bigT);
+    let slot = free(hood);
+    if (!slot) {
+      // Spill into the EMPTIEST district. Taking the first with space just piled the overflow into
+      // whichever district happened to head the list.
+      let best = null, bestFree = 0;
+      for (const h of NEIGHBOURHOODS) {
+        const e = lotsOf(h), room = e.lots.length - e.used.size;
+        if (room > bestFree) { bestFree = room; best = h; }
+      }
+      if (best) { hood = best; slot = free(best); }
+    }
+    let lot = null;
+    if (slot) {
+      const { lots, used, stride, dense } = slot;
+      const need = clearanceFor(i) * k;
+      if (dense) {
+        while (slot.next < lots.length && used.has(slot.next)) slot.next++;   // pack from the core
+        // Nearest free lot to the core that still leaves the taller neighbours their room. Falling
+        // back to the plain nearest one matters: a district can genuinely run out of clear space,
+        // and a building with nowhere to stand is worse than one standing a little close.
+        let j = -1;
+        for (let q = slot.next; q < lots.length; q++) {
+          if (used.has(q)) continue;
+          if (!clears(slot.towers, lots[q].x, lots[q].z, need)) continue;
+          j = q; break;
+        }
+        if (j < 0 && slot.next < lots.length) j = slot.next;
+        if (j >= 0) { used.add(j); lot = lots[j]; }
+      } else {
+        // ⚠ THE LOT HASH MUST BE INDEPENDENT OF THE NEIGHBOURHOOD HASH. Using hash01(it.a) for both
+        // is what caused the visible clumping: neighbourhoods are picked by comparing that hash
+        // against cumulative weights, so every wallet in Midtown had a hash inside Midtown's slice
+        // (~0.36-0.54), and feeding the same number back in as a lot index put them all in the same
+        // ~18% strip of a row-major lot list. Whole districts piled into one band with dead space
+        // either side. A salted second hash is uniform over 0..1 whichever district you landed in.
+        let j = Math.floor(hash01(it.a + "|lot") * lots.length) % lots.length;
+        // Two passes: the first honours the tower clearance, the second takes anything free. The
+        // scattered districts need this too — a big holder landing on the park is still a tower,
+        // and two of them on neighbouring lots read as one building just the same.
+        let found = -1;
+        for (let pass = 0; pass < 2 && found < 0; pass++) {
+          let c = j;
+          for (let s = 0; s < lots.length; s++) {
+            if (!used.has(c) && (pass === 1 || clears(slot.towers, lots[c].x, lots[c].z, need))) { found = c; break; }
+            c = (c + stride) % lots.length;                                   // scatter, don't clump
+          }
+          if (need <= 0) break;                                               // no clearance asked, no second pass
+        }
+        if (found >= 0) { used.add(found); lot = lots[found]; }
+      }
+      if (lot && need > 0) slot.towers.push({ x: lot.x, z: lot.z });
+    }
+    // Genuinely out of room: park it off the east shore rather than stack it on a roof.
+    if (!lot) { const p = fromAxis((i % 100) / 100, 26 + (i % 4) * 1.4); lot = { x: p.x * k, z: p.z * k }; }
+    // A whisper of setback variation. Manhattan IS a grid, so this stays small — enough that the
+    // blocks don't read as a printed lattice, far short of letting two buildings touch (lots are
+    // 1.45 x 1.25 apart and the widest footprint is ~1.08).
+    const jx = (hash01(it.a + "|jx") - 0.5) * 0.16, jz = (hash01(it.a + "|jz") - 0.5) * 0.11;
+    return { ...it, hood, x: lot.x + jx, z: lot.z + jz };
+  });
+}
+
+// ── the outer boroughs ────────────────────────────────────────────────────────────────────────
+// Manhattan holds 1,693 buildings at full scale. Past that the city expands the way the real one
+// did — across the river — rather than by inflating the island, which would break the one
+// proportion anyone can check against a map.
+//
+// ⚠ THE BOROUGH OUTLINES ARE ADMIN BOUNDARIES and legally cross open water, so a naive grid over
+// them drops buildings into the harbour. Lots are therefore rejected inside the WATER rings, and
+// held within reach of the waterfront so nobody is housed in the middle of the Atlantic where
+// Queens' boundary nominally reaches.
+export const BOROUGHS = [
+  { id: "brooklyn", name: "Brooklyn" },
+  { id: "queens", name: "Queens" },
+  { id: "bronx", name: "The Bronx" },
+  { id: "jersey", name: "Jersey City" },
+];
+const BOROUGH_U = 46;          // how far across from the island's centre line to build
+const BOROUGH_T = [-0.22, 1.22];
+// Keep clear of the water between the island and the far bank. Carving the WATER rings is not
+// enough on its own: the East River above Long Island City and the whole Harlem River are narrower
+// than 400 m and are covered by the borough boundaries, so a grid over those boundaries drops
+// buildings mid-channel. Anything this close to Manhattan's coastline is in a river, not on land.
+const CHANNEL = 4;
+// The FULL outline, not a subsample: sampling every third point left buildings in the channel
+// wherever the coastline turns sharply between samples. It is computed once and cached.
+const COAST = MANHATTAN;
+const inChannel = (x, z) => COAST.some(([cx, cz]) => (cx - x) ** 2 + (cz - z) ** 2 < CHANNEL * CHANNEL);
+
+// A single point's borough, or null if it isn't buildable borough land — the shared predicate for
+// lots, blocks and streets so all three agree on exactly where a borough is.
+const boroughAt = (() => {
+  let rings = null;
+  return (x, z) => {
+    if (!rings) rings = BOROUGHS.flatMap(b => (NYC[b.id] || []).map(r => ({ id: b.id, name: b.name, ring: r })));
+    if (inManhattan(x, z)) return null;                     // the island has its own grid
+    if (WATER.some(w => pointInRing(x, z, w.ring))) return null;   // never in the harbour
+    if (inChannel(x, z)) return null;                       // nor in the rivers
+    if (underBridge(x, z)) return null;                     // nor on the bridge ramp (both shores)
+    const home = rings.find(r => pointInRing(x, z, r.ring));
+    return home ? { id: home.id, name: home.name } : null;
+  };
+})();
+
+let BORO_CACHE = null, BORO_K = null;
+// The boroughs as BLOCKS, the same as Manhattan's hoodGrid — lots grouped into blocks with a slab
+// sized to the lots that actually landed on land, so the outer boroughs get real streets and kerbed
+// pavement instead of buildings scattered on a bare green field.
+export function boroughGrid(k = 1) {
+  if (BORO_CACHE && BORO_K === k) return BORO_CACHE;
+  const lots = [], blocks = [];
+  const perT = PERIOD_T / (AXIS.len * k), lotT = GRID.lotT / (AXIS.len * k);
+  const uCols = Math.ceil(BOROUGH_U / PERIOD_U);
+  for (let t = BOROUGH_T[0]; t < BOROUGH_T[1]; t += perT) {
+    for (let bu = -uCols; bu <= uCols; bu++) {
+      const mine = [];                                      // this block's buildable lots
+      for (let li = 0; li < GRID.blkT; li++) {
+        const tt = t + (li + 0.5) * lotT;
+        for (let lu = 0; lu < GRID.blkU; lu++) {
+          const u = bu * PERIOD_U + (lu + 0.5 - GRID.blkU / 2) * GRID.lotU;
+          if (Math.abs(u) > BOROUGH_U) continue;
+          const { x, z } = fromAxis(tt, u / k);
+          const hood = boroughAt(x, z);
+          if (!hood) continue;
+          mine.push({ tt, u, x: x * k, z: z * k, hood });
+        }
+      }
+      if (!mine.length) continue;
+      for (const l of mine) lots.push({ x: l.x, z: l.z, hood: l.hood });
+      const tMin = Math.min(...mine.map(l => l.tt)), tMax = Math.max(...mine.map(l => l.tt));
+      const uMin = Math.min(...mine.map(l => l.u)), uMax = Math.max(...mine.map(l => l.u));
+      const c = fromAxis((tMin + tMax) / 2, ((uMin + uMax) / 2) / k);
+      blocks.push({
+        x: c.x * k, z: c.z * k,
+        w: (uMax - uMin) + GRID.lotU * 1.05,
+        d: (tMax - tMin) * AXIS.len * k + GRID.lotT * 1.05,
+      });
+    }
+  }
+  BORO_CACHE = { lots, blocks };
+  BORO_K = k;
+  return BORO_CACHE;
+}
+
+// Lots only — the shape placeCity expects.
+export function boroughLots(k = 1) { return boroughGrid(k).lots; }
+
+// The borough street grid — the same avenues-and-streets ribbons as the island, clipped to borough
+// land through the SAME boroughAt predicate so a street can't run over water or across a channel.
+export function boroughStreets(k = 1) {
+  const segs = [];
+  const perT = PERIOD_T / (AXIS.len * k);
+  const lotT = GRID.lotT / (AXIS.len * k);
+  const gapT = (GRID.street / 2) / (AXIS.len * k);
+  const uCols = Math.ceil(BOROUGH_U / PERIOD_U);
+  const trace = (pt, steps, step, kind, major = false) => {
+    let run = null;
+    const put = (x, z) => segs.push({ x1: run[0], z1: run[1], x2: x * k, z2: z * k, kind, major });
+    for (let i = 0; i <= steps; i++) {
+      const { x, z } = pt(i * step);
+      const on = !!boroughAt(x, z);
+      if (on && !run) run = [x * k, z * k];
+      else if (!on && run) { put(x, z); run = null; }
+    }
+    if (run) { const { x, z } = pt(steps * step); put(x, z); }
+  };
+  const t0 = BOROUGH_T[0], t1 = BOROUGH_T[1], span = t1 - t0;
+  // cross-streets: down the gap between block rows
+  for (let t = t0; t < t1; t += perT) {
+    const tt = t + GRID.blkT * lotT + gapT;
+    if (tt >= t1) break;
+    trace(uu => fromAxis(tt, (uu - BOROUGH_U) / k), 160, (BOROUGH_U * 2) / 160, "street");
+  }
+  // avenues: down the gap between block columns, walked across the whole borough t-range
+  for (let bu = -uCols; bu < uCols; bu++) {
+    const u = (bu + 0.5) * PERIOD_U;
+    if (Math.abs(u) > BOROUGH_U) continue;
+    trace(tt => fromAxis(t0 + tt * span, u / k), 300, 1 / 300, "avenue", isGrand(bu));
+  }
+  return segs;
+}
+
+// "Where do you live?" — answers for ANY address, holder or not: the neighbourhood is a property
+// of the address itself, so anyone can find their block.
+export function lookupHome(address) {
+  const a = String(address || "").trim().toLowerCase();
+  if (!/^0x[0-9a-f]{40}$/.test(a)) return null;
+  const hood = neighbourhoodFor(a, 0);
+  const lots = hoodLots(hood, 1);
+  const lot = lots.length ? lots[Math.floor(hash01(a) * lots.length) % lots.length] : fromAxis((hood.t0 + hood.t1) / 2, 0);
+  return { a, hood, x: lot.x, z: lot.z };
+}
+
+// ── open water ────────────────────────────────────────────────────────────────────────────────
+// ⚠ THE BOROUGH OUTLINES ARE ADMINISTRATIVE BOUNDARIES, NOT COASTLINES. In New York those run out
+// into open water by definition — Brooklyn's county line crosses the middle of the Upper Bay — so
+// drawing them as land pours concrete over the harbour and the island ends up sitting in a puddle
+// with a thin moat around it. This is the SAME trap already documented for Manhattan, where the
+// admin relation was swapped for the natural "Manhattan Island" feature; the boroughs were never
+// re-fetched.
+//
+// The proper fix is to re-fetch each borough's natural coastline. Overpass is unreachable from the
+// build sandbox (the network policy 504s it), so instead of inventing shorelines we paint the KNOWN
+// water bodies back on TOP of the boroughs, traced from real coordinates. Honest scope: these are
+// hand-entered and are SCENERY ONLY — no wallet is ever placed on or near them, and nothing is
+// measured from them. 🔲 Replace with real coastlines when OSM is reachable.
+//
+// ONLY the harbour is patched, deliberately. A first pass also blocked in the Lower Bay and Jamaica
+// Bay as rectangles, and they rendered as exactly that — hard straight edges across the sea, which
+// looked more wrong than the error they were fixing. The harbour survives because it is traced
+// along real shorelines on both banks and lands where the eye already expects water. Distance haze
+// handles everything further out, which is honest: it hides the far geography rather than
+// inventing it.
+//
+// Projection matches nyc-geo.js exactly: equirectangular about (40.7808, -73.9665), 1 unit = 100 m.
+const LAT0 = 40.7808, LON0 = -73.9665, M = 1113.2, LONS = Math.cos(LAT0 * Math.PI / 180) * M;
+const ll = ([lat, lon]) => [(lon - LON0) * LONS, (lat - LAT0) * M];
+// Exported so the infrastructure layer can place things at their REAL coordinates too.
+export const fromLatLon = (lat, lon) => { const [x, z] = ll([lat, lon]); return { x, z }; };
+
+export const WATER = [
+  {
+    id: "harbour", name: "The Hudson, the Upper Bay and the East River",
+    // Traced along the REAL shorelines on either side — the New Jersey waterfront from Weehawken
+    // down past Liberty State Park and Bayonne, across the Narrows, then back up Brooklyn's
+    // waterfront through Red Hook and DUMBO to Long Island City. Everything between is water that
+    // the borough boundaries claim as land.
+    //
+    // It deliberately runs UNDER Manhattan: the island is drawn after the water, so overlapping is
+    // free and the alternative — trying to trace the harbour's northern edge along the island's own
+    // coastline by hand — would introduce a seam that has to be maintained.
+    ring: [
+      [40.7520, -74.0270], [40.7520, -73.9560], [40.7350, -73.9590], [40.7200, -73.9670],
+      [40.7030, -73.9880], [40.6980, -73.9985], [40.6760, -74.0170], [40.6540, -74.0190],
+      [40.6330, -74.0270], [40.6050, -74.0330], [40.6080, -74.0580], [40.6420, -74.0760],
+      [40.6680, -74.0740], [40.6900, -74.0500], [40.7150, -74.0370], [40.7400, -74.0290],
+    ].map(ll),
+  },
+];
+
+// Backdrop geography (scenery only — no wallet is ever placed on it).
+export const BACKDROP = [
+  { id: "brooklyn", rings: NYC.brooklyn || [] },
+  { id: "queens", rings: NYC.queens || [] },
+  { id: "bronx", rings: NYC.bronx || [] },
+  { id: "jersey", rings: NYC.jersey || [] },
+];
+export const ISLETS = [{ id: "roosevelt", rings: NYC.roosevelt || [] }];
+export const ISLAND_RING = MANHATTAN;
+export const PARK_RINGS = PARK_RING ? [PARK_RING] : [];
+
+// ⭐ HOW WIDE A ROAD MAY BE DRAWN, derived from the gaps the lot grid actually leaves — never
+// hardcoded. A ribbon wider than its gap runs under the buildings either side, which is the exact
+// bug ("streets painted under the towers") that made the lots and the streets share one grid in the
+// first place. The fractions leave a visible kerb of bare block edge on both sides.
+export const ROAD_W = {
+  avenue: GRID.avenue * 0.74,   // ~1.55 — the long corridors
+  street: GRID.street * 0.72,   // ~0.86 — the cross-streets between them
+};
+
+// Is this block column one of the grand avenues? Shared by the grid and the medians so the two can
+// never disagree about which avenue is which.
+const isGrand = bu => ((bu % 3) + 3) % 3 === 0;
+
+// ⭐ THE PLANTED MEDIANS DOWN THE GRAND AVENUES — one planter per BLOCK, broken at every
+// cross-street, exactly as Park Avenue is. Drawn as ONE unbroken ribbon it was a continuous green
+// strip running the whole island, which read as a corridor of parkland rather than as a road, and
+// at a distance joined up with Central Park itself. Breaking it at the streets fixes the misread
+// and is what a median actually looks like.
+//
+// The block extents are computed HERE, in the same t-space the cross-streets come from, so the gaps
+// land on the intersections instead of drifting out of phase with them.
+export function avenueMedians(k = 1) {
+  const out = [];
+  const perT = PERIOD_T / (AXIS.len * k);
+  const blkTt = (GRID.blkT * GRID.lotT) / (AXIS.len * k);
+  const on = (x, z) => inManhattan(x, z) && !inPark(x, z);
+  for (let bu = -COLS; bu < COLS; bu++) {
+    if (!isGrand(bu)) continue;
+    const u = (bu + 0.5) * PERIOD_U;
+    for (let bi = 0; bi * perT < 1; bi++) {
+      const t0 = bi * perT, t1 = t0 + blkTt;
+      if (t1 >= 1) break;
+      const a = fromAxis(t0, u / k), b = fromAxis(t1, u / k);
+      // Both ends AND the middle, or a planter juts out over the water where the shore cuts across.
+      const mid = fromAxis((t0 + t1) / 2, u / k);
+      if (!on(a.x, a.z) || !on(b.x, b.z) || !on(mid.x, mid.z)) continue;
+      out.push({ x1: a.x * k, z1: a.z * k, x2: b.x * k, z2: b.z * k });
+    }
+  }
+  return out;
+}
+
+// Manhattan's street grid, clipped to the coastline — avenues along the island, streets across.
+//
+// ⭐ AVENUES AND STREETS ARE DIFFERENT ROADS, and the grid now says which is which. Every segment
+// used to come back in one undifferentiated bag and get drawn as the same hairline, so the island
+// read as graph paper — when the whole ground-level signature of Manhattan is that a dozen long
+// avenues run its full length and the cross-streets are minor beside them. Tagging here lets the
+// renderer give each its real width and markings without re-deriving the geometry.
+//
+// `major` marks every third avenue — the grand ones. They deliberately are NOT drawn wider: the lot
+// grid leaves one fixed gap, so extra width would pave over the buildings. They get a planted
+// median instead, which is what makes Park Avenue read as Park Avenue anyway.
+export function streetGrid(k = 1) {
+  const segs = [];
+  const halfW = 24;
+  const perT = PERIOD_T / (AXIS.len * k);
+  const lotT = GRID.lotT / (AXIS.len * k);
+  const gapT = (GRID.street / 2) / (AXIS.len * k);
+  // Trace a line only where it is actually on the island, so streets stop at the water rather than
+  // running out over it.
+  const trace = (pt, steps, step, kind, major = false) => {
+    let run = null;
+    const put = (x, z) => segs.push({ x1: run[0], z1: run[1], x2: x * k, z2: z * k, kind, major });
+    for (let i = 0; i <= steps; i++) {
+      const { x, z } = pt(i * step);
+      const on = inManhattan(x, z) && !inPark(x, z);
+      if (on && !run) run = [x * k, z * k];
+      else if (!on && run) { put(x, z); run = null; }
+    }
+    if (run) { const { x, z } = pt(steps * step); put(x, z); }
+  };
+  // cross-streets: down the middle of the gap between block rows
+  for (let bi = 0; bi * perT < 1; bi++) {
+    const t = bi * perT + GRID.blkT * lotT + gapT;
+    if (t >= 1) break;
+    trace(u => fromAxis(t, (u - halfW) / k), 120, halfW * 2 / 120, "street");
+  }
+  // avenues: down the middle of the gap between block columns
+  for (let bu = -COLS; bu < COLS; bu++) {
+    const u = (bu + 0.5) * PERIOD_U;
+    trace(t => fromAxis(t, u / k), 260, 1 / 260, "avenue", isGrand(bu));
+  }
+  return segs;
+}
+
+// ⭐ CROSSWALKS at the avenue/street intersections — the pale bands across the roadway that read as
+// a city seen from above once the eye is close enough to make out an intersection. One band per
+// crossing, spanning the AVENUE's width at the cross-street line, computed in the same t-space the
+// streets and medians come from so the bands land exactly on the intersections. Avenues only: the
+// cross-streets are too narrow at this scale for a second set to be anything but noise.
+export function crosswalks(k = 1) {
+  const out = [];
+  const perT = PERIOD_T / (AXIS.len * k);
+  const lotT = GRID.lotT / (AXIS.len * k);
+  const gapT = (GRID.street / 2) / (AXIS.len * k);
+  const halfU = ROAD_W.avenue / 2;
+  const on = (x, z) => inManhattan(x, z) && !inPark(x, z);
+  for (let bu = -COLS; bu < COLS; bu++) {
+    const u = (bu + 0.5) * PERIOD_U;
+    for (let bi = 0; bi * perT < 1; bi++) {
+      const t = bi * perT + GRID.blkT * lotT + gapT;
+      if (t >= 1) break;
+      const mid = fromAxis(t, u / k);
+      if (!on(mid.x, mid.z)) continue;               // off the island, or in the park — no crossing
+      const a = fromAxis(t, (u - halfU) / k), b = fromAxis(t, (u + halfU) / k);
+      out.push({ x1: a.x * k, z1: a.z * k, x2: b.x * k, z2: b.z * k });
+    }
+  }
+  return out;
+}
+
+// ⭐ CENTRAL PARK'S INTERIOR. The park is the single largest unbroken surface in the city — it fills
+// a huge share of every wide shot — and it was ONE flat green polygon, which is the first thing that
+// reads as unfinished from above. These are the features a person actually recognises Manhattan by
+// after the coastline: the Reservoir (the big water oval), the Great Lawn, the Lake, the Pond, and
+// the transverse roads that cut across.
+//
+// Everything is built from the DRAWN park's own axis-space bounding box, so it can only ever land
+// inside the green — the park is aligned to the grid bearing (that alignment is why the bearing is
+// measured from the park in the first place), so in axis space it is very nearly a rectangle, and a
+// fraction (fL along its length from the south end, fW across its width) maps cleanly onto it.
+//
+// Positions are the real ones as fractions of the park: 59th St is fL 0, 110th St is fL 1. The
+// Reservoir sits ~86th–96th, the Great Lawn ~79th–85th, the Lake ~71st–74th, the transverses at
+// 65/79/86/97. Rings come back in the SAME world coordinates as PARK_RING, so they render through
+// the exact `flat()` path that draws the park and cannot drift from it.
+export function parkFeatures() {
+  if (!PARK_RING) return { water: [], lawn: [], roads: [] };
+  let tlo = Infinity, thi = -Infinity, ulo = Infinity, uhi = -Infinity;
+  for (const [x, z] of PARK_RING) {
+    const { t, u } = toAxis(x, z);
+    if (t < tlo) tlo = t; if (t > thi) thi = t;
+    if (u < ulo) ulo = u; if (u > uhi) uhi = u;
+  }
+  const dt = thi - tlo, du = uhi - ulo;
+  const T = fL => tlo + fL * dt, U = fW => ulo + fW * du;
+  // An oval feature: centre at park-fraction (fL, fW), radii as fractions of the park's own length
+  // and width, sampled into a world-coordinate ring. A gentle per-point wobble keeps the water from
+  // reading as a machined ellipse.
+  const oval = (fL, fW, rL, rW, n = 30, wob = 0.12) => {
+    const ring = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const r = 1 + Math.sin(a * 3 + fL * 9) * wob;
+      const { x, z } = fromAxis(T(fL) + Math.cos(a) * rL * dt * r, U(fW) + Math.sin(a) * rW * du * r);
+      ring.push([x, z]);
+    }
+    return ring;
+  };
+  // A transverse road: a thin band across the whole width at a length-fraction, as a 4-point ring.
+  const cross = (fL, halfL = 0.006, inset = 0.04) => {
+    const c = [[fL - halfL, inset], [fL - halfL, 1 - inset], [fL + halfL, 1 - inset], [fL + halfL, inset]];
+    return c.map(([l, w]) => { const { x, z } = fromAxis(T(l), U(w)); return [x, z]; });
+  };
+  return {
+    water: [
+      oval(0.63, 0.50, 0.11, 0.34, 34, 0.05),   // the Reservoir — the one everyone knows
+      oval(0.325, 0.40, 0.05, 0.22, 24, 0.22),  // the Lake
+      oval(0.09, 0.80, 0.035, 0.12, 18, 0.28),  // the Pond, south-east corner
+    ],
+    lawn: [
+      oval(0.45, 0.50, 0.065, 0.26, 26, 0.06),  // the Great Lawn
+      oval(0.20, 0.55, 0.05, 0.28, 22, 0.16),   // Sheep Meadow / the southern lawns
+    ],
+    roads: [cross(0.13), cross(0.39), cross(0.53), cross(0.75)],
+  };
+}
+
+// ⭐ THE WATERFRONT PIERS. Manhattan's edge is famously serrated — the finger piers of the Hudson
+// and East River are as much of its outline from above as the street grid is — and ours was a
+// perfectly smooth coastline, which is the tell that the shape is traced rather than lived on.
+//
+// A pier is a flat deck reaching out from the shore into open water. They go along the long river
+// shores only (an edge running roughly parallel to the island's axis), never around the tips, and
+// every one is checked to make sure its far end lands in WATER — the Harlem River and the East River
+// above Long Island City are narrow enough that a pier there would drive into Brooklyn or the Bronx,
+// exactly the trap the borough lot-grid hit. Decks come back as world-coordinate rings and render
+// through the same flat() path as the shoreline, so they sit on the water at any city scale.
+export function waterfrontPiers() {
+  const R = MANHATTAN;
+  let cx = 0, cz = 0;
+  for (const [x, z] of R) { cx += x; cz += z; }
+  cx /= R.length; cz /= R.length;
+  const ax = AXIS.ax, az = AXIS.az;
+  const boroughs = [NYC.brooklyn, NYC.queens, NYC.bronx, NYC.jersey].filter(Boolean).map(b => b[0]);
+  // Open water = off the island AND not inside a borough. Both shores are checked so a pier can't
+  // reach across a narrow channel onto land.
+  const inWater = (x, z) => !pointInRing(x, z, R) && !boroughs.some(b => pointInRing(x, z, b));
+  const piers = [];
+  let acc = 0;
+  const GAP = 3.4;                                   // arc-length between piers along the shore
+  for (let i = 0; i < R.length; i++) {
+    const a = R[i], b = R[(i + 1) % R.length];
+    const dx = b[0] - a[0], dz = b[1] - a[1], L = Math.hypot(dx, dz);
+    acc += L;
+    if (acc < GAP || L < 1e-6) continue;
+    const ux = dx / L, uz = dz / L;                  // along the shore
+    if (Math.abs(ux * ax + uz * az) < 0.55) continue; // a tip or a corner — not a river shore
+    // outward normal, pointing away from the island's centre
+    let nx = -uz, nz = ux;
+    if ((a[0] - cx) * nx + (a[1] - cz) * nz < 0) { nx = -nx; nz = -nz; }
+    const len = 1.5 + hash01(`pier${i}`) * 1.5, hw = (0.5 + hash01(`pw${i}`) * 0.45) / 2;
+    const bx = a[0] - nx * 0.25, bz = a[1] - nz * 0.25;         // start a touch inland to meet the shore
+    const p1 = [bx + ux * hw, bz + uz * hw], p2 = [bx - ux * hw, bz - uz * hw];
+    const p3 = [bx - ux * hw + nx * len, bz - uz * hw + nz * len], p4 = [bx + ux * hw + nx * len, bz + uz * hw + nz * len];
+    // The far end must land in OPEN water — both outer corners, not just the centreline, or a
+    // concave stretch of coast lets one corner curve back onto land while the middle clears.
+    if (!inWater(p3[0], p3[1]) || !inWater(p4[0], p4[1]) || !inWater((p3[0] + p4[0]) / 2, (p3[1] + p4[1]) / 2)) continue;
+    acc = 0;
+    piers.push([p1, p2, p3, p4]);
+  }
+  return piers;
+}
