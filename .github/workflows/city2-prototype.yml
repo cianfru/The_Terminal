@@ -1,0 +1,34 @@
+name: City 2.0 prototype
+
+# Standalone CI for the SPX City 2.0 review prototype (prototypes/spx-city-2.0).
+# Runs ONLY when the prototype changes, in its OWN workflow, so a break in the
+# prototype can never turn the main CI (ci.yml) red or block the production pipeline.
+on:
+  push:
+    branches: [main]
+    paths: ["prototypes/spx-city-2.0/**"]
+  pull_request:
+    paths: ["prototypes/spx-city-2.0/**"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: city2-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: prototypes/spx-city-2.0
+
+jobs:
+  prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci
+      - name: Test
+        run: npm test
+      - name: Build
+        run: npm run build
