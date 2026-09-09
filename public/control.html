@@ -1952,7 +1952,8 @@ async function engAnalyze(contentText, overviewText) {
   html += kpi(likeRate.toFixed(1) + "%", "median like-rate · X norm ~1%", "good");
   if (bmk1k != null) html += kpi(bmk1k.toFixed(1), "bookmarks ‰ · private intent", "good");
   html += kpi(nfmt(dVis), "profile visits");
-  if (haveFollows) html += kpi(nfmt(totFollows), "new follows · culturally capped", "muted");
+  // (removed the standalone "new follows · culturally capped" KPI — it read as a stuck total;
+  //  the 📈 Followers over time section below now owns follows, with your real running total.)
   html += `</div>`;
 
   // The follow funnel: reach → likes → profile visits → (follows). The visit→follow "leak" only shows
