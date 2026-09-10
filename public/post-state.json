@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-09",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-10",
+  "lastId": "urpdage",
   "recent": [
-    {
-      "date": "2026-07-25",
-      "id": "concentration"
-    },
     {
       "date": "2026-07-26",
       "id": "walletgrowth"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-08",
       "id": "freefloat"
+    },
+    {
+      "date": "2026-09-10",
+      "id": "urpdage"
     }
   ],
   "lanes": {
