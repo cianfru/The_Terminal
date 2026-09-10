@@ -1,5 +1,5 @@
 {
- "checked": "2026-09-09",
+ "checked": "2026-09-10",
  "ok": 39,
  "warn": 0,
  "fail": 4,
@@ -7,17 +7,17 @@
  "priceGaps": [
   {
    "label": "onchain.json spot",
-   "date": "2026-09-08",
-   "value": 0.529549,
-   "live": 0.529549,
+   "date": "2026-09-09",
+   "value": 0.530535,
+   "live": 0.530535,
    "gapPct": 0,
    "stale": false
   },
   {
    "label": "city-history.json price",
-   "date": "2026-09-08",
-   "value": 0.529549,
-   "live": 0.529549,
+   "date": "2026-09-09",
+   "value": 0.530535,
+   "live": 0.530535,
    "gapPct": 0,
    "stale": false
   }
@@ -30,7 +30,7 @@
    "status": "fail",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": [
     "upnl: stopped arriving",
     "rpnl: stopped arriving",
@@ -45,7 +45,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": []
   },
   {
@@ -55,7 +55,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": []
   },
   {
@@ -65,7 +65,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": []
   },
   {
@@ -75,7 +75,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": []
   },
   {
@@ -85,7 +85,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -95,7 +95,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -105,7 +105,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -115,7 +115,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -125,7 +125,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": [
     "no rows"
    ]
@@ -137,7 +137,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -147,7 +147,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 2,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": [
     "no rows"
    ]
@@ -159,7 +159,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -169,7 +169,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -179,7 +179,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-09-09",
+   "date": "2026-09-10",
    "notes": []
   },
   {
@@ -189,7 +189,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -197,7 +197,7 @@
    "by": "btc-mvrv.yml",
    "what": "Bitcoin's MVRV, for the comparison chart",
    "status": "ok",
-   "age": 9,
+   "age": 10,
    "cadence": 40,
    "date": "2026-08-31",
    "notes": []
@@ -209,7 +209,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -219,7 +219,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -229,7 +229,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -239,7 +239,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -247,9 +247,9 @@
    "by": "aeon.yml",
    "what": "AEON marketplace trades",
    "status": "ok",
-   "age": 3,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-09-06",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -259,7 +259,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -269,7 +269,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -279,7 +279,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -289,7 +289,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -299,7 +299,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -309,7 +309,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -319,7 +319,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -329,7 +329,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -339,7 +339,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -349,7 +349,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -359,7 +359,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -369,7 +369,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -379,7 +379,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -389,7 +389,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -397,9 +397,9 @@
    "by": "aeon.yml",
    "what": "AEON per-wallet realized P&L",
    "status": "ok",
-   "age": 3,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-09-06",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -409,7 +409,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -417,7 +417,7 @@
    "by": "aeon.yml (once)",
    "what": "AEON trait rarity (static once built)",
    "status": "ok",
-   "age": 47,
+   "age": 48,
    "cadence": 400,
    "date": "2026-07-24",
    "notes": []
@@ -429,7 +429,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": [
     "sales: empty (allowed, but worth knowing)"
    ]
@@ -439,9 +439,9 @@
    "by": "aeon.yml",
    "what": "AEON sales pull heartbeat (newest sales DATA date — the one feed still on Dune)",
    "status": "ok",
-   "age": 3,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-09-06",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -451,7 +451,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-09-08",
+   "date": "2026-09-09",
    "notes": []
   },
   {
@@ -459,11 +459,11 @@
    "by": "onchain-dune.yml (step)",
    "what": "whale-cohort move candidates",
    "status": "fail",
-   "age": 45,
+   "age": 46,
    "cadence": 9,
    "date": "2026-07-26",
    "notes": [
-    "45d old, cadence allows 9d",
+    "46d old, cadence allows 9d",
     "signals: empty (allowed, but worth knowing)"
    ]
   }
