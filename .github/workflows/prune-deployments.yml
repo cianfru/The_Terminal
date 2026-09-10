@@ -1,0 +1,41 @@
+name: Prune Vercel deployments
+
+# Stops Vercel function/deployment storage from accumulating. Every deployment retains its ~12
+# serverless-function bundles (~35 MB) forever unless deleted, and this repo deploys ~5×/day from
+# crons plus code pushes — so retained bundles hit the Hobby ceiling (10 GB) and Vercel blocks new
+# deployments. Hobby has no retention policy, so this runs scripts/prune-vercel-deployments.mjs
+# daily: keeps the live production deployment (+ anything aliased or in flight) and the newest
+# PRUNE_KEEP as rollback candidates, deletes the rest. Storage stays bounded at ~a week of deploys.
+
+on:
+  schedule:
+    - cron: "15 15 * * *" # ~15:15 UTC daily — after the last cron deploy (aeon backstop 13:37)
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List what would be removed without deleting (1 = dry run)"
+        default: "0"
+      keep:
+        description: "How many newest deployments to keep as rollback candidates"
+        default: "6"
+
+concurrency:
+  group: vercel-prune
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Prune old deployments
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || '0' }}
+          PRUNE_KEEP: ${{ github.event.inputs.keep || '6' }}
+        run: node scripts/prune-vercel-deployments.mjs
