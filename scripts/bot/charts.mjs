@@ -34,6 +34,7 @@ import { renderAltOscCard } from "./alt-osc-card.mjs";
 import { renderFreeFloatCard } from "./free-float-card.mjs";
 import { renderNuplCard } from "./nupl-card.mjs";
 import { renderConcentrationCard } from "./concentration-card.mjs";
+import { renderGiniDustCard } from "./gini-dust-card.mjs";
 import { renderHodlWavesCard } from "./hodl-waves-card.mjs";
 import { renderValuationBandCard } from "./valuation-band-card.mjs";
 import { renderWalletGrowthCard } from "./wallet-growth-card.mjs";
@@ -916,7 +917,7 @@ export const CARD_TYPES = new Set([
   "rainbow", "channel", "riskcolor", "risklevels", "riskheat", "runningroi", "longshort",
   "firesalerally", "underwater", "goldencross", "holdergrowth", "multichain", "chainrace",
   "holderspair", "mvrvbtc", "mvrvtrend", "supplyprofit", "floormodel", "altmarket",
-  "freefloat", "nupl", "concentration", "hodlwaves", "hodlcompare", "urpd", "bagsprofile", "urpdage",
+  "freefloat", "nupl", "concentration", "ginidust", "hodlwaves", "hodlcompare", "urpd", "bagsprofile", "urpdage",
   "lthsth", "sopr", "nrpl", "liveliness", "valband", "walletgrowth", "picycle", "spxbitcoin", "spxcohort", "costbasis",
   "cexsupply", "cexflow", "cexvenues", "cexvenflow", "cexsankey", "whalethennow", "whaleentry", "whales", "walletwaves", "wealthwaves", "survivorship", "supplyera", "exitmap", "smartmoney",
   "cyclesync", "cycleclock", "rsidots", "monthcompare", "ethsol", "chainconc", "illiquid", "baltier", "dualholders", "basesurv", "supplycurve", "whalecensus", "whalebehaviour", "whalemosaic", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover",
@@ -982,6 +983,7 @@ export function renderPostCard(post, stats, opts = {}) {
   if (type === "freefloat") return renderFreeFloatCard(stats, dims);
   if (type === "nupl") return renderNuplCard(stats, dims);
   if (type === "concentration") return renderConcentrationCard(stats, dims);
+  if (type === "ginidust") return renderGiniDustCard(stats, dims);
   if (type === "hodlwaves") return renderHodlWavesCard(stats, dims);
   if (type === "urpd") return renderUrpdCard(stats, dims);
   if (type === "bagsprofile") return renderCostBasisProfileCard(stats, dims);

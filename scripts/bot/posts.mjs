@@ -1396,6 +1396,26 @@ Decentralising, on-chain.`,
     };
   })(),
 
+  // "Why the Gini says 0.97" — the counterintuitive companion to the concentration card.
+  // Gini ROSE while real concentration FELL, because Gini is dominated by the dust tail:
+  // the holder base exploded and ~60% of wallets hold under $100, so every new small
+  // holder pushes Gini toward 1 even as the whales' grip loosens. This is exactly why the
+  // concentration chart publishes top-N share and leaves Gini off. A teaching/methodology
+  // post (NO_ROTATE, hand-postable) and the honest answer to "0.97 = whales own it all".
+  s => (s.onchain?.length >= 50) && (() => {
+    const o = s.onchain, cur = o.at(-1), first = o[0];
+    if (!Number.isFinite(cur?.gini) || !Number.isFinite(first?.gini)) return false;
+    const dust = Array.isArray(cur.wealth) && cur.holders > 0
+      ? (cur.wealth[0] / cur.holders) * 100 : null;
+    return {
+      id: "ginidust",
+      text: ct`SPX6900's Gini coefficient is ${cur.gini.toFixed(2)} — a number that usually screams "whales own everything."
+Here's why it misleads. Since launch: Gini ${first.gini.toFixed(2)} → ${cur.gini.toFixed(2)} (more unequal), top 100 wallets ${first.top100.toFixed(1)}% → ${cur.top100.toFixed(1)}% of supply (less concentrated), holders ${first.holders.toLocaleString()} → ${cur.holders.toLocaleString()}. Both moved, in opposite directions. Gini measures spread across every wallet, and ${dust != null ? dust.toFixed(0) + "% of wallets hold under $100" : "most wallets hold dust"} — every new small holder pushes Gini up even as real concentration falls. So we publish top-10 and top-100 share instead: ${cur.top10.toFixed(1)}% and ${cur.top100.toFixed(1)}%, excluding exchanges, LP and the bridge.
+A high Gini here is adoption, not capture.`,
+      card: { type: "ginidust" },
+    };
+  })(),
+
   // HODL waves — supply by holding age over time (Dune). The classic maturation
   // story: 100% fresh at launch → a third now in the longest-held (1y+) tier. A
   // holding-behaviour / conviction read, NOT a signal.
@@ -2492,7 +2512,7 @@ const weightOf = id => WEIGHT[id] ?? (BULLISH.has(id) ? 2 : 1);
 // marketcap ("real free-float cap / thin float") is RETIRED — its premise is false: SPX is a
 // fair launch with no lockup, so free float is ~88% (not thin). The honest story is
 // illiquid/liquid supply (the reframed freefloat card), so marketcap is out of the feed.
-const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
+const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
 
 // LONG-FORM cards — the few methodology / teaching posts that genuinely run long. HISTORY: these
 // once opted past a 290 "instant-read" cap. That cap was REMOVED (owner, 2026-08) — the account is
@@ -2557,7 +2577,7 @@ const LOOK = {
   whatnext: "race",
   // — Tier B: flavourful / distinct looks (used to break up the green lines) —
   riskcolor: "colorline", risklevels: "colorline", rsidots: "colorline",
-  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
+  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
   firesalerally: "fanlines",
   model: "scatter",
   monthlyreturns: "heatmap", monthlyreturnssp: "heatmap", monthlyreturnsbtc: "heatmap",
