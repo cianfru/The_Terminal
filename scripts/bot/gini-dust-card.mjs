@@ -41,6 +41,10 @@ export function giniDustSvg(stats, opts = {}) {
   const W = opts.W ?? 1200, H = opts.H ?? 630, sq = H >= W * 0.9;
   const mL = 96, mR = 104, mT = sq ? 232 : 156, mB = sq ? 124 : 92;
   const pW = W - mL - mR, pH = H - mT - mB;
+  // On the square card the plot splits into two panels: the divergence on top, and a
+  // schematic of the balance distribution beneath it (the MECHANISM behind the divergence).
+  // The wide card has no room for two, so it keeps the single chart.
+  const twoPanel = sq, hA = twoPanel ? 448 : pH, yA1 = mT + hA;
   const fTitle = sq ? 44 : 36, fHero = sq ? 31 : 26, fSub = sq ? 24 : 21;
   const yTitle = sq ? 80 : 56, yHero = sq ? 136 : 100, ySub = sq ? 178 : 130;
   const fTick = sq ? 24 : 22, fEnd = sq ? 25 : 22, fNote = sq ? 29 : 24, fNote2 = sq ? 22 : 19, fFoot = sq ? 20 : 18;
@@ -48,13 +52,13 @@ export function giniDustSvg(stats, opts = {}) {
   const t0 = first.ts, t1 = cur.ts;
   const x = t => mL + ((t - t0) / ((t1 - t0) || 1)) * pW;
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const yG = v => mT + (1 - (clamp(v, G_LO, G_HI) - G_LO) / (G_HI - G_LO)) * pH;
-  const yC = v => mT + (1 - (clamp(v, C_LO, C_HI) - C_LO) / (C_HI - C_LO)) * pH;
+  const yG = v => mT + (1 - (clamp(v, G_LO, G_HI) - G_LO) / (G_HI - G_LO)) * hA;
+  const yC = v => mT + (1 - (clamp(v, C_LO, C_HI) - C_LO) / (C_HI - C_LO)) * hA;
 
   // Five shared gridlines — left labelled in Gini, right in top-100 %.
   let grid = "";
   for (let i = 0; i < 5; i++) {
-    const f = i / 4, yy = (mT + (1 - f) * pH).toFixed(1);
+    const f = i / 4, yy = (mT + (1 - f) * hA).toFixed(1);
     const gv = (G_LO + f * (G_HI - G_LO)).toFixed(2);
     const cv = Math.round(C_LO + f * (C_HI - C_LO));
     grid += `<line x1="${mL}" y1="${yy}" x2="${W - mR}" y2="${yy}" stroke="rgba(255,255,255,0.12)"/>`
@@ -64,7 +68,7 @@ export function giniDustSvg(stats, opts = {}) {
   let xlab = "";
   for (let yr = new Date(t0).getUTCFullYear(); yr <= new Date(t1).getUTCFullYear(); yr++) {
     const t = Date.UTC(yr, 0, 1); if (t < t0 || t > t1) continue;
-    xlab += `<text x="${x(t).toFixed(1)}" y="${yX}" fill="#94a3b8" font-size="${fTick}" text-anchor="middle" font-family="sans-serif">${yr}</text>`;
+    xlab += `<text x="${x(t).toFixed(1)}" y="${twoPanel ? (yA1 + 34).toFixed(1) : yX}" fill="#94a3b8" font-size="${fTick}" text-anchor="middle" font-family="sans-serif">${yr}</text>`;
   }
 
   const lineG = raw.map(r => `${x(r.ts).toFixed(1)},${yG(r.g).toFixed(1)}`).join(" ");
@@ -83,6 +87,29 @@ export function giniDustSvg(stats, opts = {}) {
     ? `${dustPct.toFixed(0)}% of wallets hold under $100`
     : `most wallets hold a dust-sized balance`;
 
+  // PANEL B — a deliberately SCHEMATIC picture of why the number is what it is: a handful of
+  // whales on the left, then ~44k wallets flattening into a carpet of dust on the right. The
+  // shape is illustrative (a true power law on a linear axis is an unreadable spike plus a flat
+  // line), so it is labelled as such and the REAL figures are printed beneath it.
+  let panelB = "";
+  if (twoPanel) {
+    const yB0 = yA1 + 118, hB = 258, yB1 = yB0 + hB, nB = 72, bw = pW / nB;
+    let bars = "";
+    for (let i = 0; i < nB; i++) {
+      const f = i / (nB - 1);
+      const h = Math.max(3, hB * (Math.exp(-4.6 * f) * 0.985 + 0.015));
+      const bx = mL + i * bw;
+      bars += `<rect x="${(bx + bw * 0.12).toFixed(1)}" y="${(yB1 - h).toFixed(1)}" width="${(bw * 0.76).toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="url(#gdBars)"/>`;
+    }
+    const dustN = (lastRow?.holders && Array.isArray(lastRow.wealth)) ? lastRow.wealth[0] : null;
+    panelB = `<text x="60" y="${(yB0 - 30).toFixed(1)}" fill="#e2e8f0" font-size="26" font-weight="800" font-family="sans-serif">Why it reads that high — every wallet, largest to smallest</text>`
+      + `<line x1="${mL}" y1="${yB1.toFixed(1)}" x2="${(W - mR).toFixed(1)}" y2="${yB1.toFixed(1)}" stroke="rgba(255,255,255,0.18)"/>`
+      + bars
+      + `<text x="${(mL + bw * 4).toFixed(1)}" y="${(yB0 + 40).toFixed(1)}" fill="${GINI}" font-size="23" font-weight="800" font-family="sans-serif">← a few whales</text>`
+      + `<text x="${(mL + pW * 0.42).toFixed(1)}" y="${(yB1 - 48).toFixed(1)}" fill="${CONC}" font-size="23" font-weight="800" font-family="sans-serif">${esc(dustN ? `${dustN.toLocaleString()} wallets holding dust →` : "tens of thousands holding dust →")}</text>`
+      + `<text x="60" y="${(yB1 + 40).toFixed(1)}" fill="#94a3b8" font-size="20" font-family="sans-serif">${esc("illustrative shape, not to scale — the real drop-off is far steeper")}</text>`;
+  }
+
   const hero = `Gini rose ${first.g.toFixed(2)} → ${cur.g.toFixed(2)} while the top 100 fell ${first.c.toFixed(0)}% → ${cur.c.toFixed(0)}%`;
   const sub = dustPct != null
     ? `Gini counts every wallet — and ${dustPct.toFixed(0)}% of them hold under $100`
@@ -93,6 +120,7 @@ export function giniDustSvg(stats, opts = {}) {
 <linearGradient id="gdbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#151033"/><stop offset="55%" stop-color="#0d0b1e"/><stop offset="100%" stop-color="#07060f"/></linearGradient>
 <radialGradient id="gdRose" cx="80%" cy="20%" r="66%"><stop offset="0%" stop-color="${GINI}" stop-opacity="0.18"/><stop offset="100%" stop-color="${GINI}" stop-opacity="0"/></radialGradient>
 <radialGradient id="gdCyan" cx="22%" cy="84%" r="66%"><stop offset="0%" stop-color="${CONC}" stop-opacity="0.16"/><stop offset="100%" stop-color="${CONC}" stop-opacity="0"/></radialGradient>
+<linearGradient id="gdBars" gradientUnits="userSpaceOnUse" x1="${mL}" y1="0" x2="${mL + pW}" y2="0"><stop offset="0%" stop-color="${GINI}"/><stop offset="100%" stop-color="${CONC}"/></linearGradient>
 </defs>
 <rect width="${W}" height="${H}" fill="url(#gdbg)"/>
 <rect width="${W}" height="${H}" fill="url(#gdRose)"/>
@@ -112,6 +140,7 @@ ${grid}${xlab}
 <text x="${(x(cur.ts) - 14).toFixed(1)}" y="${(yC(cur.c) + 34).toFixed(1)}" fill="${CONC}" font-size="${fEnd}" font-weight="800" text-anchor="end" font-family="sans-serif">TOP 100 · ${cur.c.toFixed(0)}%</text>
 <text x="${(x(first.ts) + 12).toFixed(1)}" y="${(yG(first.g) + 32).toFixed(1)}" fill="${GINI}" font-size="20" font-weight="700" text-anchor="start" font-family="sans-serif">${first.g.toFixed(2)}</text>
 <text x="${(x(first.ts) + 12).toFixed(1)}" y="${(yC(first.c) - 16).toFixed(1)}" fill="${CONC}" font-size="20" font-weight="700" text-anchor="start" font-family="sans-serif">${first.c.toFixed(0)}%</text>
+${panelB}
 <text x="60" y="${yFoot}" fill="#8592a6" font-size="${fFoot}" font-family="sans-serif">${esc("spx6900rainbow.xyz · not financial advice · ETH-native · exchanges, LP & bridge excluded")}</text>
 </svg>`;
 }
