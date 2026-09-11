@@ -251,3 +251,47 @@ test("390px: the insight line answers the chart before the plot does", async () 
   assert.ok(ins.abovePlot, "sits above the plot");
   await ctx.close();
 });
+
+test("390px: a chart page stays inside its layout-shift budget", async () => {
+  // Measured 0.171 before reserving the lazy chart's height — the pager jumped ~700px on mount.
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.addInitScript(() => {
+    window.__cls = 0;
+    new PerformanceObserver(l => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; })
+      .observe({ type: "layout-shift", buffered: true });
+  });
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  await page.waitForTimeout(2500);
+  const cls = await page.evaluate(() => window.__cls);
+  assert.ok(cls <= 0.1, `CLS within budget (got ${cls.toFixed(3)})`);
+  await ctx.close();
+});
+
+test("390px: the gallery mounts no chart chunks and fetches each feed once", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  const urls = [];
+  page.on("request", r => urls.push(r.url()));
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(2500);
+  // ChartsGallery is the PAGE's own chunk — legitimate. What must not appear is a per-chart
+  // component chunk, which would mean a tile mounted a real chart.
+  const chartChunks = urls.filter(u => /\/assets\/[A-Za-z]*Chart[A-Za-z]*-/.test(u) && !u.includes("ChartsGallery"));
+  assert.deepEqual(chartChunks.map(u => u.split("/").pop()), [], "no per-chart chunk is fetched for a tile");
+  await ctx.close();
+});
+
+test("390px: a chart page downloads each data feed exactly once", async () => {
+  // onchain.json was pulled twice — once by the chart, once by the freshness tag — at 249KB a copy.
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  const feeds = [];
+  page.on("request", r => { const u = r.url(); if (/\.json(\?|$)/.test(u) && !u.includes("version")) feeds.push(u.split("/").pop().split("?")[0]); });
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  await page.waitForTimeout(2000);
+  const dupes = feeds.filter((f, i) => feeds.indexOf(f) !== i);
+  assert.deepEqual([...new Set(dupes)], [], `no feed is fetched twice (saw ${JSON.stringify(feeds)})`);
+  await ctx.close();
+});

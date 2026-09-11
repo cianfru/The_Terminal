@@ -12,6 +12,7 @@ import { placeCity, cityScale, CITY_LENGTH, ISLAND_RING, PARK_RINGS, BACKDROP, I
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { chainOf } from "./city-messages.js";
 import { makeDrs } from "./city-drs.js";
+import { readQuality, qualityRatios } from "./city-quality.js";
 import { recordCanvas } from "./canvas-record.js";
 import { TIMES, FAMILIES, skyEnv, facadeTexture, facadeAlbedo, wallGeometry, roofGeometry, archetype, heightOf, waterMaterials,
          berthGeometry, bridgeGeometry, monumentGeometry } from "./city-render.js";
@@ -1236,7 +1237,9 @@ export default function Skyline3D({
     // it cannot be exercised live in the dev sandbox (headless rAF ~0.7Hz, frames slower than the
     // tab-switch cutoff), which let two earlier in-page versions sit silently dead. CSS2D labels
     // are DOM and untouched — text stays sharp at any render scale.
-    const MAXR = Math.min(devicePixelRatio, 2), MINR = Math.max(0.55, MAXR * 0.4);
+    // Ceiling comes from the visitor's explicit Battery saver / Full detail choice; DRS still
+    // adapts within it (src/city-quality.js).
+    const { maxRatio: MAXR, minRatio: MINR } = qualityRatios(readQuality(isMobile), devicePixelRatio);
     const sizeNow = () => recordDims || [cine ? window.innerWidth : el.clientWidth,
       cine ? window.innerHeight : (viewHRef.current || VH)];
     const drs = makeDrs({

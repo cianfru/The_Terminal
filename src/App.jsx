@@ -1527,7 +1527,7 @@ export default function App() {
           )}
           <ChartFreshness chartId={tab} />
           <ErrorBoundary key={tab}>
-          <Suspense fallback={<div style={{ textAlign: "center", fontFamily: "var(--mono)", color: "var(--faint)", padding: 40 }}>loading chart…</div>}>
+          <Suspense fallback={<div style={{ minHeight: isMobile ? 620 : 760, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", color: "var(--faint)" }}>loading chart…</div>}>
             {chartEl(tab)}
           </Suspense>
           </ErrorBoundary>

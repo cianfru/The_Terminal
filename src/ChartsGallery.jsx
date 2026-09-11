@@ -42,7 +42,7 @@ export function LivePreview({ render }) {
     if (!el) return;
     const ro = new ResizeObserver(() => { if (el.clientWidth) setScale(el.clientWidth / BASE_W); });
     ro.observe(el);
-    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setShow(true); io.disconnect(); } }, { rootMargin: "500px" });
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setShow(true); io.disconnect(); } }, { rootMargin: "200px" });
     io.observe(el);
     return () => { ro.disconnect(); io.disconnect(); };
   }, []);
@@ -60,6 +60,25 @@ export function LivePreview({ render }) {
           </ErrorBoundary>
         </div>
       )}
+    </div>
+  );
+}
+
+// PHONE TILES DON'T MOUNT CHARTS. A real chart scaled from 1180px into a ~358px tile renders its
+// labels at roughly 3px — unreadable — while costing a recharts mount, its lazy chunk and its data
+// on the slowest devices we serve. So on mobile the preview is a cheap painted band in the chart's
+// own colour: same tile shape and colour language, no chart, no chunk. The real chart mounts when
+// the tile is opened. (Desktop keeps the live preview, where it is both legible and affordable.)
+function QuietPreview({ color, height = 132 }) {
+  return (
+    <div aria-hidden="true" style={{
+      height, position: "relative", overflow: "hidden",
+      background: `linear-gradient(155deg, ${color}26, ${color}0d 58%, transparent)`,
+      borderBottom: `1px solid ${color}2e`,
+    }}>
+      <svg viewBox="0 0 120 60" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.5 }}>
+        <path d="M0 46 L18 38 L32 42 L48 24 L64 30 L80 14 L98 20 L120 6" fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      </svg>
     </div>
   );
 }
@@ -95,7 +114,7 @@ function DripCover({ color, mode }) {
   );
 }
 
-function Tile({ item, color, onOpen, renderPreview, released, me }) {
+function Tile({ item, color, onOpen, renderPreview, released, me, isMobile }) {
   const [hover, setHover] = useState(false);
   // Deep Field members chart? Owner + released-chart members see the live preview; everyone else on a
   // drip chart sees the release-aware cover (under construction, or members / log in).
@@ -121,9 +140,9 @@ function Tile({ item, color, onOpen, renderPreview, released, me }) {
         transition: "transform .14s, box-shadow .14s, border-color .14s",
       }}
     >
-      {showLive
-        ? <LivePreview render={() => renderPreview(item.id)} />
-        : <DripCover color={color} mode={coverMode} />}
+      {!showLive ? <DripCover color={color} mode={coverMode} />
+        : isMobile ? <QuietPreview color={color} />
+          : <LivePreview render={() => renderPreview(item.id)} />}
       <div style={{ padding: "12px 14px 14px", borderTop: `1px solid ${color}2e` }}>
         <div style={{
           fontFamily: MONO, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase",
@@ -279,7 +298,7 @@ export default function ChartsGallery({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${isMobile ? 300 : 372}px), 1fr))`, gap: isMobile ? 12 : 15 }}>
             {group.charts.map(item => (
-              <Tile key={item.id} item={item} color={gc} onOpen={onOpen} renderPreview={renderPreview} released={released} me={me} />
+              <Tile key={item.id} item={item} color={gc} onOpen={onOpen} renderPreview={renderPreview} released={released} me={me} isMobile={isMobile} />
             ))}
           </div>
         </div>

@@ -15,7 +15,7 @@ import crypto from "node:crypto";
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const SALT = process.env.INTEL_SALT || "spx6900-intel";
-const TYPES = new Set(["pageview", "wallet_search", "city_open", "chart_open", "click"]);
+const TYPES = new Set(["pageview", "wallet_search", "city_open", "chart_open", "click", "vitals"]);
 const CAP = 50000, WCAP = 20000;
 // DoS guards on the UNAUTHENTICATED ingest beacon: a per-source rate cap (bounds how fast any one
 // IP can write) + a cardinality cap on the free-form hashes (path/ref/chart are attacker-controlled,
@@ -128,6 +128,14 @@ async function ingest(req, res, body) {
   }
   if (t === "wallet_search" && ev.wallet) { cmds.push(["LPUSH", "intel:wallets", json], ["LTRIM", "intel:wallets", "0", String(WCAP - 1)]); }
   if (t === "chart_open" && ev.chart && hcharts < FIELD_CAP) cmds.push(["HINCRBY", "intel:charts", ev.chart, "1"]);
+  // Core Web Vitals, counted per metric PER DEVICE ("lcp:m:good"), so mobile and desktop are read
+  // separately — a combined p75 hides the phone problem behind desktop's numbers.
+  if (t === "vitals") {
+    const dev = ev.device || "?";
+    for (const [k, r] of [["lcp", body.lcpb], ["cls", body.clsb], ["inp", body.inpb]]) {
+      if (r === "good" || r === "ni" || r === "poor") cmds.push(["HINCRBY", "intel:vitals", `${k}:${dev}:${r}`, "1"]);
+    }
+  }
 
   try { await kvPipeline(cmds); } catch { /* swallow — analytics must never break the page */ }
   res.status(204).end();

@@ -16,7 +16,7 @@ import { CITY_KEY } from "./city-gate-key.js";
 // preview panel (not the tweet card). Built from the real catalog so every leaf
 // carries a live chart id and drives the app's own routing. Scoped under .tzone.
 
-const LOGO = "/logo_rainbow.png";
+const LOGO = "/logo_rainbow_128.png";   // 34px display, 3x DPR — the 1408px master was 217KB
 const X_URL = "https://x.com/SPX6900Rainbow";
 const KRAKEN_URL = "https://proinvite.kraken.com/9f1e/8985jw0l";
 
