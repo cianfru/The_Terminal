@@ -177,7 +177,7 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
   .tzone .tbar .siclink svg{ width:19px; height:19px; }
   .tzone .tbar .siclink.krk svg{ width:22px; height:22px; }
   .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:none; margin-left:8px;
-    border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+    border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
   .tzone .tmobtog svg{ width:22px; height:22px; }
   /* NB: the sticky sub-page nav has backdrop-filter, which makes it the containing block for
      position:fixed descendants — so inset:0 would fill the 51px bar, not the screen. The nav is
@@ -188,7 +188,7 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 }
 .tzone .tmobhead{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--line); flex:none; }
 .tzone .tmobtitle{ font-family:var(--mono); text-transform:uppercase; letter-spacing:.18em; font-size:13px; color:var(--dim); }
-.tzone .tmobclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+.tzone .tmobclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
 .tzone .tmobclose svg{ width:22px; height:22px; }
 .tzone .tmobbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:48px; }
 .tzone .tmob-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; cursor:pointer;
@@ -418,11 +418,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
 /* base tile: squared terminal panel, thin border, group-colour edge, lights up on press */
 .tzone .tsbtile{ position:relative; display:flex; flex-direction:column; text-align:left; cursor:pointer; overflow:hidden;
-  border:1px solid var(--line2); border-radius:11px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line2); border-radius:0; background:linear-gradient(180deg,var(--panel),var(--panel2));
   color:var(--tx); transition:transform .08s ease, border-color .12s; padding:0; }
 .tzone .tsbtile:active{ transform:scale(.975); border-color:var(--tc); }
 .tzone .tsbtile .tsbedge{ position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc); }
-.tzone .tsbtile .tsbnm{ font-family:var(--sans); font-weight:700; letter-spacing:-.01em; line-height:1.15; color:var(--tx); }
+.tzone .tsbtile .tsbnm{ font-family:var(--mono); font-weight:700; letter-spacing:.05em; text-transform:uppercase; line-height:1.15; color:var(--tx); }
 /* NAV tiles (sections / groups) */
 .tzone .tsbnav{ padding:15px 15px 14px 17px; min-height:118px; }
 .tzone .tsbnav .tsbhd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
@@ -502,7 +502,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell .tsbcellbg svg{ width:100%; height:100%; display:block; }
 .tzone .tsbcell .tsbcellico{ position:absolute; top:16px; left:17px; width:32px; height:32px; color:var(--tc); }
 .tzone .tsbcell .tsbcellico svg{ width:100%; height:100%; }
-.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--sans); font-weight:800; font-size:19px; letter-spacing:-.015em; line-height:1.05; color:var(--tx); }
+/* The launcher speaks the SAME language as the website's menu bar (.mtop > .mhead): mono,
+   uppercase, letterspaced — not the bold sans it used, which belonged to headlines. */
+.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--mono); font-weight:700; font-size:16px;
+  letter-spacing:.05em; text-transform:uppercase; line-height:1.1; color:var(--tx); }
+@media(max-width:380px){ .tzone .tsbcell .tsbcellnm{ font-size:14.5px; letter-spacing:.03em; } }
 .tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
 .tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
 
@@ -571,7 +575,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbsearch{ position:relative; display:flex; align-items:center; margin:0 0 10px; }
 .tzone .tsbsearchico{ position:absolute; left:13px; width:18px; height:18px; color:var(--dim); pointer-events:none; }
 .tzone .tsbsearchin{ width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--line2); border-radius:0;
-  background:var(--panel); color:var(--tx); font-family:var(--sans); font-size:16px; /* 16px: iOS zooms the page on focus below that */ }
+  background:var(--panel); color:var(--tx); font-family:var(--mono); font-size:16px; letter-spacing:.02em; /* 16px: iOS zooms the page on focus below that */ }
 .tzone .tsbsearchin::placeholder{ color:var(--dim); }
 .tzone .tsbsearchin:focus{ outline:none; border-color:var(--live); }
 .tzone .tsbsearchin::-webkit-search-cancel-button{ display:none; }
@@ -580,7 +584,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbchips{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin:0 -14px 14px; padding:0 14px 2px; }
 .tzone .tsbchips::-webkit-scrollbar{ display:none; }
 .tzone .tsbchip{ flex:none; min-height:40px; padding:0 15px; border:1px solid var(--line2); border-radius:0; background:var(--panel);
-  color:var(--tx); font-family:var(--sans); font-size:14.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  color:var(--tx); font-family:var(--mono); font-size:13.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
 .tzone .tsbchip.on{ border-color:var(--live); color:var(--live); background:color-mix(in srgb, var(--live) 12%, var(--panel)); }
 
 .tzone .tsbresh{ font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin:2px 0 10px; }
@@ -591,9 +595,9 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbrowmain{ flex:1; min-width:0; display:flex; align-items:center; gap:12px; min-height:56px; padding:9px 4px 9px 0;
   background:none; border:none; text-align:left; cursor:pointer; color:var(--tx); }
 .tzone .tsbrowmain:active{ background:var(--panel); }
-.tzone .tsbrowedge{ flex:none; width:3px; align-self:stretch; margin:6px 11px 6px 0; border-radius:2px; background:var(--tc,var(--live)); }
+.tzone .tsbrowedge{ flex:none; width:3px; align-self:stretch; margin:6px 11px 6px 0; border-radius:0; background:var(--tc,var(--live)); }
 .tzone .tsbrowtx{ display:flex; flex-direction:column; gap:3px; min-width:0; }
-.tzone .tsbrownm{ font-family:var(--sans); font-size:15.5px; font-weight:650; color:var(--tx); line-height:1.25; }
+.tzone .tsbrownm{ font-family:var(--mono); font-size:15px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--tx); line-height:1.25; }
 .tzone .tsbrowsub{ font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tzone .tsbstar{ flex:none; width:48px; min-height:48px; align-self:center; border:none; background:none; cursor:pointer; color:var(--dim); font-size:20px; line-height:1; }
 .tzone .tsbstar.on{ color:#fbbf24; }
@@ -617,7 +621,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .tzone .tsbdocki.dfauth img{ width:100%; height:100%; object-fit:cover; display:block; }
 .tzone .tsbdockout{ font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:none; border:1px solid var(--line2); border-radius:0; height:48px; padding:0 14px; cursor:pointer; }
-.tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:16px; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
+.tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:0; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
 .tzone .tsbdf:active{ transform:scale(.985); border-color:var(--live); }
 .tzone .tsbdf .tsbdftx{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
 .tzone .tsbdf .tsbdftx b{ font-family:var(--sans); font-weight:800; font-size:16px; letter-spacing:-.01em; color:var(--live); }

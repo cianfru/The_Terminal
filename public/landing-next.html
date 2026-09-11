@@ -453,14 +453,14 @@
     .bar .social .siclink.dfauth{ width:44px; height:44px; }   /* ≥44px tap target */
     .bar .social .siclink.dfauth svg{ width:19px; height:19px; }
     .mobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; margin-left:8px; flex:none;
-      border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+      border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
     .mobtog svg{ width:22px; height:22px; }
     .mobmenu{ display:flex; flex-direction:column; position:fixed; inset:0; z-index:200; background:var(--bg);
       transform:translateX(100%); transition:transform .22s ease; }
     .mobmenu.open{ transform:none; }
     .mmhead{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--line); flex:none; }
     .mmtitle{ font-family:var(--label); text-transform:uppercase; letter-spacing:.18em; font-size:13px; color:var(--dim); }
-    .mmclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+    .mmclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
     .mmclose svg{ width:22px; height:22px; }
     .mmbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:48px; }
     .mmitem{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; cursor:pointer;
@@ -492,17 +492,17 @@
   .sbtop .sbtitle{ position:absolute; left:0; right:0; top:calc(env(safe-area-inset-top,0px) + 12px); height:44px; line-height:44px; padding:0 62px; text-align:center; pointer-events:none;
     font-family:var(--label); text-transform:uppercase; letter-spacing:.14em; font-size:17px; font-weight:800; color:var(--tx);
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .sbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:11px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; box-shadow:0 3px 10px -5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
+  .sbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; box-shadow:0 3px 10px -5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
   .sbbtn svg{ width:22px; height:22px; }
   .sbbtn[hidden]{ visibility:hidden; }
   #sbclose{ margin-left:auto; }   /* pin close to the right (title is absolutely centred, out of flow) */
   .sbbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 40px); }
   .sbgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:13px; }
-  .sbtile{ display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:16px 15px; min-height:118px; border:1px solid var(--line2); border-radius:18px; background:linear-gradient(180deg,var(--panel),var(--panel2)); color:var(--tx); cursor:pointer; text-align:left; position:relative; overflow:hidden; transition:transform .08s ease, border-color .12s; }
+  .sbtile{ display:flex; flex-direction:column; align-items:flex-start; gap:7px; padding:16px 15px; min-height:118px; border:1px solid var(--line2); border-radius:0; background:linear-gradient(180deg,var(--panel),var(--panel2)); color:var(--tx); cursor:pointer; text-align:left; position:relative; overflow:hidden; transition:transform .08s ease, border-color .12s; }
   .sbtile:active{ transform:scale(.965); border-color:var(--tc); }
   .sbtile .sbico{ width:30px; height:30px; color:var(--tc); display:inline-flex; }
   .sbtile .sbico svg{ width:100%; height:100%; }
-  .sbtile .sbnm{ font-family:var(--sans); font-weight:700; font-size:15.5px; letter-spacing:-.01em; line-height:1.15; }
+  .sbtile .sbnm{ font-family:var(--label); font-weight:700; font-size:15.5px; letter-spacing:-.01em; line-height:1.15;  letter-spacing:.05em; text-transform:uppercase; }
   .sbtile .sbsub{ font-family:var(--label); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); margin-top:auto; }
   .sbtile .sbdot{ width:15px; height:15px; border-radius:6px; background:var(--tc);  }
   .sbtile .sbgo{ position:absolute; top:14px; right:14px; color:var(--faint); font-size:15px; }
@@ -535,7 +535,7 @@
   .sbdock::before{ content:""; position:absolute; left:0; right:0; top:-2.5px; height:2.5px; pointer-events:none;
     background:linear-gradient(90deg,var(--b0),var(--b1),var(--b2),var(--b3),var(--b4),var(--b5),var(--b6),var(--b7),var(--b8));
     filter:drop-shadow(0 -1px 6px color-mix(in srgb, var(--b4) 55%, transparent)); }
-  .sbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:13px; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; transition:border-color .14s, color .14s, box-shadow .14s; box-shadow:0 3px 10px -5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
+  .sbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; transition:border-color .14s, color .14s, box-shadow .14s; box-shadow:0 3px 10px -5px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
   .sbdocki:hover, .sbdocki:active{ border-color:var(--faint); box-shadow:0 5px 14px -5px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12); }
   .sbdocki svg{ width:23px; height:23px; fill:currentColor; }
   .sbdocki.krk{ border-color:color-mix(in srgb,#9d5cf8 42%, var(--line2)); } .sbdocki.krk svg{ fill:#9d5cf8; }
@@ -556,26 +556,34 @@
   .sbbody .sbgrid > *:nth-child(n+9){ animation-delay:.235s }
   @media(prefers-reduced-motion:reduce){ .sb.open, .sbbody.sb-fwd .sbtile, .sbbody.sb-fwd .sbcell, .sbbody.sb-back .sbtile, .sbbody.sb-back .sbcell{ animation:none; } }
   /* fullscreen 2×2 quadrant launcher for the top-level sections view (matches the React app) */
-  .sbbody:has(.sbgrid.sections){ display:flex; flex-direction:column; overflow:hidden; padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px); }
-  .sbgrid.sections{ flex:1; min-height:0; grid-template-rows:1fr 1fr; gap:12px; }
+  /* This launcher has no search or rails above the grid, so the six tiles share the screen
+     instead of leaving a dead band under them. grid-auto-rows:1fr keeps all THREE rows equal —
+     the old rule hardcoded two rows, which squashed the third and ran the icon into the title. */
+  .sbbody:has(.sbgrid.sections){ display:flex; flex-direction:column; overflow-y:auto; padding:16px 14px calc(env(safe-area-inset-bottom,0px) + 16px); }
+  .sbgrid.sections{ flex:1; min-height:0; grid-auto-rows:1fr; gap:10px; }
+  .sbgrid.sections .sbcell{ min-height:112px; }
   /* Deep Field door — the members strip under the launcher grid (green accent = the members area) */
-  .sbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:15px 17px; border:1.5px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:18px; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 22%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left;
+  .sbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:15px 17px; border:1.5px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:0; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 22%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left;
     box-shadow:0 12px 30px -12px color-mix(in srgb, var(--live) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.12); transition:transform .1s ease, border-color .12s; }
   .sbdf:active{ transform:scale(.985); border-color:var(--live); }
   .sbdf .sbdftx{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
   .sbdf .sbdftx b{ font-family:var(--sans); font-weight:800; font-size:17px; letter-spacing:-.01em; color:var(--live); }
   .sbdf .sbdftx span{ font-family:var(--label); font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); }
   .sbdf .sbdfarr{ flex:none; color:var(--live); font-size:19px; line-height:1; }
-  .sbcell{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:5px; padding:18px; min-height:0; border:1.5px solid color-mix(in srgb, var(--tc) 48%, var(--line2)); border-radius:20px; background:linear-gradient(150deg, color-mix(in srgb, var(--tc) 30%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s, box-shadow .12s;
+  .sbcell{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:5px; padding:15px 14px 14px; min-height:0; border:1.5px solid color-mix(in srgb, var(--tc) 48%, var(--line2)); border-radius:0; background:linear-gradient(150deg, color-mix(in srgb, var(--tc) 30%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s, box-shadow .12s;
     box-shadow:0 12px 30px -12px color-mix(in srgb, var(--tc) 45%, transparent), inset 0 1px 0 rgba(255,255,255,.12); }
   :root[data-theme="light"] .sbcell{ box-shadow:0 12px 26px -12px color-mix(in srgb, var(--tc) 40%, transparent), inset 0 1px 0 rgba(255,255,255,.75); }
   .sbcell:active{ transform:scale(.97); border-color:var(--tc); box-shadow:0 6px 20px -8px color-mix(in srgb, var(--tc) 60%, transparent), inset 0 1px 0 rgba(255,255,255,.14); }
+  .sbcell::after{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--tc); }
+  .sbcell::before{ content:""; position:absolute; left:0; right:0; bottom:0; height:62%; z-index:1;
+    background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--panel2) 88%, transparent) 62%, var(--panel2) 100%); }
+  .sbcell .sbcellnm, .sbcell .sbcellsub, .sbcell .sbcellarrow{ position:relative; z-index:2; }
   .sbcell .sbcellbg{ position:absolute; left:0; right:0; bottom:0; height:64%; opacity:.22; color:var(--tc); pointer-events:none; }
   .sbcell .sbcellbg svg{ width:100%; height:100%; display:block; }
   /* section icon: full group colour, crisp (no glow — glow read blurry) */
-  .sbcell .sbcellico{ position:absolute; top:15px; left:16px; width:37px; height:37px; color:var(--tc); }
+  .sbcell .sbcellico{ position:absolute; top:13px; left:14px; width:30px; height:30px; color:var(--tc); z-index:2; }
   .sbcell .sbcellico svg{ width:100%; height:100%; }
-  .sbcell .sbcellnm{ position:relative; font-family:var(--sans); font-weight:800; font-size:19px; letter-spacing:-.01em; line-height:1.05; }
+  .sbcell .sbcellnm{ position:relative; font-family:var(--label); font-weight:700; font-size:16px; letter-spacing:.05em; text-transform:uppercase; line-height:1.1; color:var(--tx); }
   .sbcell .sbcellsub{ position:relative; font-family:var(--label); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
   .sbcell .sbcellarrow{ position:absolute; top:15px; right:16px; color:var(--tc); font-size:18px; line-height:1; opacity:.95; }
   .kpi{ background:var(--panel); padding:13px 15px 14px; display:flex; flex-direction:column; gap:3px; min-width:0; }
@@ -939,7 +947,7 @@
     CHARTS:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
     SPX_CITY:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="10" width="3.2" height="10" rx="1"/><rect x="10.4" y="5" width="3.2" height="15" rx="1"/><rect x="16.8" y="12" width="3.2" height="8" rx="1"/></svg>',
     PROJECT_AEON:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z"/><path d="M12 22V12"/><path d="M4 7l8 5 8-5"/></svg>' };
-  const NAV_DISP={ CHARTS:'Charts', SPX_CITY:'City', PROJECT_AEON:'Project Aeon' };
+  const NAV_DISP={ CHARTS:'Charts', SPX_CITY:'SPX City', PROJECT_AEON:'Project Aeon' };
   const RAINBOW_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16a9 9 0 0 1 18 0"/><path d="M6 16a6 6 0 0 1 12 0"/><path d="M9 16a3 3 0 0 1 6 0"/></svg>';
   // ── mega-menu placeholder previews (real gallery renders come in the React port; here: deterministic sparklines) ──
   const _hash=s=>{ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619);} return h>>>0; };
@@ -1374,11 +1382,15 @@
     const secTile=(v,name,sub,icon,col,act)=>`<button class="sbtile sbsec" style="--tc:${col}" data-act="${act}" data-v="${esc(v)}"><span class="sbico">${icon}</span><span class="sbnm">${esc(name)}</span><span class="sbsub">${esc(sub)}</span>${CHEV}</button>`;
     // fullscreen 2×2 quadrant launcher (matches the React app) — each section a rich, motif-backed tile
     const SB_MOTIF={
+      deepfield:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="currentColor"><circle cx="22" cy="20" r="2.6"/><circle cx="52" cy="12" r="1.7"/><circle cx="86" cy="24" r="3.2"/><circle cx="104" cy="48" r="1.8"/><circle cx="34" cy="52" r="3.6"/><circle cx="66" cy="44" r="2.2"/><circle cx="14" cy="68" r="2"/><circle cx="92" cy="70" r="2.6"/><circle cx="58" cy="70" r="1.6"/></svg>',
+      manual:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="10" y="24" width="44" height="5"/><rect x="10" y="38" width="44" height="5"/><rect x="10" y="52" width="30" height="5"/><rect x="66" y="24" width="44" height="5"/><rect x="66" y="38" width="36" height="5"/><rect x="66" y="52" width="44" height="5"/></svg>',
       rainbow:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="none" stroke="currentColor"><path d="M-6 78a66 66 0 0 1 132 0" stroke-width="7"/><path d="M12 78a48 48 0 0 1 96 0" stroke-width="7"/><path d="M30 78a30 30 0 0 1 60 0" stroke-width="7"/><path d="M48 78a12 12 0 0 1 24 0" stroke-width="7"/></svg>',
       CHARTS:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="6" y="46" width="12" height="34" rx="2"/><rect x="26" y="30" width="12" height="50" rx="2"/><rect x="46" y="52" width="12" height="28" rx="2"/><rect x="66" y="20" width="12" height="60" rx="2"/><rect x="86" y="38" width="12" height="42" rx="2"/><rect x="106" y="10" width="12" height="70" rx="2"/></svg>',
       SPX_CITY:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36"/><rect x="24" y="28" width="16" height="52"/><rect x="44" y="52" width="14" height="28"/><rect x="62" y="18" width="18" height="62"/><rect x="84" y="38" width="14" height="42"/><rect x="102" y="26" width="16" height="54"/></svg>',
       PROJECT_AEON:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"><path d="M60 8 96 28v34L60 82 24 62V28z"/><path d="M60 82V44M24 28l36 16 36-16"/></svg>',
     };
+    const DF_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/><path d="M11 8v6M8 11h6"/></svg>';
+    const MANUAL_ICON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5z"/></svg>';
     const secQuad=(v,id,name,sub,icon,col,act)=>`<button class="sbcell" style="--tc:${col}" data-act="${act}" data-v="${esc(v)}"><span class="sbcellbg">${SB_MOTIF[id]||''}</span><span class="sbcellico">${icon}</span><span class="sbcellnm">${esc(name)}</span><span class="sbcellsub">${esc(sub)}</span><span class="sbcellarrow">&rarr;</span></button>`;
     // faint single-colour background drawing per group (like the top-level cards), keyed by group title
     const GRP_MOTIF={
@@ -1405,11 +1417,15 @@
     const el=()=>document.getElementById('sb'), body=()=>document.getElementById('sbbody');
     function render(view,dir){ const b=body(); if(!b) return; let title='Explore', tiles='', foot='';
       if(view.t==='sections'){ title='Explore';
+        // SIX equal tiles in a 2x3 grid, matching the in-app launcher exactly. This used to be four
+        // quads plus a full-width Deep Field strip, which read as lopsided; Deep Field is a peer
+        // tile now and the Manual closes the grid. Hues are spread so no two neighbours share one.
+        const SEC_COL={ CHARTS:'#fbbf24', SPX_CITY:'#38bdf8', PROJECT_AEON:'#f87171' };
         tiles+=secQuad('/?view=rainbow','rainbow','Rainbow','the foundation chart',RAINBOW_ICON,'#a78bfa','nav');
         NAV.forEach((sec,i)=>{ const sub=sec.groups.length>1 ? sec.groups.length+' groups · '+chartCount(sec)+' charts' : chartCount(sec)+' charts';
-          tiles+=secQuad(sec.label, sec.label, NAV_DISP[sec.label]||sec.label, sub, NAV_ICON[sec.label]||'', GCOL[i%GCOL.length], 'sec'); });
-        // Deep Field door — a full-width members strip under the launcher (routes to /deepfield, which self-gates)
-        foot=`<button class="sbdf" data-act="nav" data-v="/deepfield"><span class="sbdftx"><b>Deep Field</b><span>members · the on-chain deep layer</span></span><span class="sbdfarr">→</span></button>`;
+          tiles+=secQuad(sec.label, sec.label, NAV_DISP[sec.label]||sec.label, sub, NAV_ICON[sec.label]||'', SEC_COL[sec.label]||GCOL[i%GCOL.length], 'sec'); });
+        tiles+=secQuad('/deepfield','deepfield','Deep Field','members · the deep layer',DF_ICON,'#4ee79a','nav');
+        tiles+=secQuad('/?view=docs','manual','Manual','how to read it all',MANUAL_ICON,'#e879f9','nav');
       } else if(view.t==='groups'){ const sec=NAV.find(s=>s.label===view.sec); title=NAV_DISP[sec.label]||sec.label;
         sec.groups.forEach((g,i)=>{ tiles+=grpTile(sec.label, g.g, g.items.length+' charts', GCOL[i%GCOL.length]); });
       } else if(view.t==='charts'){ const sec=NAV.find(s=>s.label===view.sec), g=sec.groups.find(x=>x.g===view.grp); title=view.grp;

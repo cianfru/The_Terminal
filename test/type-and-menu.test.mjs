@@ -97,3 +97,45 @@ test("the launcher is square-cornered throughout, like the rest of the site", ()
   const tile = css.indexOf(".tzone .tsbcell{");
   assert.ok(css.slice(tile, css.indexOf("}", tile)).includes("border-radius:0"), "tiles are square");
 });
+
+test("BOTH mobile launchers are the same six tiles — the landing has its own", () => {
+  // The landing ships a second, independent springboard in vanilla JS. It was still on the old
+  // four-quads-plus-strip layout, so someone arriving from X saw the menu the app no longer has.
+  const landing = read("public/landing-next.html");
+  assert.ok(landing.includes("secQuad('/deepfield','deepfield'"), "Deep Field is a peer tile");
+  assert.ok(landing.includes("secQuad('/?view=docs','manual'"), "the Manual closes the grid");
+  assert.ok(!/foot=`<button class="sbdf"/.test(landing), "the full-width strip is gone");
+  assert.ok(landing.includes("grid-auto-rows:1fr"), "all three rows are equal");
+  assert.ok(!/grid-template-rows:1fr 1fr/.test(landing), "no hardcoded two-row grid to squash the third");
+});
+
+test("both launchers speak the website menu's type: mono, uppercase, letterspaced", () => {
+  // The reference is .tzone .mtop > .mhead — the desktop menu bar.
+  const css = read("src/terminal.css");
+  const menu = css.match(/\.tzone \.mtop > \.mhead\{[^}]*\}/)[0];
+  assert.match(menu, /font-family:var\(--mono\)/);
+  assert.match(menu, /text-transform:uppercase/);
+  for (const sel of ["tsbcellnm", "tsbrownm"]) {
+    const at = css.indexOf(`.tzone .tsbcell .${sel}{`) > -1 ? css.indexOf(`.tzone .tsbcell .${sel}{`) : css.indexOf(`.tzone .${sel}{`);
+    const block = css.slice(at, css.indexOf("}", at));
+    assert.match(block, /font-family:var\(--mono\)/, `${sel} uses the menu face`);
+    assert.match(block, /text-transform:uppercase/, `${sel} is uppercase`);
+  }
+  const landing = read("public/landing-next.html");
+  const tile = landing.match(/\.sbcellnm\{[^}]*\}/)[0];
+  assert.match(tile, /font-family:var\(--label\)/, "landing tiles use the menu face too");
+  assert.match(tile, /text-transform:uppercase/);
+});
+
+test("nothing in either mobile menu is still rounded", () => {
+  const css = read("src/terminal.css"), landing = read("public/landing-next.html");
+  const square = (src, sel, label) => {
+    const at = src.indexOf(sel);
+    assert.ok(at > -1, `${label} exists`);
+    const block = src.slice(at, src.indexOf("}", at));
+    const m = block.match(/border-radius:([^;]*)/);
+    if (m) assert.equal(m[1].trim(), "0", `${label} is square (found ${m[1]})`);
+  };
+  for (const sel of [".tzone .tmobtog{", ".tzone .tmobclose{", ".tzone .tsbtile{", ".tzone .tsbrowedge{"]) square(css, sel, sel);
+  for (const sel of [".mobtog{", ".mmclose{", ".sbbtn{", ".sbtile{", ".sbdocki{", ".sbcell{"]) square(landing, sel, "landing " + sel);
+});
