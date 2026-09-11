@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 
 // Drag-to-zoom state machine for Recharts: press-drag-release selects an x-window.
+// MOUSE ONLY, on purpose. The chart page binds a horizontal flick to the chart-to-chart pager
+// (App.jsx onTEnd), so wiring a touch drag here would make one swipe both flip the chart and draw
+// a selection. Phones zoom through the fullscreen viewer's pinch instead (FullscreenView.jsx).
 // `canZoom(a, b)` is the chart-specific guard (typically "≥2 data points inside")
 // so a too-narrow selection can't produce an empty view. Spread the handlers onto
 // the chart (`onMouseDown={onDown}` etc.) and render the selection rectangle

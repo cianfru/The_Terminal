@@ -62,7 +62,7 @@ export default function RiskColorChart({ series, m, isMobile }) {
 
       <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
         <ComposedChart data={rows} margin={{ top: 10, right: isMobile ? 14 : 32, bottom: 24, left: isMobile ? 0 : 12 }}
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
           <defs>
             <linearGradient id="zgrad" x1="0" y1="0" x2="1" y2="0">
               {stops.map((s, i) => <stop key={i} offset={s.off} stopColor={s.color} />)}

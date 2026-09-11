@@ -447,8 +447,12 @@
   @media(max-width:760px){
     .menu{ display:none; }                         /* the hover cascade is desktop-only */
     .bar .sys{ display:none; }                      /* free room in the bar for the toggle */
-    .bar .social{ display:none; }                   /* login/X/Kraken/theme live in the springboard dock on phones */
-    .mobtog{ display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; margin-left:8px; flex:none;
+    /* the bar carries brand + ONE account chip + ONE ☰ Explore button; theme, X and Kraken are
+       secondary and live in the springboard's utility dock (.sbdock) */
+    .bar .social .siclink:not(.dfauth){ display:none; }
+    .bar .social .siclink.dfauth{ width:44px; height:44px; }   /* ≥44px tap target */
+    .bar .social .siclink.dfauth svg{ width:19px; height:19px; }
+    .mobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; margin-left:8px; flex:none;
       border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
     .mobtog svg{ width:22px; height:22px; }
     .mobmenu{ display:flex; flex-direction:column; position:fixed; inset:0; z-index:200; background:var(--bg);
@@ -456,7 +460,7 @@
     .mobmenu.open{ transform:none; }
     .mmhead{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--line); flex:none; }
     .mmtitle{ font-family:var(--label); text-transform:uppercase; letter-spacing:.18em; font-size:13px; color:var(--dim); }
-    .mmclose{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+    .mmclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
     .mmclose svg{ width:22px; height:22px; }
     .mmbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:48px; }
     .mmitem{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; cursor:pointer;
@@ -723,7 +727,7 @@
         <a class="siclink" href="https://x.com/SPX6900Rainbow" target="_blank" rel="noopener noreferrer" title="@SPX6900Rainbow on X" aria-label="SPX6900Rainbow on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
         <a class="siclink krk" href="https://proinvite.kraken.com/9f1e/8985jw0l" target="_blank" rel="noopener noreferrer sponsored" title="Trade on Kraken — affiliate" aria-label="Trade on Kraken (affiliate)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z"/></svg></a>
       </span>
-      <button class="mobtog" id="mobtog" aria-label="Open charts" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
+      <button class="mobtog" id="mobtog" aria-label="Explore charts" title="Explore" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></button>
     </span>
   </div>
 
@@ -764,9 +768,9 @@
       <div class="cta">
         <!-- desktop: the classic button; mobile: the slide-to-open control (toggled by breakpoint in CSS) -->
         <span class="btn pri" id="ctaChart" role="button" tabindex="0"><span class="btw">&gt; <span class="lbl" data-t="explore charts">explore charts</span><span class="cur">_</span></span></span>
-        <div class="slidecta" id="slideCharts" role="button" tabindex="0" aria-label="Open charts">
+        <div class="slidecta" id="slideCharts" role="button" tabindex="0" aria-label="Open charts — tap anywhere, or slide">
           <span class="slidefill" id="slideFill"></span>
-          <span class="slidelbl" id="slideLbl">slide to open charts</span>
+          <span class="slidelbl" id="slideLbl">tap to open charts</span>
           <span class="slideknob" id="slideKnob"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h13M13 6l6 6-6 6"/></svg></span>
         </div>
       </div>

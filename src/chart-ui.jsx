@@ -136,7 +136,7 @@ export function ZoomResetButton({ onReset, accent = "#38bdf8", fontSize = 12, pa
 // The status row above a zoomable chart: hint text + reset button when zoomed.
 export function ZoomBar({ zoomed, onReset, accent = "#38bdf8", viewing = "Viewing a selected window." }) {
   const coarse = useCoarsePointer();
-  const hint = coarse ? "Swipe sideways across the chart to zoom into a period." : "Drag across the chart to zoom into any period.";
+  const hint = coarse ? "Tap Fullscreen, then pinch to zoom into a period." : "Drag across the chart to zoom into any period.";
   return (
     <div className="chart-zoombar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 10 }}>
       <span style={{ fontFamily: SANS, fontSize: 13, color: "var(--ch-dim,#8b96a8)" }}>{zoomed ? viewing : hint}</span>

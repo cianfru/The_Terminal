@@ -1009,6 +1009,9 @@ export default function App() {
   // shell: near-black ground, Geist type, the DOS cascade nav. Home + the iframe landing
   // keep their own chrome untouched.
   const isSub = ["gallery", "chart", "aeon", "city", "docs", "rainbow", "terminal", "wallet", "cluster"].includes(route);
+  // the full-bleed landing iframe paints over the React shell — everything beneath it must be inert
+  // (no tab stops, no screen-reader duplicates of the nav) while it is on screen.
+  const landingCovers = route === "next" || (route === "home" && HOME_IS_LANDING);
 
   return (
     <div className={isSub ? "tzone" : undefined} style={{
@@ -1060,7 +1063,7 @@ export default function App() {
           <TerminalNav onHome={goHome} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={id => chartEl(id, { preview: true })} asOf={last?.date} me={me} onDeepField={openDeepField} />
         </nav>
       ) : (
-      <nav ref={navRef} style={{
+      <nav ref={navRef} inert={landingCovers || undefined} aria-hidden={landingCovers || undefined} style={{
         position: "sticky", top: 0, zIndex: 50, width: "100%",
         background: "rgba(6, 8, 18, 0.35)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
       }}>
@@ -1168,8 +1171,8 @@ export default function App() {
       {route === "city" && (
         <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading the city…</div>}>
           <div ref={cityFsRef} style={{ position: "relative" }}>
-            {!isMobile && <MenuBtn className="cityfsbtn" onClick={enterCityFullscreen} title="Fullscreen"
-              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H4v4M16 3h4v4M8 21H4v-4M16 21h4v-4" /></svg>} />}
+            <MenuBtn className="cityfsbtn" onClick={enterCityFullscreen} title="Fullscreen"
+              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H4v4M16 3h4v4M8 21H4v-4M16 21h4v-4" /></svg>} />
 
             <SpxCity isMobile={isMobile} initialMode={cityMode} />
           </div>
@@ -1341,7 +1344,7 @@ export default function App() {
         >
         <ResponsiveContainer width="100%" height={isMobile ? 440 : isTablet ? 580 : 720}>
           <ComposedChart data={vdata} margin={{ top: 10, right: isMobile ? 64 : 130, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ userSelect: "none", touchAction: "pan-y" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} style={{ userSelect: "none", touchAction: "pan-y" }}>
             {/* invisible tooltip — the custom crosshair does the visible readout, but recharts needs an
                 active tooltip to expose activeLabel to the drag-zoom handlers. */}
             <Tooltip content={() => null} cursor={false} isAnimationActive={false} />
@@ -1491,10 +1494,10 @@ export default function App() {
             <MenuBtn onClick={back} title={`Back to ${label}`}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>} />
             <span style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--tx)" }}>{grp}<span className="tgcur" style={{ "--curc": gcol }}>_</span></span>
-            {!isMobile && <MenuBtn onClick={() => setFsOpen(true)}
-              title="Open a full-screen chart" label="Fullscreen" style={{ marginLeft: "auto" }}
-              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>} />}
-            <MenuBtn onClick={shareChart} title="Share this chart" label={copied ? "Copied" : "Share"} className={copied ? "copied" : ""} style={isMobile ? { marginLeft: "auto" } : undefined}
+            <MenuBtn onClick={() => setFsOpen(true)}
+              title="Open a full-screen chart" label={isMobile ? "" : "Fullscreen"} style={{ marginLeft: "auto" }}
+              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>} />
+            <MenuBtn onClick={shareChart} title="Share this chart" label={copied ? "Copied" : "Share"} className={copied ? "copied" : ""}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.6" y1="13.5" x2="15.4" y2="17.5" /><line x1="15.4" y1="6.5" x2="8.6" y2="10.5" /></svg>} />
           </div>
           <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".04em", color: "var(--live)", marginBottom: 10 }}>

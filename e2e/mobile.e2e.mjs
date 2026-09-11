@@ -6,7 +6,7 @@ import assert from "node:assert/strict";
 import { chromium, devices } from "playwright";
 
 const BASE = process.env.E2E_BASE || "http://localhost:4173";
-const WIDTHS = [360, 390, 430];
+const WIDTHS = [320, 360, 390, 430];   // iPhone SE 1st-gen upward
 const ROUTES = ["/?view=charts", "/?chart=hodlwaves", "/?view=docs", "/deepfield"];
 let browser;
 before(async () => { browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined }); });
@@ -33,6 +33,12 @@ for (const w of WIDTHS) {
       assert.ok(bar.r <= w, `header bar fits (right ${bar.r} of ${w})`);
       const o = await overflow(page);
       assert.equal(o.sw, o.cw, `page does not scroll sideways (${o.sw} vs ${o.cw})`);
+      // WCAG 2.5.5 / Apple HIG: every control left in the header is a ≥44px target
+      const small = await page.evaluate(() => [...document.querySelectorAll(".tbar a, .tbar button")]
+        .map(el => ({ c: el.className || el.tagName, r: el.getBoundingClientRect() }))
+        .filter(x => x.r.width > 0 && (x.r.width < 44 || x.r.height < 44))
+        .map(x => `${x.c} ${Math.round(x.r.width)}×${Math.round(x.r.height)}`));
+      assert.deepEqual(small, [], "header controls are all ≥44px");
       // the menu really opens
       await page.tap(".tmobtog");
       await page.waitForTimeout(400);
@@ -61,23 +67,43 @@ for (const w of WIDTHS) {
   });
 }
 
-test("390px: a sideways swipe zooms a chart (touch drag-to-zoom), no mouse hint overlay", async () => {
+test("390px: fullscreen is offered on phones (FullscreenView is built for them)", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  const titles = await page.$$eval(".tchart button", bs => bs.map(b => b.getAttribute("title") || ""));
+  assert.ok(titles.some(t => /full-screen/i.test(t)), `fullscreen button present (saw ${JSON.stringify(titles)})`);
+  await ctx.close();
+});
+
+test("390px home: the React shell under the landing iframe is inert (no duplicate nav)", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+  const nav = await page.evaluate(() => {
+    const n = document.querySelector("nav[aria-hidden='true']") || document.querySelector("nav");
+    return n ? { inert: n.hasAttribute("inert"), hidden: n.getAttribute("aria-hidden") } : null;
+  });
+  assert.ok(nav, "a nav exists beneath the iframe");
+  assert.equal(nav.inert, true, "covered nav is inert");
+  assert.equal(nav.hidden, "true", "covered nav is aria-hidden");
+  await ctx.close();
+});
+
+test("390px: touch charts point at fullscreen pinch, not a swipe that would flip the chart", async () => {
+  // The chart page binds a horizontal flick to the chart-to-chart pager, so the zoom affordance on
+  // touch MUST be fullscreen + pinch. A "swipe to zoom" caption here would teach a broken gesture.
   const ctx = await browser.newContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
-  assert.equal(await page.$(".zoomhint-box"), null, "animated mouse hint hidden on a touch device");
-  const cap = await page.textContent(".chart-zoombar");
-  assert.match(cap, /swipe/i, "zoom caption speaks touch");
-  const box = await page.evaluate(() => { const el = document.querySelector(".recharts-wrapper"); el.scrollIntoView({ block: "center" }); const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; });
-  const cdp = await ctx.newCDPSession(page);
-  const y = box.y + box.h * 0.5;
-  const x0 = box.x + box.w * 0.35, x1 = box.x + box.w * 0.75;
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x0, y }] });
-  for (let i = 1; i <= 8; i++) { await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: x0 + (x1 - x0) * i / 8, y }] }); await page.waitForTimeout(30); }
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await page.waitForTimeout(400);
-  assert.ok(await page.$("button.pill"), "Reset-zoom button appears after a sideways swipe");
+  assert.equal(await page.$(".zoomhint-box"), null, "the animated MOUSE hint is hidden on a touch device");
+  const cap = (await page.textContent(".chart-zoombar")) || "";
+  assert.match(cap, /fullscreen/i, `caption routes to fullscreen (saw "${cap.trim()}")`);
+  assert.doesNotMatch(cap, /\bdrag\b|\bswipe\b/i, "caption never asks for a gesture the pager owns");
+  const handlers = await page.evaluate(() => getComputedStyle(document.querySelector(".recharts-wrapper")).touchAction);
+  assert.equal(handlers, "pan-y", "chart keeps vertical scrolling and leaves horizontal to the pager");
   await ctx.close();
 });
 

@@ -172,7 +172,7 @@ function Scene3D({ seed, color }) {
 }
 
 // Dark ↔ bright theme toggle (mirrors the landing switch; shares localStorage 'spx_theme').
-function ThemeToggle() {
+function ThemeToggle({ className = "tthemebtn" }) {
   const [light, setLight] = useState(() => typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "light");
   const toggle = () => {
     const next = !light; setLight(next);
@@ -184,7 +184,7 @@ function ThemeToggle() {
     });
   };
   return (
-    <button className="tthemebtn" onClick={toggle} aria-label="Toggle dark / bright theme" title={light ? "Switch to dark" : "Switch to bright"}>
+    <button className={className} onClick={toggle} aria-label="Toggle dark / bright theme" title={light ? "Switch to dark" : "Switch to bright"}>
       {light
         ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor" /></svg>
         : <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="4.2" /><path d="M12 2v2.6M12 19.4V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.6M19.4 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" /></svg>}
@@ -452,6 +452,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
       {/* utility dock — the bar's icon group (login/avatar · X · Kraken) lives here on phones, so the
           header keeps room for the ☰ toggle. Mirrors the landing's .sbdock. */}
       <div className="tsbdock">
+        <ThemeToggle className="tsbdocki tsbtheme" />
         {me && me.loggedIn ? (
           <>
             <button type="button" className="tsbdocki dfauth" onClick={() => go(onDeepField)} title={me.username ? `@${me.username} — Deep Field` : "Deep Field"} aria-label="Deep Field, members home">
@@ -577,14 +578,18 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
               </a>
             )}
+            {/* X + Kraken are secondary: on phones they live in the springboard dock (.tsocial-ext is
+                hidden ≤760px) so the bar keeps room for the brand, the account chip and ☰ Explore. */}
+            <span className="tsocial-ext">
             <a className="siclink" href={X_URL} target="_blank" rel="noopener noreferrer" title="@SPX6900Rainbow on X" aria-label="SPX6900Rainbow on X">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
             <a className="siclink krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" title="Trade on Kraken, affiliate" aria-label="Trade on Kraken (affiliate)">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z" /></svg>
             </a>
+            </span>
           </div>
-          <button className="tmobtog" onClick={() => setMobOpen(true)} aria-label="Open charts" aria-expanded={mobOpen}>
+          <button className="tmobtog" onClick={() => setMobOpen(true)} aria-label="Explore charts" title="Explore" aria-expanded={mobOpen}>
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
           </button>
         </div>

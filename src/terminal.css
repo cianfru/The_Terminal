@@ -166,11 +166,17 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
    (test/mobile-breakpoint.test.mjs pins all three together). */
 @media(max-width:760px){
   .tzone .tmenu{ display:none; }
-  /* phones: the icon group (login · X · Kraken) leaves the bar for the springboard dock, so the brand
-     + theme + ☰ toggle always fit — with the icons, a 390px bar was 443px wide and the toggle sat
-     off-screen (found 2026-09-11: the primary nav was unreachable on every phone). */
-  .tzone .tbar .tsocial{ display:none; }
-  .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; flex:none; margin-left:8px;
+  /* phones: the bar carries exactly three things — brand, ONE account chip, ONE ☰ Explore button.
+     Theme, X and Kraken are secondary and move to the springboard's utility dock. With all of them
+     in the bar a 390px header measured 443px wide and the ☰ sat off-screen (found 2026-09-11:
+     the primary nav was unreachable on every phone). */
+  .tzone .tbar .tsocial-ext, .tzone .tbar .tthemebtn{ display:none; }
+  /* ≥44px tap targets (WCAG 2.5.5 / Apple HIG) for everything left in the bar */
+  .tzone .tbar .siclink{ width:44px; height:44px; }
+  .tzone .tbar .tbrand{ min-width:44px; min-height:44px; justify-content:center; }
+  .tzone .tbar .siclink svg{ width:19px; height:19px; }
+  .tzone .tbar .siclink.krk svg{ width:22px; height:22px; }
+  .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:none; margin-left:8px;
     border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
   .tzone .tmobtog svg{ width:22px; height:22px; }
   /* NB: the sticky sub-page nav has backdrop-filter, which makes it the containing block for
@@ -182,7 +188,7 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 }
 .tzone .tmobhead{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--line); flex:none; }
 .tzone .tmobtitle{ font-family:var(--mono); text-transform:uppercase; letter-spacing:.18em; font-size:13px; color:var(--dim); }
-.tzone .tmobclose{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+.tzone .tmobclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
 .tzone .tmobclose svg{ width:22px; height:22px; }
 .tzone .tmobbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:48px; }
 .tzone .tmob-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; cursor:pointer;
@@ -349,7 +355,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
   font-family:var(--label); text-transform:uppercase; letter-spacing:.07em; font-size:15px; line-height:1.14; font-weight:800; color:var(--tx); }
 @media(max-width:400px){ .tzone .tbrand b{ display:none; } }  /* 320–400px: logo only, the text + toggle can't share the bar */
 @media(max-width:380px){ .tzone .tsbtitle{ letter-spacing:.03em; font-size:14px; } .tzone .tsbtop{ gap:7px; } }
-.tzone .tsbbtn{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:9px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
+.tzone .tsbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:9px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
 .tzone .tsbbtn:active{ border-color:var(--live); }
 .tzone .tsbbtn svg{ width:21px; height:21px; }
 .tzone .tsbbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px 14px calc(env(safe-area-inset-bottom,0px) + 40px); }
@@ -441,7 +447,8 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
   background:linear-gradient(90deg,#8b5cf6,#3b82f6,#22c55e,#eab308,#f97316,#ef4444); opacity:.9; }
 .tzone .tsbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:13px; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; padding:0; overflow:hidden; }
 .tzone .tsbdocki:active{ border-color:var(--live); }
-.tzone .tsbdocki svg{ width:20px; height:20px; fill:currentColor; }
+.tzone .tsbdocki:not(.tsbtheme) svg{ width:20px; height:20px; fill:currentColor; }
+.tzone .tsbdocki.tsbtheme svg{ width:20px; height:20px; }
 .tzone .tsbdocki.krk svg{ width:24px; height:24px; fill:#9d5cf8; }
 .tzone .tsbdocki.dfauth{ border-color:var(--live); color:var(--live); }
 .tzone .tsbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }

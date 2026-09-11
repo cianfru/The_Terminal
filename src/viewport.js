@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 // (a plain `innerWidth < N` disagrees with `max-width:N` by one pixel and ignores zoom/scrollbars).
 export const MOBILE_BP = 760;
 export const MOBILE_MQ = `(max-width:${MOBILE_BP}px)`;
-export const TABLET_BP = 980;
+export const TABLET_BP = 1024;   // tablet = 761–1024, desktop above
 export const COARSE_MQ = "(pointer:coarse)";
 
 // true when the viewport matches `query`; SSR/no-window → false. Re-evaluates on change.
