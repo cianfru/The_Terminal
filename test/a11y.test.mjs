@@ -70,7 +70,12 @@ test("the dialog hook traps, closes on Escape and restores focus", () => {
 });
 
 test("text inputs are 16px on a phone, so Safari cannot zoom the page", () => {
-  assert.match(css, /font-size:16px; \/\* 16px: iOS zooms/, "springboard search");
+  // Assert the PROPERTY, not its neighbours: the first version keyed off a comment sitting
+  // immediately after the declaration and broke the moment another property was added between.
+  const at = css.indexOf(".tzone .tsbsearchin{");
+  const block = css.slice(at, css.indexOf("}", at));
+  const px = parseFloat((block.match(/font-size:\s*([\d.]+)px/) || [])[1]);
+  assert.ok(px >= 16, `springboard search is >=16px (found ${px})`);
   assert.match(read("src/ChartsGallery.jsx"), /fontSize: isMobile \? 16 : 14/, "gallery search");
 });
 
