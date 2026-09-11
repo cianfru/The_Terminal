@@ -291,14 +291,6 @@ function MobRow({ label, chev, cls = "", onTap }) {
 // Sections → groups → charts as tappable tiles; chart tiles show a live preview (or the Scene3D
 // placeholder for the three.js charts). Each drill is a
 // real history entry, so the iOS edge-swipe and Android back button walk back up the levels natively.
-const SB_ICON = {
-  rainbow: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 16a9 9 0 0 1 18 0" /><path d="M6 16a6 6 0 0 1 12 0" /><path d="M9 16a3 3 0 0 1 6 0" /></svg>,
-  charts: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
-  city: <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="10" width="3.2" height="10" rx="1" /><rect x="10.4" y="5" width="3.2" height="15" rx="1" /><rect x="16.8" y="12" width="3.2" height="8" rx="1" /></svg>,
-  aeon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z" /><path d="M12 22V12" /><path d="M4 7l8 5 8-5" /></svg>,
-  deepfield: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /><path d="M11 8v6M8 11h6" /></svg>,
-  manual: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5z" /></svg>,
-};
 const sbCount = groups => groups.reduce((n, g) => n + g.charts.filter(c => !c.dev).length, 0);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
@@ -312,13 +304,13 @@ const SB_MOTIF = {
   manual: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="10" y="24" width="44" height="5" /><rect x="10" y="38" width="44" height="5" /><rect x="10" y="52" width="30" height="5" /><rect x="66" y="24" width="44" height="5" /><rect x="66" y="38" width="36" height="5" /><rect x="66" y="52" width="44" height="5" /></svg>,
 };
 
-// A fullscreen quadrant — one section, its colour washed across the tile, a big icon + a background
-// motif, the name and count. Tapping drills in (or navigates for Rainbow).
-function SbQuad({ id, color, icon, name, sub, onTap }) {
+// A fullscreen quadrant — one section, its colour washed across the tile, a background motif behind
+// the name and a one-line descriptor. The small corner icon was dropped: it repeated the motif that
+// already carries the section's colour, and at 390px it collided with a two-line subtitle.
+function SbQuad({ id, color, name, sub, onTap }) {
   return (
     <button className="tsbcell" style={{ "--tc": color }} onClick={onTap}>
       <span className="tsbcellbg" aria-hidden="true">{SB_MOTIF[id]}</span>
-      <span className="tsbcellico">{icon}</span>
       <span className="tsbcellnm">{name}</span>
       <span className="tsbcellsub">{sub}</span>
       <span className="tsbcellarrow" aria-hidden="true">→</span>
@@ -467,12 +459,12 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   // which left the menu visibly lopsided; Deep Field is now a peer tile, and the Manual joins it so
   // the grid closes. Both were already top-level destinations, so nothing is invented to fill a hole.
   const SECS = [
-    { id: "rainbow", name: "Rainbow", sub: "the foundation chart", color: "#a78bfa", onTap: () => go(openRainbow) },
-    { id: "charts", name: "Charts", groups: CHART_GROUPS, color: GCOL[1], onAll: () => go(openGallery) },
-    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, color: "#38bdf8", onAll: () => go(openCity) },
-    { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, color: GCOL[3], onAll: () => go(openAeon) },
-    { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "members · your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
-    { id: "manual", name: "Manual", sub: "how to read it all", color: "#e879f9", onTap: () => go(() => openDocs && openDocs("index")) },
+    { id: "rainbow", name: "Rainbow", sub: "the main chart", color: "#a78bfa", onTap: () => go(openRainbow) },
+    { id: "charts", name: "Charts", groups: CHART_GROUPS, desc: n => `all ${n} charts`, color: GCOL[1], onAll: () => go(openGallery) },
+    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, desc: () => "holders in 3D", color: "#38bdf8", onAll: () => go(openCity) },
+    { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, desc: n => `${n} NFT charts`, color: GCOL[3], onAll: () => go(openAeon) },
+    { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
+    { id: "manual", name: "Manual", sub: "how to read it", color: "#e879f9", onTap: () => go(() => openDocs && openDocs("index")) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -482,8 +474,8 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
       const onTap = sec.onTap ? sec.onTap
         : sec.single ? () => push({ t: "charts", secId: sec.id })
           : () => push({ t: "groups", secId: sec.id });
-      const sub = sec.sub || (sec.single ? `${sbCount(sec.groups)} charts` : `${sec.groups.length} groups · ${sbCount(sec.groups)} charts`);
-      return <SbQuad key={sec.id} id={sec.id} icon={SB_ICON[sec.id]} color={sec.color} name={sec.name} sub={sub} onTap={onTap} />;
+      const sub = sec.sub || sec.desc(sbCount(sec.groups));
+      return <SbQuad key={sec.id} id={sec.id} color={sec.color} name={sec.name} sub={sub} onTap={onTap} />;
     });
   } else if (view.t === "groups") {
     const sec = SECS.find(s => s.id === view.secId); title = sec.name; cmd = `ls ./${slug(sec.name)}`;

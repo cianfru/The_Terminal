@@ -139,3 +139,52 @@ test("nothing in either mobile menu is still rounded", () => {
   for (const sel of [".tzone .tmobtog{", ".tzone .tmobclose{", ".tzone .tsbtile{", ".tzone .tsbrowedge{"]) square(css, sel, sel);
   for (const sel of [".mobtog{", ".mmclose{", ".sbbtn{", ".sbtile{", ".sbdocki{", ".sbcell{"]) square(landing, sel, "landing " + sel);
 });
+
+test("launcher tiles carry no corner icon, and say what a section IS, not how many parts it has", () => {
+  // The small corner icon repeated the background motif that already carries the section colour,
+  // and at 390px it collided with the name whenever the subtitle wrapped to two lines. The
+  // subtitles were inventories ("8 groups · 57 charts") that wrapped for the same reason.
+  const css = read("src/terminal.css"), nav = read("src/TerminalNav.jsx"), landing = read("public/landing-next.html");
+  for (const [src, sel, label] of [[css, "tsbcellico", "app CSS"], [landing, "sbcellico", "landing CSS"],
+    [nav, "tsbcellico", "app markup"], [nav, "SB_ICON", "app icon map"]])
+    assert.ok(!src.includes(sel), `${label} no longer references ${sel}`);
+  // Check the expressions that BUILD the subtitle, not the file text — a prose comment mentioning
+  // the old format is not a regression, and matching on it made this assertion fire on itself.
+  assert.ok(!/sec\.groups\.length \+ ?['"] groups/.test(nav) && !/groups\.length\} groups/.test(nav),
+    "app builds a descriptor, not a group count");
+  assert.ok(!/groups\.length ?\+ ?' groups/.test(landing), "landing builds a descriptor, not a group count");
+  assert.ok(landing.includes("SEC_DESC"), "landing has per-section descriptors");
+  assert.match(nav, /desc: n =>/, "app has per-section descriptors");
+  // Nothing reads the removed icon constants either.
+  for (const c of ["DF_ICON", "MANUAL_ICON", "RAINBOW_ICON"])
+    assert.ok(!landing.includes(c), `landing dropped the unused ${c}`);
+});
+
+test("tile subtitles reserve two lines, so names align across a row even when one wraps", () => {
+  // Tiles are bottom-anchored: a one-line subtitle next to a two-line one pushed the names out of
+  // line with each other. Reserving the height is what keeps the row level at any width.
+  const css = read("src/terminal.css"), landing = read("public/landing-next.html");
+  const app = css.slice(css.indexOf(".tzone .tsbcell .tsbcellsub{"));
+  assert.match(app.slice(0, app.indexOf("}")), /min-height:2\.5em/, "app reserves two lines");
+  const land = landing.slice(landing.indexOf(".sbcell .sbcellsub{"));
+  assert.match(land.slice(0, land.indexOf("}")), /min-height:2\.5em/, "landing reserves two lines");
+  // The reserve is 2 lines at the declared line-height; if one changes the other has to follow.
+  for (const [block, label] of [[app.slice(0, app.indexOf("}")), "app"], [land.slice(0, land.indexOf("}")), "landing"]]) {
+    const lh = Number(block.match(/line-height:([\d.]+)/)?.[1]);
+    const min = Number(block.match(/min-height:([\d.]+)em/)?.[1]);
+    assert.equal(min, 2 * lh, `${label} reserve matches two lines of its own line-height`);
+  }
+});
+
+test("tile subtitles stay at the readable floor, never shrunk to fit", () => {
+  // 320px is tight, but the fix there is tracking, not type size: the house rule is no meaningful
+  // text below 12px.
+  const css = read("src/terminal.css"), landing = read("public/landing-next.html");
+  for (const [src, sel, label] of [[css, ".tzone .tsbcell .tsbcellsub{", "app"], [landing, ".sbcell .sbcellsub{", "landing"]]) {
+    const at = src.indexOf(sel);
+    const size = Number(src.slice(at, src.indexOf("}", at)).match(/font-size:([\d.]+)px/)[1]);
+    assert.ok(size >= 12, `${label} subtitle is ${size}px, below the 12px floor`);
+  }
+  const narrow = landing.match(/@media\(max-width:340px\)\{ \.sbcellsub\{[^}]*\}/)?.[0] || "";
+  assert.ok(!/font-size/.test(narrow), "the narrow-width rule adjusts tracking, not size");
+});

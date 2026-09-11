@@ -500,14 +500,22 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell:active{ transform:scale(.975); border-color:var(--tc); background:linear-gradient(157deg, color-mix(in srgb, var(--tc) 38%, var(--panel)) 0%, var(--panel2) 72%); }
 .tzone .tsbcell .tsbcellbg{ position:absolute; left:0; right:0; bottom:0; height:62%; opacity:.2; color:var(--tc); pointer-events:none; }
 .tzone .tsbcell .tsbcellbg svg{ width:100%; height:100%; display:block; }
-.tzone .tsbcell .tsbcellico{ position:absolute; top:16px; left:17px; width:32px; height:32px; color:var(--tc); }
-.tzone .tsbcell .tsbcellico svg{ width:100%; height:100%; }
 /* The launcher speaks the SAME language as the website's menu bar (.mtop > .mhead): mono,
-   uppercase, letterspaced — not the bold sans it used, which belonged to headlines. */
-.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--mono); font-weight:700; font-size:16px;
-  letter-spacing:.05em; text-transform:uppercase; line-height:1.1; color:var(--tx); }
-@media(max-width:380px){ .tzone .tsbcell .tsbcellnm{ font-size:14.5px; letter-spacing:.03em; } }
-.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+   uppercase, letterspaced — not the bold sans it used, which belonged to headlines.
+   The small corner icon that used to sit above this is gone: it repeated the motif already
+   carrying the section colour, and it collided with the name whenever a subtitle wrapped. The
+   space it freed goes to the name and the subtitle, both of which were too small to read.
+   "PROJECT AEON" is the longest name, and at .04em tracking it needed 146px of a 148px box — a
+   margin thin enough that subpixel rounding decided whether it wrapped. The tighter tracking below
+   buys ~5px, and nowrap makes the outcome explicit rather than incidental. */
+.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--mono); font-weight:700; font-size:19px;
+  letter-spacing:.02em; text-transform:uppercase; line-height:1.1; color:var(--tx); white-space:nowrap; }
+@media(max-width:380px){ .tzone .tsbcell .tsbcellnm{ font-size:17px; letter-spacing:.01em; } }
+/* Two lines of height are reserved whether or not the copy needs them, so the names sit on one
+   baseline across the row: at 320px a descriptor still wraps, and without this the tiles in a row
+   drifted out of line with each other. */
+.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; line-height:1.25; color:var(--dim);
+  min-height:2.5em; display:flex; align-items:flex-start; }
 .tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
