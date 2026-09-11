@@ -67,7 +67,7 @@ function buildScene(el, hist, isMobile) {
   const addLabel = (text, x, y, z, color, size = 11, weight = 500) => {
     const d = document.createElement("div");
     d.textContent = text;
-    Object.assign(d.style, { color, font: `${weight} ${size}px 'Space Grotesk', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.92" });
+    Object.assign(d.style, { color, font: `${weight} ${size}px 'Geist', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.92" });
     const l = new CSS2DObject(d); l.position.set(x, y, z); scene.add(l); return l;
   };
 

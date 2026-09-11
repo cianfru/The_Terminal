@@ -107,7 +107,7 @@ function DripCover({ color, mode }) {
           <rect key={i} x={x} y={34 - h} width="7" height={h} fill={acc} />
         ))}
       </svg>
-      <div aria-hidden="true" style={{ position: "relative", fontSize: 27, lineHeight: 1 }}>{glyph}</div>
+      <div aria-hidden="true" style={{ position: "relative", fontFamily: SANS, fontSize: 27, lineHeight: 1 }}>{glyph}</div>
       <div style={{ position: "relative", fontFamily: MONO, fontSize: 11.5, letterSpacing: ".18em", textTransform: "uppercase", color: "#cbd5e1" }}>{kicker}</div>
       {/* The cover keeps its own DARK ground in both themes (it is a deliberate "locked" object), so
           its text must be fixed light ink — theme tokens go near-black on the bright theme and the

@@ -1061,7 +1061,7 @@ export default function App() {
       {/* Terminal cascade nav for sub-pages; the glass pill nav stays on home + landing preview */}
       {isSub ? (
         <nav className="tnavstick" style={{ position: "sticky", top: 0, zIndex: 50, width: "100%" }}>
-          <TerminalNav onHome={goHome} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={id => chartEl(id, { preview: true })} asOf={last?.date} me={me} onDeepField={openDeepField} />
+          <TerminalNav onHome={goHome} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={id => chartEl(id, { preview: true })} asOf={last?.date} me={me} onDeepField={openDeepField} openDocs={openDocs} />
         </nav>
       ) : (
       <nav ref={navRef} inert={landingCovers || undefined} aria-hidden={landingCovers || undefined} style={{

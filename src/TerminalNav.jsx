@@ -296,6 +296,8 @@ const SB_ICON = {
   charts: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
   city: <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="10" width="3.2" height="10" rx="1" /><rect x="10.4" y="5" width="3.2" height="15" rx="1" /><rect x="16.8" y="12" width="3.2" height="8" rx="1" /></svg>,
   aeon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z" /><path d="M12 22V12" /><path d="M4 7l8 5 8-5" /></svg>,
+  deepfield: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.2-4.2" /><path d="M11 8v6M8 11h6" /></svg>,
+  manual: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v18H6.5A2.5 2.5 0 0 1 4 18.5z" /><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v18h5.5a2.5 2.5 0 0 0 2.5-2.5z" /></svg>,
 };
 const sbCount = groups => groups.reduce((n, g) => n + g.charts.filter(c => !c.dev).length, 0);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -306,6 +308,8 @@ const SB_MOTIF = {
   charts: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="6" y="46" width="12" height="34" rx="2" /><rect x="26" y="30" width="12" height="50" rx="2" /><rect x="46" y="52" width="12" height="28" rx="2" /><rect x="66" y="20" width="12" height="60" rx="2" /><rect x="86" y="38" width="12" height="42" rx="2" /><rect x="106" y="10" width="12" height="70" rx="2" /></svg>,
   city: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36" /><rect x="24" y="28" width="16" height="52" /><rect x="44" y="52" width="14" height="28" /><rect x="62" y="18" width="18" height="62" /><rect x="84" y="38" width="14" height="42" /><rect x="102" y="26" width="16" height="54" /></svg>,
   aeon: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round"><path d="M60 8 96 28v34L60 82 24 62V28z" /><path d="M60 82V44M24 28l36 16 36-16" /></svg>,
+  deepfield: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="currentColor"><circle cx="22" cy="20" r="2.6" /><circle cx="52" cy="12" r="1.7" /><circle cx="86" cy="24" r="3.2" /><circle cx="104" cy="48" r="1.8" /><circle cx="34" cy="52" r="3.6" /><circle cx="66" cy="44" r="2.2" /><circle cx="14" cy="68" r="2" /><circle cx="92" cy="70" r="2.6" /><circle cx="58" cy="70" r="1.6" /></svg>,
+  manual: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="10" y="24" width="44" height="5" /><rect x="10" y="38" width="44" height="5" /><rect x="10" y="52" width="30" height="5" /><rect x="66" y="24" width="44" height="5" /><rect x="66" y="38" width="36" height="5" /><rect x="66" y="52" width="44" height="5" /></svg>,
 };
 
 // A fullscreen quadrant — one section, its colour washed across the tile, a big icon + a background
@@ -436,7 +440,7 @@ function SbRail({ title, note, items, favs, toggleFav, goChart, close, noteOf })
   );
 }
 
-function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
+function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout, openDocs }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
   const sheetRef = useRef(null);
   const [q, setQ] = useState("");
@@ -459,11 +463,16 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   // jump straight to the four-section launcher from any depth
   const home = () => { if (stack.length > 1) setStack([{ t: "sections" }]); };
 
+  // SIX destinations in a 2x3 grid. It used to be four squares plus a full-width Deep Field strip,
+  // which left the menu visibly lopsided; Deep Field is now a peer tile, and the Manual joins it so
+  // the grid closes. Both were already top-level destinations, so nothing is invented to fill a hole.
   const SECS = [
     { id: "rainbow", name: "Rainbow", sub: "the foundation chart", color: "#a78bfa", onTap: () => go(openRainbow) },
     { id: "charts", name: "Charts", groups: CHART_GROUPS, color: GCOL[1], onAll: () => go(openGallery) },
     { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, color: GCOL[2], onAll: () => go(openCity) },
     { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, color: GCOL[3], onAll: () => go(openAeon) },
+    { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "members · your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
+    { id: "manual", name: "Manual", sub: "how to read it all", color: "#5eead4", onTap: () => go(() => openDocs && openDocs("index")) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -545,14 +554,6 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
         <div className="tsbcmd"><span className="tsbprompt">spx6900 ~ %</span> {cmd}</div>
         <div className="tsbrule" />
         <div className={"tsbgrid tsbgrid-" + grid}>{tiles}</div>
-        {/* Deep Field — the members area, surfaced as a full-width strip under the launcher so it's
-            discoverable on phones too (logged in → member home; signed out → the X login). */}
-        {view.t === "sections" && (
-          <button className="tsbdf" onClick={() => go(onDeepField)}>
-            <span className="tsbdftx"><b>Deep Field</b><span>{me && me.loggedIn ? "members home · your charts" : "log in with X to enter"}</span></span>
-            <span className="tsbdfarrow" aria-hidden="true">→</span>
-          </button>
-        )}
         {/* Rails: what you saved, what you just read, what actually changed — before the catalog. */}
         {view.t === "sections" && (<>
           <SbRail title="Saved" items={savedItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
@@ -639,7 +640,7 @@ function MobileMenu({ open, onClose, openRainbow, openGallery, openAeon, openCit
   );
 }
 
-export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, asOf, me, onDeepField }) {
+export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, asOf, me, onDeepField, openDocs }) {
   const asOfLabel = asOf ? new Date(asOf).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null;
   const cityColor = CITY_GROUPS[0]?.color || "#7dd3fc";
   const cityItems = [
@@ -722,7 +723,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
-      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
+      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} openDocs={openDocs} />
     </div>
   );
 }

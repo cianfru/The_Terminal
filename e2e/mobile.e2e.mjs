@@ -160,14 +160,18 @@ test("390px Explore: search, chips and rails make a 73-chart catalogue reachable
   const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
   assert.equal(o.sw, o.cw, "Explore does not scroll sideways");
 
-  // the destination tiles must not collide with what follows them
+  // the destination tiles must not collide with each other or with the rails below them
+  // (this used to check clearance against a full-width Deep Field strip, which is now a peer tile)
   const overlap = await page.evaluate(() => {
-    const cells = [...document.querySelectorAll(".tsbcell")].map(e => e.getBoundingClientRect());
-    const df = document.querySelector(".tsbdf")?.getBoundingClientRect();
-    if (!df || cells.length < 4) return "missing";
-    return cells.some(c => c.bottom > df.top + 1) ? "overlap" : "ok";
+    const r = [...document.querySelectorAll(".tsbcell")].map(e => e.getBoundingClientRect());
+    if (r.length < 6) return "missing";
+    const hits = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
+    for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (hits(r[i], r[j])) return "overlap";
+    const rail = document.querySelector(".tsbrail")?.getBoundingClientRect();
+    if (rail && r.some(c => c.bottom > rail.top + 1)) return "overlap";
+    return "ok";
   });
-  assert.equal(overlap, "ok", "destination tiles clear the Deep Field strip");
+  assert.equal(overlap, "ok", "the six destination tiles lay out cleanly");
   await ctx.close();
 });
 
@@ -524,5 +528,68 @@ test("landscape: the fullscreen viewer mounts the plot and pinch zooms it", asyn
     return m ? parseFloat(m[1]) : 1;
   });
   assert.ok(scale > 1.05, `two fingers zoom the plot (scale ${scale})`);
+  await ctx.close();
+});
+
+test("390px: the launcher is a balanced grid of six, all reachable without scrolling", async () => {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], hasTouch: true });
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+  await page.tap(".tmobtog");
+  await page.waitForTimeout(700);
+  const g = await page.evaluate(() => {
+    const cells = [...document.querySelectorAll(".tsbcell")].map(e => {
+      const r = e.getBoundingClientRect();
+      return { name: e.querySelector(".tsbcellnm")?.textContent, w: Math.round(r.width), h: Math.round(r.height),
+        radius: getComputedStyle(e).borderTopLeftRadius, bottom: Math.round(r.bottom) };
+    });
+    return { cells, strip: !!document.querySelector(".tsbdf"), vh: innerHeight,
+      sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
+  });
+  assert.equal(g.cells.length, 6, "six destinations");
+  assert.equal(g.strip, false, "no odd full-width strip");
+  assert.equal(new Set(g.cells.map(c => `${c.w}x${c.h}`)).size, 1, "every tile is the same size");
+  assert.deepEqual([...new Set(g.cells.map(c => c.radius))], ["0px"], "square corners");
+  assert.ok(g.cells.every(c => c.bottom <= g.vh), "all six fit on one screen");
+  assert.equal(g.sw, g.cw, "no sideways scroll");
+  await ctx.close();
+});
+
+test("390px: one typeface everywhere — the landing and the app render the same files", async () => {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], hasTouch: true });
+  // recharts keeps an off-screen span at top:-20000px to measure label widths; it is never seen.
+  const probe = () => { const t = {};
+    for (const el of document.querySelectorAll("body *")) {
+      if (el.children.length || !(el.textContent || "").trim()) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width < 2 || r.height < 2 || r.bottom < -1000) continue;
+      const f = getComputedStyle(el).fontFamily.split(",")[0].replace(/["']/g, "");
+      t[f] = (t[f] || 0) + 1;
+    }
+    return t; };
+  const ALLOWED = new Set(["Geist", "Geist Mono", "GeistMono", "DepartureMono", "PxVGA"]);
+  for (const route of ["/", "/?view=charts", "/?chart=hodlwaves", "/?view=docs"]) {
+    const page = await ctx.newPage();
+    await page.goto(BASE + route, { waitUntil: "networkidle" });
+    await page.waitForTimeout(2200);
+    let tally = await page.evaluate(probe);
+    const fr = page.frames().find(f => f.url().includes("landing-next"));
+    if (fr) tally = await fr.evaluate(probe);
+    const stray = Object.keys(tally).filter(f => !ALLOWED.has(f));
+    assert.deepEqual(stray, [], `${route} renders only the site's own faces (saw ${JSON.stringify(tally)})`);
+    await page.close();
+  }
+  await ctx.close();
+});
+
+test("390px: no request leaves the site for a font", async () => {
+  const ctx = await browser.newContext({ ...devices["iPhone 13"], hasTouch: true });
+  const page = await ctx.newPage();
+  const external = [];
+  page.on("request", r => { const u = r.url(); if (!u.startsWith(BASE) && !u.startsWith("data:")) external.push(u); });
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1500);
+  assert.deepEqual(external.filter(u => /font|gstatic|googleapis/.test(u)), [], "fonts are all first-party");
   await ctx.close();
 });
