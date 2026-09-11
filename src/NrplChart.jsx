@@ -73,7 +73,7 @@ export default function NrplChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <ReferenceArea y1={0} y2={view.yDomain[1]} fill={GRN} fillOpacity={0.171} stroke="none" />
             <ReferenceArea y1={view.yDomain[0]} y2={0} fill={RED} fillOpacity={0.171} stroke="none" />

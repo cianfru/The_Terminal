@@ -371,7 +371,7 @@ function SbChartTile({ item, color, group, render, spark, onTap }) {
   );
 }
 
-function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField }) {
+function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
   const view = stack[stack.length - 1];
   const go = fn => { onClose(); fn && fn(); };
@@ -448,6 +448,30 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
             <span className="tsbdfarrow" aria-hidden="true">→</span>
           </button>
         )}
+      </div>
+      {/* utility dock — the bar's icon group (login/avatar · X · Kraken) lives here on phones, so the
+          header keeps room for the ☰ toggle. Mirrors the landing's .sbdock. */}
+      <div className="tsbdock">
+        {me && me.loggedIn ? (
+          <>
+            <button type="button" className="tsbdocki dfauth" onClick={() => go(onDeepField)} title={me.username ? `@${me.username} — Deep Field` : "Deep Field"} aria-label="Deep Field, members home">
+              {me.avatar
+                ? <img src={me.avatar} alt="" referrerPolicy="no-referrer" onError={e => { e.currentTarget.style.display = "none"; }} />
+                : <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2" /><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5" /></svg>}
+            </button>
+            <button type="button" className="tsbdockout" onClick={onLogout}>Log out</button>
+          </>
+        ) : (
+          <a className="tsbdocki dfauth" href="/api/auth?action=login" title="Log in with X — enter Deep Field" aria-label="Log in with X to enter Deep Field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
+          </a>
+        )}
+        <a className="tsbdocki" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="SPX6900Rainbow on X">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+        </a>
+        <a className="tsbdocki krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" aria-label="Trade on Kraken (affiliate)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z" /></svg>
+        </a>
       </div>
     </div>
   );
@@ -579,7 +603,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
-      <MobileSpringboard open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} />
+      <MobileSpringboard open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
     </div>
   );
 }

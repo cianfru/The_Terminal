@@ -162,8 +162,14 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 /* mobile: the hover cascade is replaced by a full-screen, tap-driven menu (the ☰ hamburger) */
 .tmobtog{ display:none; }
 .tmobmenu{ display:none; }
+/* ONE mobile breakpoint: 760px here == MOBILE_BP in src/viewport.js == the landing's menu switch
+   (test/mobile-breakpoint.test.mjs pins all three together). */
 @media(max-width:760px){
   .tzone .tmenu{ display:none; }
+  /* phones: the icon group (login · X · Kraken) leaves the bar for the springboard dock, so the brand
+     + theme + ☰ toggle always fit — with the icons, a 390px bar was 443px wide and the toggle sat
+     off-screen (found 2026-09-11: the primary nav was unreachable on every phone). */
+  .tzone .tbar .tsocial{ display:none; }
   .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; flex:none; margin-left:8px;
     border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
   .tzone .tmobtog svg{ width:22px; height:22px; }
@@ -341,6 +347,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbtitle{ flex:1 1 auto; min-width:0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   padding:0 4px; text-align:center; overflow:hidden; overflow-wrap:break-word;
   font-family:var(--label); text-transform:uppercase; letter-spacing:.07em; font-size:15px; line-height:1.14; font-weight:800; color:var(--tx); }
+@media(max-width:400px){ .tzone .tbrand b{ display:none; } }  /* 320–400px: logo only, the text + toggle can't share the bar */
 @media(max-width:380px){ .tzone .tsbtitle{ letter-spacing:.03em; font-size:14px; } .tzone .tsbtop{ gap:7px; } }
 .tzone .tsbbtn{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:9px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
 .tzone .tsbbtn:active{ border-color:var(--live); }
@@ -428,6 +435,18 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
+/* utility dock at the foot of the springboard: login/avatar · X · Kraken — the bar's icon group on phones */
+.tzone .tsbdock{ flex:none; display:flex; align-items:center; justify-content:center; gap:14px; padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 15px); border-top:1px solid var(--line); position:relative; }
+.tzone .tsbdock::before{ content:""; position:absolute; left:0; right:0; top:-2.5px; height:2.5px; pointer-events:none;
+  background:linear-gradient(90deg,#8b5cf6,#3b82f6,#22c55e,#eab308,#f97316,#ef4444); opacity:.9; }
+.tzone .tsbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:13px; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; padding:0; overflow:hidden; }
+.tzone .tsbdocki:active{ border-color:var(--live); }
+.tzone .tsbdocki svg{ width:20px; height:20px; fill:currentColor; }
+.tzone .tsbdocki.krk svg{ width:24px; height:24px; fill:#9d5cf8; }
+.tzone .tsbdocki.dfauth{ border-color:var(--live); color:var(--live); }
+.tzone .tsbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.tzone .tsbdocki.dfauth img{ width:100%; height:100%; object-fit:cover; display:block; }
+.tzone .tsbdockout{ font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:none; border:1px solid var(--line2); border-radius:13px; height:48px; padding:0 14px; cursor:pointer; }
 .tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:16px; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
 .tzone .tsbdf:active{ transform:scale(.985); border-color:var(--live); }
 .tzone .tsbdf .tsbdftx{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }

@@ -91,7 +91,7 @@ export default function SpxBtcChart({ series, isMobile }) {
 
       <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
         <ComposedChart data={view?.vis ?? data} margin={{ top: 10, right: isMobile ? 14 : 30, bottom: 24, left: isMobile ? 0 : 12 }}
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
           <defs>
             <linearGradient id="btcFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#f59e0b" stopOpacity={0.35} />

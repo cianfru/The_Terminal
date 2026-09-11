@@ -104,6 +104,7 @@
   .navfresh .ch b{ letter-spacing:.05em; }
   .navfresh .ch em{ font-style:normal; color:var(--faint); }
   @media(max-width:760px){ .navfresh .nfl{ display:none; } }
+  html, body{ overflow-x:clip; }
   .bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; font-family:var(--label); font-size:13px; letter-spacing:.05em; text-transform:uppercase; color:var(--dim); min-height:48px; padding:0; border-bottom:1px solid var(--line); }
   .bar b{ color:var(--tx); }
   .bar .barright{ display:inline-flex; align-items:center; gap:14px; }
@@ -327,7 +328,7 @@
   .slideknob svg{ width:22px; height:22px; }
   /* the slide control is a MOBILE affordance; desktop keeps the classic button. */
   #ctaChart{ display:none; }
-  @media(min-width:701px){ #ctaChart{ display:inline-flex; } .slidecta{ display:none; } }
+  @media(min-width:761px){ #ctaChart{ display:inline-flex; } .slidecta{ display:none; } }
 
   .snap{ border:1px solid var(--line); border-radius:12px; background:linear-gradient(180deg,var(--panel),var(--panel2)); padding:15px 18px 16px; display:flex; flex-direction:column; }
   .snap .sh{ display:flex; justify-content:space-between; font-family:var(--label); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); padding-bottom:11px; border-bottom:1px solid var(--line); }
@@ -410,6 +411,9 @@
   @media(max-width:600px){
     .bar .l .bsub{ display:none; }                 /* drop the descriptor (was wrapping to 3 lines) */
     .bar .l b{ font-size:15px; } .bcur{ font-size:15px; }
+  }
+  @media(max-width:400px){
+    .bar .l b, .bar .l .bcur{ display:none; }        /* logo-only wordmark: 320–400px bars can't fit the text + toggle */
     .navfresh{ display:none; }                      /* on-chain sync forced the 604px overflow */
     .menu{ flex-wrap:wrap; }
     .mtop > .mhead{ font-size:13px; padding:7px 9px; gap:5px; }
@@ -440,9 +444,10 @@
   /* ── phones: a full-screen, tap-driven menu replaces the hover cascade ── */
   .mobtog{ display:none; }
   .mobmenu{ display:none; }
-  @media(max-width:700px){
+  @media(max-width:760px){
     .menu{ display:none; }                         /* the hover cascade is desktop-only */
     .bar .sys{ display:none; }                      /* free room in the bar for the toggle */
+    .bar .social{ display:none; }                   /* login/X/Kraken/theme live in the springboard dock on phones */
     .mobtog{ display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; margin-left:8px; flex:none;
       border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
     .mobtog svg{ width:22px; height:22px; }
@@ -530,6 +535,8 @@
   .sbdocki:hover, .sbdocki:active{ border-color:var(--faint); box-shadow:0 5px 14px -5px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12); }
   .sbdocki svg{ width:23px; height:23px; fill:currentColor; }
   .sbdocki.krk{ border-color:color-mix(in srgb,#9d5cf8 42%, var(--line2)); } .sbdocki.krk svg{ fill:#9d5cf8; }
+  .sbdocki.dfauth{ border-color:var(--live); color:var(--live); } .sbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .sbdocki.dfauth.authed{ padding:0; overflow:hidden; border-color:var(--line2); } .sbdocki.dfauth.authed img{ width:100%; height:100%; object-fit:cover; display:block; }
   .sbdocki#sbtheme svg{ fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
   /* the panel itself springs up on open (iOS "zoom into a folder") */
   @keyframes sbopen{ from{ opacity:0; transform:scale(1.05) } to{ opacity:1; transform:none } }
@@ -739,6 +746,7 @@
     <div class="sbbody" id="sbbody"></div>
     <!-- utility dock: the social + affiliate + theme controls, always at hand without leaving the menu -->
     <div class="sbdock">
+      <a class="sbdocki dfauth" id="dfAuthDock" href="/api/auth?action=login" target="_top" title="Log in with X — enter Deep Field" aria-label="Log in with X to enter Deep Field"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></a>
       <a class="sbdocki" href="https://x.com/SPX6900Rainbow" target="_blank" rel="noopener noreferrer" aria-label="@SPX6900Rainbow on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
       <a class="sbdocki krk" href="https://proinvite.kraken.com/9f1e/8985jw0l" target="_blank" rel="noopener noreferrer sponsored" aria-label="Trade on Kraken (affiliate)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z"/></svg></a>
       <button class="sbdocki" id="sbtheme" type="button" aria-label="Toggle dark / bright theme"></button>
@@ -1412,7 +1420,7 @@
     { const hm=document.getElementById('sbhome'); if(hm) hm.addEventListener('click',()=>{ if(stack.length>1) history.go(-(stack.length-1)); }); }
     { const cx=document.getElementById('sbclose'); if(cx) cx.addEventListener('click',()=>{ if(stack.length) history.go(-stack.length); else close(); }); }
     // entry points (mobile only): the "apps" grid button in the bar + the hero "> CHARTS" CTA
-    window.__sbOpen=open; window.__sbMobile=()=>matchMedia('(max-width:700px)').matches;
+    window.__sbOpen=open; window.__sbMobile=()=>matchMedia('(max-width:760px)').matches;
     { const tog=document.getElementById('mobtog'); if(tog) tog.addEventListener('click',e=>{ e.preventDefault(); e.stopImmediatePropagation(); open(); }, true); }
   })();
   // touch/tap support — on hover-less devices, tap a segment to open it, tap a leaf to navigate, tap outside to close
@@ -1546,13 +1554,15 @@
    X avatar (→ /deepfield). Signed out stays the login icon (→ X OAuth). Both anchors are target="_top"
    so they break out of the home iframe. Fails silent (icon stays login) if auth isn't reachable. */
 (function(){
-  var el=document.getElementById('dfAuth'); if(!el) return;
+  var els=[document.getElementById('dfAuth'),document.getElementById('dfAuthDock')].filter(Boolean); if(!els.length) return;
   fetch('/api/auth?action=me',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(d){
     if(!d||!d.loggedIn) return;                     // signed out → keep the login icon + href
-    el.setAttribute('href','/deepfield');
     var who=d.username?('@'+d.username):'you';
-    el.title='Signed in as '+who+' — open Deep Field'; el.setAttribute('aria-label',el.title);
-    if(d.avatar){ el.classList.add('authed'); el.innerHTML='<img src="'+d.avatar+'" alt="" referrerpolicy="no-referrer" onerror="this.remove()"/>'; }
+    els.forEach(function(el){
+      el.setAttribute('href','/deepfield');
+      el.title='Signed in as '+who+' — open Deep Field'; el.setAttribute('aria-label',el.title);
+      if(d.avatar){ el.classList.add('authed'); el.innerHTML='<img src="'+d.avatar+'" alt="" referrerpolicy="no-referrer" onerror="this.remove()"/>'; }
+    });
   }).catch(function(){});
 })();
 </script>

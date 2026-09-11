@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Drag-to-zoom state machine for Recharts: press-drag-release selects an x-window.
 // `canZoom(a, b)` is the chart-specific guard (typically "≥2 data points inside")
@@ -20,6 +20,15 @@ export function useDragZoom(canZoom) {
     }
     setSelL(null); setSelR(null);
   };
+  // Touch: the chart wrapper carries `touch-action: pan-y`, so a SIDEWAYS swipe stays with us (and
+  // zooms) while a vertical one scrolls the page. When the browser takes a vertical pan it fires
+  // touchcancel, not touchend, so drop any half-drawn selection then — otherwise a sliver stays lit.
+  useEffect(() => {
+    const clear = () => { setSelL(null); setSelR(null); };
+    window.addEventListener("touchcancel", clear, { passive: true });
+    window.addEventListener("pointercancel", clear, { passive: true });
+    return () => { window.removeEventListener("touchcancel", clear); window.removeEventListener("pointercancel", clear); };
+  }, []);
   return { zoom, setZoom, selL, selR, onDown, onMove, onUp, zoomed: !!zoom };
 }
 

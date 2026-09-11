@@ -1,3 +1,4 @@
+import { useViewport, useMedia, MOBILE_MQ, TABLET_BP } from "./viewport.js";
 import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import {
   ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis,
@@ -249,16 +250,7 @@ const AURORA = [
   { c: "#dc2626", top: "78%",  left: "18%",  size: "38vw", anim: "aurora-3 27s" },
 ];
 
-// Track viewport width so we can size things responsively for phones/tablets.
-function useViewport() {
-  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 1400);
-  useEffect(() => {
-    const onResize = () => setW(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-  return w;
-}
+// viewport hooks live in src/viewport.js (ONE mobile breakpoint shared with the CSS)
 
 const fP = v => {
   if (v == null) return "";
@@ -394,8 +386,8 @@ export default function App() {
   // The MODEL FIT is always computed from DEFAULT_RAW (bundled) only, so the
   // rainbow shape is stable and never changes when fresh data arrives.
   const vw = useViewport();
-  const isMobile = vw < 640;
-  const isTablet = vw < 980;
+  const isMobile = useMedia(MOBILE_MQ); // same query as the CSS hamburger switch
+  const isTablet = vw < TABLET_BP;
 
   const [priceData, setPriceData] = useState(DENSE_BASE);
   const [, setDataStatus] = useState(null);
@@ -1349,7 +1341,7 @@ export default function App() {
         >
         <ResponsiveContainer width="100%" height={isMobile ? 440 : isTablet ? 580 : 720}>
           <ComposedChart data={vdata} margin={{ top: 10, right: isMobile ? 64 : 130, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} style={{ userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ userSelect: "none", touchAction: "pan-y" }}>
             {/* invisible tooltip — the custom crosshair does the visible readout, but recharts needs an
                 active tooltip to expose activeLabel to the drag-zoom handlers. */}
             <Tooltip content={() => null} cursor={false} isAnimationActive={false} />

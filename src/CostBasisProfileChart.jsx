@@ -127,7 +127,7 @@ export default function CostBasisProfileChart({ isMobile, preview = false, price
       <ZoomBar zoomed={!!zoomP} onReset={() => setZoomP(null)} accent={GRN} />
 
       <div ref={wrap} style={{ position: "relative", width: "100%", userSelect: "none" }}
-        onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => { setHov(null); setDrag(null); }}>
+        onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={() => { setHov(null); setDrag(null); }} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}>
         <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ display: "block", cursor: drag ? "ns-resize" : "crosshair" }}>
           <defs><clipPath id="cbpClip"><rect x={mL} y={mT} width={plotW} height={plotH} /></clipPath></defs>
           {priceTicks.map(v => (

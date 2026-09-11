@@ -96,7 +96,7 @@ export default function NuplChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
             <defs>
               <linearGradient id="nuplfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f8fafc" stopOpacity={0.14} /><stop offset="100%" stopColor="#f8fafc" stopOpacity={0} /></linearGradient>
             </defs>
