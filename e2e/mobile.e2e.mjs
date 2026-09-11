@@ -67,12 +67,20 @@ for (const w of WIDTHS) {
   });
 }
 
-test("390px: fullscreen is offered on phones (FullscreenView is built for them)", async () => {
+test("390px: charts rely on the browser's own pinch zoom, not a fullscreen viewer", async () => {
+  // The custom fullscreen viewer is gone. iOS Safari refuses requestFullscreen on anything that
+  // isn't a <video>, so on iPhone it never actually went fullscreen — it was a CSS overlay under
+  // the URL bar and the tab bar. What replaces it is what always worked: the browser's own pinch.
   const ctx = await browser.newContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   const titles = await page.$$eval(".tchart button", bs => bs.map(b => b.getAttribute("title") || ""));
-  assert.ok(titles.some(t => /full-screen/i.test(t)), `fullscreen button present (saw ${JSON.stringify(titles)})`);
+  assert.ok(!titles.some(t => /full-screen/i.test(t)), `no fullscreen button (saw ${JSON.stringify(titles)})`);
+  assert.equal(await page.$(".fsview"), null, "no fullscreen overlay in the tree");
+  // Native pinch only works while the page does not forbid it.
+  const vp = await page.$eval('meta[name=viewport]', m => m.getAttribute("content"));
+  assert.ok(!/user-scalable\s*=\s*no/i.test(vp), `viewport must not block zoom (${vp})`);
+  assert.ok(!/maximum-scale\s*=\s*1/i.test(vp), `viewport must not cap scale (${vp})`);
   await ctx.close();
 });
 
@@ -91,19 +99,20 @@ test("390px home: the React shell under the landing iframe is inert (no duplicat
   await ctx.close();
 });
 
-test("390px: touch charts point at fullscreen pinch, not a swipe that would flip the chart", async () => {
-  // The chart page binds a horizontal flick to the chart-to-chart pager, so the zoom affordance on
-  // touch MUST be fullscreen + pinch. A "swipe to zoom" caption here would teach a broken gesture.
+test("390px: touch charts point at pinch, and actually permit it", async () => {
+  // The chart page binds a horizontal flick to the chart-to-chart pager, so the touch zoom
+  // affordance must not be a drag. It is the browser's own pinch now — which means touch-action
+  // has to ALLOW pinch: plain "pan-y" silently blocks it, and the caption would be a lie.
   const ctx = await browser.newContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   await page.waitForTimeout(800);
   assert.equal(await page.$(".zoomhint-box"), null, "the animated MOUSE hint is hidden on a touch device");
   const cap = (await page.textContent(".chart-zoombar")) || "";
-  assert.match(cap, /fullscreen/i, `caption routes to fullscreen (saw "${cap.trim()}")`);
+  assert.match(cap, /pinch/i, `caption routes to pinch (saw "${cap.trim()}")`);
   assert.doesNotMatch(cap, /\bdrag\b|\bswipe\b/i, "caption never asks for a gesture the pager owns");
   const handlers = await page.evaluate(() => getComputedStyle(document.querySelector(".recharts-wrapper")).touchAction);
-  assert.equal(handlers, "pan-y", "chart keeps vertical scrolling and leaves horizontal to the pager");
+  assert.equal(handlers, "pan-y pinch-zoom", "vertical scroll + pinch allowed, horizontal left to the pager");
   await ctx.close();
 });
 
@@ -164,14 +173,14 @@ test("390px Explore: search, chips and rails make a 73-chart catalogue reachable
   // (this used to check clearance against a full-width Deep Field strip, which is now a peer tile)
   const overlap = await page.evaluate(() => {
     const r = [...document.querySelectorAll(".tsbcell")].map(e => e.getBoundingClientRect());
-    if (r.length < 6) return "missing";
+    if (r.length < 5) return "missing";
     const hits = (a, b) => a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1;
     for (let i = 0; i < r.length; i++) for (let j = i + 1; j < r.length; j++) if (hits(r[i], r[j])) return "overlap";
     const rail = document.querySelector(".tsbrail")?.getBoundingClientRect();
     if (rail && r.some(c => c.bottom > rail.top + 1)) return "overlap";
     return "ok";
   });
-  assert.equal(overlap, "ok", "the six destination tiles lay out cleanly");
+  assert.equal(overlap, "ok", "the destination tiles lay out cleanly");
   await ctx.close();
 });
 
@@ -467,27 +476,20 @@ test("390px: the five core tasks are completable, and cheap in taps", async () =
   assert.ok(insight && /\d/.test(insight.v), "a current value is stated");
   assert.ok(insight.m.length > 20, "and what it means, in words");
 
-  // 4 — zoom into a period. On touch the supported path is Fullscreen + pinch (see the test above:
-  // a horizontal drag on the plot belongs to the pager, so a swipe-to-zoom would teach a gesture
-  // that fights it). This follows the path the caption actually tells the user to take.
+  // 4 — zoom into a period. On touch this is the browser's own pinch now: the custom fullscreen
+  // viewer is gone because iOS Safari never actually granted it fullscreen. So the requirement is
+  // that the caption points at pinch and nothing over the plot disables it.
   const cap = await page.textContent(".chart-zoombar");
-  assert.match(cap, /fullscreen/i, "the chart tells a touch user how to zoom");
-  const fsBtn = (await page.$$(".tchart button")).length
-    ? await page.evaluateHandle(() => [...document.querySelectorAll(".tchart button")]
-        .find(b => /full-screen/i.test(b.getAttribute("title") || "")))
-    : null;
-  assert.ok(fsBtn && (await fsBtn.asElement()), "a fullscreen control is offered on a phone");
-  await fsBtn.asElement().click(); taps++;
-  await page.waitForTimeout(800);
-  const fsOpen = await page.evaluate(() => !!document.querySelector(".fsview"));
-  assert.ok(fsOpen, "the fullscreen viewer opens");
-  // Held PORTRAIT it deliberately asks you to rotate rather than pinching a letterbox — the plot
-  // body is only mounted in landscape, so that hint is the honest state, not a failure.
-  assert.ok(await page.$(".fsview.fsportrait, .fsrotate"), "portrait asks the reader to rotate");
-  // The pinch itself is exercised in landscape by the test below; held portrait the viewer
-  // deliberately mounts no plot, so there is nothing to pinch yet.
-  await page.keyboard.press("Escape");
-  await page.waitForTimeout(500);
+  assert.match(cap, /pinch/i, "the chart tells a touch user how to zoom");
+  assert.equal(await page.$(".fsview"), null, "no fullscreen viewer is offered");
+  const zoomBlocked = await page.evaluate(() => {
+    const plot = document.querySelector(".recharts-surface");
+    if (!plot) return "no plot";
+    for (let el = plot; el && el !== document.documentElement; el = el.parentElement)
+      if (getComputedStyle(el).touchAction === "none") return el.className.toString() || el.tagName;
+    return null;
+  });
+  assert.equal(zoomBlocked, null, `pinch is not blocked over the plot (found ${zoomBlocked})`);
 
   // 5 — save another chart and find it again
   await tap(".tmobtog");
@@ -502,36 +504,26 @@ test("390px: the five core tasks are completable, and cheap in taps", async () =
   await ctx.close();
 });
 
-test("landscape: the fullscreen viewer mounts the plot and pinch zooms it", async () => {
-  // The touch zoom path the chart caption points at. Portrait shows a rotate hint instead, so this
-  // runs in a landscape viewport — the orientation the viewer is designed for.
+test("landscape: a chart page is usable rotated, with nothing blocking pinch", async () => {
+  // Replaces the old landscape fullscreen test. There is no viewer to open now; the requirement is
+  // simply that the chart renders rotated and no element disables touch zoom over the plot.
   const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true, deviceScaleFactor: 3 });
   const page = await ctx.newPage();
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   await page.waitForTimeout(1800);
-  const fs = await page.evaluateHandle(() => [...document.querySelectorAll(".tchart button")]
-    .find(b => /full-screen/i.test(b.getAttribute("title") || "")));
-  assert.ok(fs.asElement(), "fullscreen is offered");
-  await fs.asElement().click();
-  await page.waitForTimeout(900);
-  assert.ok(await page.$(".fsview"), "the viewer opens");
-  assert.ok(await page.$(".fsbody"), "landscape mounts the chart body");
-  const cdp = await ctx.newCDPSession(page);
-  const cx = 422, cy = 195, pts = d => [{ x: cx - d, y: cy }, { x: cx + d, y: cy }];
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: pts(40) });
-  for (const d of [70, 100, 130, 160]) { await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: pts(d) }); await page.waitForTimeout(60); }
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await page.waitForTimeout(500);
-  const scale = await page.evaluate(() => {
-    const el = document.querySelector(".fsbody")?.firstElementChild;
-    const m = el ? getComputedStyle(el).transform.match(/matrix\(([^,]+)/) : null;
-    return m ? parseFloat(m[1]) : 1;
+  assert.ok(await page.$(".recharts-surface"), "the plot renders in landscape");
+  const blocked = await page.evaluate(() => {
+    const plot = document.querySelector(".recharts-surface");
+    if (!plot) return "no plot";
+    for (let el = plot; el && el !== document.documentElement; el = el.parentElement)
+      if (getComputedStyle(el).touchAction === "none") return el.className.toString() || el.tagName;
+    return null;
   });
-  assert.ok(scale > 1.05, `two fingers zoom the plot (scale ${scale})`);
+  assert.equal(blocked, null, `nothing over the plot sets touch-action:none (found ${blocked})`);
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth), 0, "no sideways scroll rotated");
   await ctx.close();
 });
-
-test("390px: the launcher is a balanced grid of six, all reachable without scrolling", async () => {
+test("390px: the launcher is a balanced grid, all reachable without scrolling", async () => {
   const ctx = await browser.newContext({ ...devices["iPhone 13"], hasTouch: true });
   const page = await ctx.newPage();
   await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
@@ -547,7 +539,10 @@ test("390px: the launcher is a balanced grid of six, all reachable without scrol
     return { cells, strip: !!document.querySelector(".tsbdf"), vh: innerHeight,
       sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
   });
-  assert.equal(g.cells.length, 6, "six destinations");
+  // Five, not six: the Manual tile was removed — it is the SPX City manual, so top level was
+  // the wrong home for it.
+  assert.equal(g.cells.length, 5, "five destinations");
+  assert.ok(!g.cells.some(c => /manual/i.test(c.name || "")), "the Manual is not one of them");
   assert.equal(g.strip, false, "no odd full-width strip");
   assert.equal(new Set(g.cells.map(c => `${c.w}x${c.h}`)).size, 1, "every tile is the same size");
   assert.deepEqual([...new Set(g.cells.map(c => c.radius))], ["0px"], "square corners");

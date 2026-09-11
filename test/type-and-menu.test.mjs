@@ -48,25 +48,28 @@ test("3D overlay labels use the site typeface, not a second one", () => {
   }
 });
 
-test("the launcher is six equal tiles, not four squares and a strip", () => {
+test("the launcher is equal tiles, not four squares and a strip", () => {
+  // FIVE now, not six: the Manual was pulled out. It is the SPX City manual, so at top level it
+  // read as random next to Rainbow and Charts, and it competed with what people come for.
   const nav = read("src/TerminalNav.jsx"), css = read("src/terminal.css");
   const ids = [...nav.matchAll(/\{ id: "(rainbow|charts|city|aeon|deepfield|manual)"/g)].map(m => m[1]);
-  assert.deepEqual(ids, ["rainbow", "charts", "city", "aeon", "deepfield", "manual"], "six destinations");
+  assert.deepEqual(ids, ["rainbow", "charts", "city", "aeon", "deepfield"], "five destinations");
+  assert.ok(!ids.includes("manual"), "the Manual is not a top-level tile");
   assert.ok(!nav.includes('className="tsbdf"'), "the odd full-width strip is gone");
   assert.match(css, /\.tzone \.tsbgrid-quad\{ display:grid; grid-template-columns:1fr 1fr/, "2 columns");
   assert.match(css, /\.tzone \.tsbcell\{[^}]*border-radius:0;/, "square corners, like the rest of the site");
   assert.match(css, /\.tzone \.tsbcell::after\{[^}]*background:var\(--tc\)/, "a hard bar of the section colour");
-  for (const id of ["deepfield", "manual"]) {
-    assert.ok(nav.includes(`  ${id}: <svg`), `${id} has its own icon and motif`);
-  }
+  assert.ok(nav.includes("  deepfield: <svg"), "deepfield has its own motif");
+  assert.ok(!nav.includes("  manual: <svg"), "and the Manual's motif went with its tile");
 });
 
-test("both new tiles go somewhere that already existed", () => {
-  // Nothing invented to fill the grid: Deep Field and the Manual were both already destinations.
+test("the launcher invents no destination, and drops the docs prop it no longer needs", () => {
   const nav = read("src/TerminalNav.jsx"), app = read("src/App.jsx");
-  assert.match(nav, /openDocs && openDocs\("index"\)/, "Manual opens the docs route");
-  assert.match(app, /openDocs=\{openDocs\}/, "which App already had");
   assert.match(nav, /go\(onDeepField\)/, "Deep Field keeps its own handler");
+  // Removing the Manual tile left openDocs unused in the nav; it must not linger as a dead prop.
+  assert.ok(!nav.includes("openDocs"), "the nav no longer takes openDocs");
+  assert.ok(!app.includes("openDocs={openDocs}"), "and App stops threading it in");
+  assert.match(app, /onNavigate=\{openDocs\}/, "the docs route itself still exists");
 });
 
 test("the font files are small enough to preload", () => {
@@ -98,12 +101,12 @@ test("the launcher is square-cornered throughout, like the rest of the site", ()
   assert.ok(css.slice(tile, css.indexOf("}", tile)).includes("border-radius:0"), "tiles are square");
 });
 
-test("BOTH mobile launchers are the same six tiles — the landing has its own", () => {
-  // The landing ships a second, independent springboard in vanilla JS. It was still on the old
-  // four-quads-plus-strip layout, so someone arriving from X saw the menu the app no longer has.
+test("BOTH mobile launchers carry the same tiles — the landing has its own", () => {
+  // The landing ships a second, independent springboard in vanilla JS, so every launcher change
+  // has to be made twice or the two drift apart.
   const landing = read("public/landing-next.html");
   assert.ok(landing.includes("secQuad('/deepfield','deepfield'"), "Deep Field is a peer tile");
-  assert.ok(landing.includes("secQuad('/?view=docs','manual'"), "the Manual closes the grid");
+  assert.ok(!landing.includes("secQuad('/?view=docs','manual'"), "the Manual tile is gone here too");
   assert.ok(!/foot=`<button class="sbdf"/.test(landing), "the full-width strip is gone");
   assert.ok(landing.includes("grid-auto-rows:1fr"), "all three rows are equal");
   assert.ok(!/grid-template-rows:1fr 1fr/.test(landing), "no hardcoded two-row grid to squash the third");

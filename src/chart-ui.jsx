@@ -114,7 +114,7 @@ export function useHoverType(text) {
 
 // THE app's single button vocabulary — squared (90° corners), mono, uppercase, and it inverts +
 // types its label out on hover, exactly like the top menu. Used for every chart-page control
-// (share / fullscreen / chart pager / back). icon optional; iconRight puts the icon after the label;
+// (share / chart pager / back). icon optional; iconRight puts the icon after the label;
 // an empty label makes an icon-only square button. Styling lives in .menubtn (terminal.css, .tzone).
 export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, className = "", active = false, style, type: btnType = "button" }) {
   const { shown, type, reset } = useHoverType(label || "");
@@ -169,7 +169,11 @@ export function ZoomResetButton({ onReset, accent = "#38bdf8", fontSize = 12, pa
 // The status row above a zoomable chart: hint text + reset button when zoomed.
 export function ZoomBar({ zoomed, onReset, accent = "#38bdf8", viewing = "Viewing a selected window." }) {
   const coarse = useCoarsePointer();
-  const hint = coarse ? "Tap Fullscreen, then pinch to zoom into a period." : "Drag across the chart to zoom into any period.";
+  // The fullscreen viewer this used to point at is gone: iOS Safari refuses requestFullscreen on
+  // anything that isn't a <video>, so on iPhone it was only ever a CSS overlay sitting under the
+  // URL bar — never actually fullscreen. The browser's own pinch zoom works on the page as-is
+  // (nothing here sets user-scalable=no), so that is what touch users are pointed at.
+  const hint = coarse ? "Pinch to zoom in on any part of the chart." : "Drag across the chart to zoom into any period.";
   return (
     <div className="chart-zoombar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 10 }}>
       <span style={{ fontFamily: SANS, fontSize: 13, color: "var(--ch-dim,#8b96a8)" }}>{zoomed ? viewing : hint}</span>

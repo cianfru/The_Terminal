@@ -97,7 +97,7 @@ export default function HodlWavesChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={TK.height}>
           <AreaChart data={view.vis} margin={TK.margin}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: TK.tick, fontFamily: MONO }}

@@ -116,7 +116,6 @@ const CITY_IDS = new Set(CITY_GROUPS[0].charts.map(c => c.id));
 const ALIAS = { whalewatch: "spxcity", aeonskyline: "spxcity" };
 const resolveId = id => ALIAS[id] || id;
 import ChartFreshness from "./ChartFreshness.jsx";
-import FullscreenView from "./FullscreenView.jsx";
 import BandStats from "./BandStats.jsx";
 // Secondary tab charts are lazy-loaded so their code only ships when the tab is opened.
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -411,7 +410,6 @@ export default function App() {
   const [walletAddr, setWalletAddr] = useState(""); // per-wallet page address (?view=wallet&addr=…)
   const [clusterId, setClusterId] = useState(""); // per-cluster page id (?view=cluster&id=…)
   const [galleryGroup, setGalleryGroup] = useState(null); // when a nav group is clicked, show only that section
-  const [fsOpen, setFsOpen] = useState(false); // fullscreen / landscape chart viewer
   const cityFsRef = useRef(null);
   const enterCityFullscreen = () => {
     const el = cityFsRef.current; if (!el) return;
@@ -1061,7 +1059,7 @@ export default function App() {
       {/* Terminal cascade nav for sub-pages; the glass pill nav stays on home + landing preview */}
       {isSub ? (
         <nav className="tnavstick" style={{ position: "sticky", top: 0, zIndex: 50, width: "100%" }}>
-          <TerminalNav onHome={goHome} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={id => chartEl(id, { preview: true })} asOf={last?.date} me={me} onDeepField={openDeepField} openDocs={openDocs} />
+          <TerminalNav onHome={goHome} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={id => chartEl(id, { preview: true })} asOf={last?.date} me={me} onDeepField={openDeepField} />
         </nav>
       ) : (
       <nav ref={navRef} inert={landingCovers || undefined} aria-hidden={landingCovers || undefined} style={{
@@ -1345,7 +1343,7 @@ export default function App() {
         >
         <ResponsiveContainer width="100%" height={isMobile ? 440 : isTablet ? 580 : 720}>
           <ComposedChart data={vdata} margin={{ top: 10, right: isMobile ? 64 : 130, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} style={{ userSelect: "none", touchAction: "pan-y" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} style={{ userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             {/* invisible tooltip — the custom crosshair does the visible readout, but recharts needs an
                 active tooltip to expose activeLabel to the drag-zoom handlers. */}
             <Tooltip content={() => null} cursor={false} isAnimationActive={false} />
@@ -1504,10 +1502,7 @@ export default function App() {
             <MenuBtn onClick={back} title={`Back to ${label}`}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>} />
             <span style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--tx)" }}>{grp}<span className="tgcur" aria-hidden="true" style={{ "--curc": gcol }}>_</span></span>
-            <MenuBtn onClick={() => setFsOpen(true)}
-              title="Open a full-screen chart" label={isMobile ? "" : "Fullscreen"} style={{ marginLeft: "auto" }}
-              icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>} />
-            <MenuBtn onClick={shareChart} title="Share this chart" label={copied ? "Copied" : "Share"} className={copied ? "copied" : ""}
+            <MenuBtn onClick={shareChart} style={{ marginLeft: "auto" }} title="Share this chart" label={copied ? "Copied" : "Share"} className={copied ? "copied" : ""}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.6" y1="13.5" x2="15.4" y2="17.5" /><line x1="15.4" y1="6.5" x2="8.6" y2="10.5" /></svg>} />
           </div>
           <div style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".04em", color: "var(--live)", marginBottom: 10 }}>
@@ -1545,15 +1540,6 @@ export default function App() {
                 : <span />}
             </div>
           )}
-          <FullscreenView open={fsOpen} onClose={() => setFsOpen(false)}>
-            {fsOpen && (
-              <ErrorBoundary key={"fs-" + tab}>
-                <Suspense fallback={<div style={{ fontFamily: "var(--mono)", color: "var(--faint)" }}>loading…</div>}>
-                  {chartEl(tab, { fullscreen: true })}
-                </Suspense>
-              </ErrorBoundary>
-            )}
-          </FullscreenView>
         </div>
         );
       })()}{/* end chart page */}

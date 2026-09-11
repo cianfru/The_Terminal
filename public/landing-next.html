@@ -9,11 +9,11 @@
 <body>
 <title>SPX6900/Rainbow — the data layer</title>
 <style>
-  @font-face{ font-family:'PxVGA'; src:url(/fonts/PxVGA.ttf) format('truetype') format('truetype'); font-display:block; }
-  @font-face{ font-family:'DepartureMono'; font-style:normal; font-weight:400; font-display:block; src:url(/fonts/DepartureMono-Regular.woff2) format('woff2') format('woff2'); }
-  @font-face{ font-family:'SpaceGrotesk'; font-style:normal; font-weight:300 700; font-display:swap; src:url(/fonts/SpaceGrotesk.woff2) format('woff2') format('woff2'); }
-  @font-face{ font-family:'Geist'; font-style:normal; font-weight:100 900; font-display:swap; src:url(/fonts/Geist.woff2) format('woff2') format('woff2'); }
-  @font-face{ font-family:'GeistMono'; font-style:normal; font-weight:100 900; font-display:swap; src:url(/fonts/GeistMono.woff2) format('woff2') format('woff2'); }
+  @font-face{ font-family:'PxVGA'; src:url(/fonts/PxVGA.ttf) format('truetype'); font-display:block; }
+  @font-face{ font-family:'DepartureMono'; font-style:normal; font-weight:400; font-display:block; src:url(/fonts/DepartureMono-Regular.woff2) format('woff2'); }
+  @font-face{ font-family:'SpaceGrotesk'; font-style:normal; font-weight:300 700; font-display:swap; src:url(/fonts/SpaceGrotesk.woff2) format('woff2'); }
+  @font-face{ font-family:'Geist'; font-style:normal; font-weight:100 900; font-display:swap; src:url(/fonts/Geist.woff2) format('woff2'); }
+  @font-face{ font-family:'GeistMono'; font-style:normal; font-weight:100 900; font-display:swap; src:url(/fonts/GeistMono.woff2) format('woff2'); }
 
   /* Fusion: editorial thesis hero (big grotesque, model snapshot, restraint) + terminal
      character (pixel brand, DOS nav, green command lines, dotted grid, live clock).
@@ -1386,7 +1386,6 @@
     // fullscreen 2×2 quadrant launcher (matches the React app) — each section a rich, motif-backed tile
     const SB_MOTIF={
       deepfield:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="currentColor"><circle cx="22" cy="20" r="2.6"/><circle cx="52" cy="12" r="1.7"/><circle cx="86" cy="24" r="3.2"/><circle cx="104" cy="48" r="1.8"/><circle cx="34" cy="52" r="3.6"/><circle cx="66" cy="44" r="2.2"/><circle cx="14" cy="68" r="2"/><circle cx="92" cy="70" r="2.6"/><circle cx="58" cy="70" r="1.6"/></svg>',
-      manual:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="10" y="24" width="44" height="5"/><rect x="10" y="38" width="44" height="5"/><rect x="10" y="52" width="30" height="5"/><rect x="66" y="24" width="44" height="5"/><rect x="66" y="38" width="36" height="5"/><rect x="66" y="52" width="44" height="5"/></svg>',
       rainbow:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="none" stroke="currentColor"><path d="M-6 78a66 66 0 0 1 132 0" stroke-width="7"/><path d="M12 78a48 48 0 0 1 96 0" stroke-width="7"/><path d="M30 78a30 30 0 0 1 60 0" stroke-width="7"/><path d="M48 78a12 12 0 0 1 24 0" stroke-width="7"/></svg>',
       CHARTS:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="6" y="46" width="12" height="34" rx="2"/><rect x="26" y="30" width="12" height="50" rx="2"/><rect x="46" y="52" width="12" height="28" rx="2"/><rect x="66" y="20" width="12" height="60" rx="2"/><rect x="86" y="38" width="12" height="42" rx="2"/><rect x="106" y="10" width="12" height="70" rx="2"/></svg>',
       SPX_CITY:'<svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36"/><rect x="24" y="28" width="16" height="52"/><rect x="44" y="52" width="14" height="28"/><rect x="62" y="18" width="18" height="62"/><rect x="84" y="38" width="14" height="42"/><rect x="102" y="26" width="16" height="54"/></svg>',
@@ -1418,9 +1417,9 @@
     const el=()=>document.getElementById('sb'), body=()=>document.getElementById('sbbody');
     function render(view,dir){ const b=body(); if(!b) return; let title='Explore', tiles='', foot='';
       if(view.t==='sections'){ title='Explore';
-        // SIX equal tiles in a 2x3 grid, matching the in-app launcher exactly. This used to be four
-        // quads plus a full-width Deep Field strip, which read as lopsided; Deep Field is a peer
-        // tile now and the Manual closes the grid. Hues are spread so no two neighbours share one.
+        // FIVE tiles, matching the in-app launcher exactly. The Manual was a sixth until it proved
+        // to be the SPX City manual wearing a top-level badge — random next to Rainbow and Charts.
+        // It belongs inside SPX City. Hues are spread so no two neighbours share one.
         const SEC_COL={ CHARTS:'#fbbf24', SPX_CITY:'#38bdf8', PROJECT_AEON:'#f87171' };
         // One short descriptor per tile, never an inventory: "8 groups · 57 charts" wrapped to two
         // lines at 390px and read as stock-keeping. The counts that mean something stay, phrased as
@@ -1430,7 +1429,6 @@
         NAV.forEach((sec,i)=>{ const d=SEC_DESC[sec.label]; const sub=d?d(sec):chartCount(sec)+' charts';
           tiles+=secQuad(sec.label, sec.label, NAV_DISP[sec.label]||sec.label, sub, SEC_COL[sec.label]||GCOL[i%GCOL.length], 'sec'); });
         tiles+=secQuad('/deepfield','deepfield','Deep Field','the deep layer','#4ee79a','nav');
-        tiles+=secQuad('/?view=docs','manual','Manual','how to read it','#e879f9','nav');
       } else if(view.t==='groups'){ const sec=NAV.find(s=>s.label===view.sec); title=NAV_DISP[sec.label]||sec.label;
         sec.groups.forEach((g,i)=>{ tiles+=grpTile(sec.label, g.g, g.items.length+' charts', GCOL[i%GCOL.length]); });
       } else if(view.t==='charts'){ const sec=NAV.find(s=>s.label===view.sec), g=sec.groups.find(x=>x.g===view.grp); title=view.grp;

@@ -64,7 +64,7 @@ test("the dialog hook traps, closes on Escape and restores focus", () => {
   assert.match(d, /const lost = !now \|\| now === document\.body/, "restores when focus was lost");
   assert.match(d, /opener\.isConnected/, "but only to an element that still exists");
   assert.match(d, /node\.contains\(now\)/, "or when focus is still inside the dialog");
-  for (const f of ["src/TerminalNav.jsx", "src/FullscreenView.jsx"]) {
+  for (const f of ["src/TerminalNav.jsx"]) {
     assert.match(read(f), /useDialog\(open, \w+, onClose\)/, `${f} uses it`);
   }
 });

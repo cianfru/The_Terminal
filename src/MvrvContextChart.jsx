@@ -196,7 +196,7 @@ export default function MvrvContextChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             {zone(z.hot, z.max, "#f87171", "hot")}
             {zone(z.warm, z.hot, "#fbbf24", "warm")}

@@ -301,7 +301,6 @@ const SB_MOTIF = {
   city: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36" /><rect x="24" y="28" width="16" height="52" /><rect x="44" y="52" width="14" height="28" /><rect x="62" y="18" width="18" height="62" /><rect x="84" y="38" width="14" height="42" /><rect x="102" y="26" width="16" height="54" /></svg>,
   aeon: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round"><path d="M60 8 96 28v34L60 82 24 62V28z" /><path d="M60 82V44M24 28l36 16 36-16" /></svg>,
   deepfield: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="currentColor"><circle cx="22" cy="20" r="2.6" /><circle cx="52" cy="12" r="1.7" /><circle cx="86" cy="24" r="3.2" /><circle cx="104" cy="48" r="1.8" /><circle cx="34" cy="52" r="3.6" /><circle cx="66" cy="44" r="2.2" /><circle cx="14" cy="68" r="2" /><circle cx="92" cy="70" r="2.6" /><circle cx="58" cy="70" r="1.6" /></svg>,
-  manual: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="10" y="24" width="44" height="5" /><rect x="10" y="38" width="44" height="5" /><rect x="10" y="52" width="30" height="5" /><rect x="66" y="24" width="44" height="5" /><rect x="66" y="38" width="36" height="5" /><rect x="66" y="52" width="44" height="5" /></svg>,
 };
 
 // A fullscreen quadrant — one section, its colour washed across the tile, a background motif behind
@@ -432,7 +431,7 @@ function SbRail({ title, note, items, favs, toggleFav, goChart, close, noteOf })
   );
 }
 
-function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout, openDocs }) {
+function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
   const sheetRef = useRef(null);
   const [q, setQ] = useState("");
@@ -455,16 +454,16 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   // jump straight to the four-section launcher from any depth
   const home = () => { if (stack.length > 1) setStack([{ t: "sections" }]); };
 
-  // SIX destinations in a 2x3 grid. It used to be four squares plus a full-width Deep Field strip,
-  // which left the menu visibly lopsided; Deep Field is now a peer tile, and the Manual joins it so
-  // the grid closes. Both were already top-level destinations, so nothing is invented to fill a hole.
+  // FIVE destinations. The Manual used to sit here as a sixth, but the manual is the SPX CITY
+  // manual — how to read the city — so at top level it read as random, and it competed with the
+  // things people actually come for. It lives inside SPX City, which is the only place it makes
+  // sense, and is still on the desktop nav.
   const SECS = [
     { id: "rainbow", name: "Rainbow", sub: "the main chart", color: "#a78bfa", onTap: () => go(openRainbow) },
     { id: "charts", name: "Charts", groups: CHART_GROUPS, desc: n => `all ${n} charts`, color: GCOL[1], onAll: () => go(openGallery) },
     { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, desc: () => "holders in 3D", color: "#38bdf8", onAll: () => go(openCity) },
     { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, desc: n => `${n} NFT charts`, color: GCOL[3], onAll: () => go(openAeon) },
     { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
-    { id: "manual", name: "Manual", sub: "how to read it", color: "#e879f9", onTap: () => go(() => openDocs && openDocs("index")) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -636,7 +635,7 @@ function MobileMenu({ open, onClose, openRainbow, openGallery, openAeon, openCit
   );
 }
 
-export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, asOf, me, onDeepField, openDocs }) {
+export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, asOf, me, onDeepField }) {
   const asOfLabel = asOf ? new Date(asOf).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null;
   const cityColor = CITY_GROUPS[0]?.color || "#7dd3fc";
   const cityItems = [
@@ -719,7 +718,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
-      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} openDocs={openDocs} />
+      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
     </div>
   );
 }

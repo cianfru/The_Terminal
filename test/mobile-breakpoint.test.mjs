@@ -73,5 +73,7 @@ test("drag-to-zoom stays mouse-only (the chart surface's horizontal flick belong
     .test(readFileSync(new URL("../src/" + f, import.meta.url), "utf8")));
   assert.deepEqual(offenders, [], "no chart wires drag-to-zoom to touch");
   const ui = readFileSync(new URL("../src/chart-ui.jsx", import.meta.url), "utf8");
-  assert.match(ui, /coarse \? "Tap Fullscreen, then pinch/, "touch caption routes to fullscreen");
+  // The fullscreen viewer it used to route to is gone (iOS Safari never granted it fullscreen), so
+  // the caption points at the browser's own pinch, which always worked.
+  assert.match(ui, /coarse \? "Pinch to zoom/, "touch caption routes to the native pinch");
 });

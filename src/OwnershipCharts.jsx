@@ -72,7 +72,7 @@ function Waves({ bands, view, isMobile, preview, accent, zoomProps, tip }) {
       <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
         <AreaChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
           onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-          style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+          style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
           <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
           <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
             tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
@@ -267,7 +267,7 @@ export function WhalesChart({ isMobile, preview = false }) {
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <LineChart data={data} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
             onMouseDown={z.onDown} onMouseMove={z.onMove} onMouseUp={z.onUp} onMouseLeave={z.onUp}
-            style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+            style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={z.view.xDomain} ticks={z.view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}

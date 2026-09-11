@@ -100,7 +100,7 @@ export default function ValuationComposite({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={TK.height}>
           <ComposedChart data={view.vis} margin={TK.margin}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <defs>
               <linearGradient id="valfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f8fafc" stopOpacity={0.18} /><stop offset="100%" stopColor="#f8fafc" stopOpacity={0} /></linearGradient>
             </defs>

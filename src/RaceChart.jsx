@@ -171,7 +171,7 @@ export default function RaceChart({ series, isMobile, fetchCoins, coins, basketL
             <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
               <ComposedChart data={rows} margin={{ top: 10, right: isMobile ? 14 : 32, bottom: 24, left: isMobile ? 0 : 12 }}
                 onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-                style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
+                style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
                 <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="ts" type="number" domain={xDomain} ticks={xTicks} scale="time" allowDataOverflow
                   tickFormatter={fmtX}

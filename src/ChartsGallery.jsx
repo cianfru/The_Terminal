@@ -69,19 +69,6 @@ export function LivePreview({ render }) {
 // on the slowest devices we serve. So on mobile the preview is a cheap painted band in the chart's
 // own colour: same tile shape and colour language, no chart, no chunk. The real chart mounts when
 // the tile is opened. (Desktop keeps the live preview, where it is both legible and affordable.)
-function QuietPreview({ color, height = 132 }) {
-  return (
-    <div aria-hidden="true" style={{
-      height, position: "relative", overflow: "hidden",
-      background: `linear-gradient(155deg, ${color}26, ${color}0d 58%, transparent)`,
-      borderBottom: `1px solid ${color}2e`,
-    }}>
-      <svg viewBox="0 0 120 60" preserveAspectRatio="none" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.5 }}>
-        <path d="M0 46 L18 38 L32 42 L48 24 L64 30 L80 14 L98 20 L120 6" fill="none" stroke={color} strokeWidth="1.6" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-      </svg>
-    </div>
-  );
-}
 
 // A Deep Field members chart shows this cover in the gallery instead of a live preview — release-aware,
 // so it tells the honest state without ever mounting the real (members-only) chart:
@@ -138,15 +125,19 @@ function Tile({ item, color, onOpen, renderPreview, released, me, isMobile }) {
         borderRadius: 10, overflow: "hidden",
         background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
         border: `1px solid ${hover ? color : T.line2}`,
+        ...(isMobile ? { borderLeft: `3px solid ${color}` } : null),
         boxShadow: hover ? `0 0 0 1px ${color}, 0 12px 28px rgba(0,0,0,0.55)` : "0 8px 24px rgba(0,0,0,0.35)",
         transform: hover ? "translateY(-2px)" : "none",
         transition: "transform .14s, box-shadow .14s, border-color .14s",
       }}
     >
+      {/* On a phone the tile is a LIST ROW, not a card: no preview block at all. It used to draw a
+          placeholder, then an empty colour band — both were dead space, and the phone's job here is
+          to let someone scan 57 names quickly. The colour moves to the tile's left edge. */}
       {!showLive ? <DripCover color={color} mode={coverMode} />
-        : isMobile ? <QuietPreview color={color} />
+        : isMobile ? null
           : <LivePreview render={() => renderPreview(item.id)} />}
-      <div style={{ padding: "12px 14px 14px", borderTop: `1px solid ${color}2e` }}>
+      <div style={{ padding: isMobile ? "13px 14px" : "12px 14px 14px", borderTop: isMobile ? "none" : `1px solid ${color}2e` }}>
         <div style={{
           fontFamily: MONO, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase",
           color: hover ? color : T.faint, marginBottom: 7, transition: "color .14s",

@@ -32,7 +32,12 @@ test("the lazy chart reserves its height, so the page below cannot jump", () => 
 
 test("phone gallery tiles never mount a live chart", () => {
   const g = read("src/ChartsGallery.jsx");
-  assert.match(g, /isMobile \? <QuietPreview/, "mobile gets the cheap stand-in");
+  // Mobile now renders NO preview block at all. The stand-in it used to draw was a single
+  // hardcoded zigzag repeated on all 73 tiles — a fake plot on a data tile, and dead space once
+  // the line was removed. A phone tile is a list row: category, title, one line, colour on the edge.
+  assert.match(g, /isMobile \? null/, "mobile mounts no preview");
+  assert.ok(!g.includes("QuietPreview"), "and the placeholder is gone entirely");
+  assert.match(g, /borderLeft: `3px solid \$\{color\}`/, "the section colour moves to the tile edge");
   assert.match(g, /rootMargin: "200px"/, "the preload margin no longer pre-mounts a screenful");
   assert.ok(!/rootMargin: "500px"/.test(g));
 });

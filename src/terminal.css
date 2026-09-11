@@ -449,30 +449,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .pgpos{ flex:none; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); text-align:center; }
 @media(max-width:560px){ .tzone .pgpos{ display:none; } .tzone .pgbtn{ max-width:48%; } }
 
-/* ── FULLSCREEN / LANDSCAPE viewer (charts + city) ── */
-.tzone .fsview{ position:fixed; inset:0; z-index:2000; background:var(--bg); display:flex; flex-direction:column; }
-.tzone .fsclose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:calc(env(safe-area-inset-right,0px) + 12px); z-index:6; width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:11px; background:var(--panel); color:var(--tx); cursor:pointer; }
-.tzone .fsclose svg{ width:22px; height:22px; }
-/* the touch surface: hidden overflow + touch-action:none so the browser never hijacks the
-   pinch (we drive zoom ourselves via a CSS transform on .fsscale — SVG, so it stays crisp) */
-.tzone .fsbody{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:6px; overflow:hidden; touch-action:none; }
-.tzone .fsview.fsportrait .fsbody{ visibility:hidden; }  /* while portrait, only the rotate prompt shows (hides the chart + its zoom-hint) */
-.tzone .fsscale{ width:100%; transform-origin:0 0; will-change:transform; }
-/* fading gesture hint, bottom-centre — disappears once the user pinches */
-.tzone .fshint{ position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 10px); transform:translateX(-50%); z-index:5; padding:5px 12px; border-radius:999px; background:color-mix(in srgb, var(--panel) 82%, transparent); border:1px solid var(--line2); color:var(--dim); font-family:var(--mono); font-size:11px; letter-spacing:.04em; white-space:nowrap; pointer-events:none; animation:fshint 5s ease forwards; }
-@keyframes fshint{ 0%,70%{ opacity:.92 } 100%{ opacity:0 } }
-@media(prefers-reduced-motion:reduce){ .tzone .fshint{ animation:none; opacity:.7 } }
-/* reset-zoom button, top-left, appears once magnified */
-.tzone .fsreset{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px); z-index:5; display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 13px; border:1px solid var(--line2); border-radius:11px; background:var(--panel); color:var(--tx); cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:.04em; text-transform:uppercase; }
-.tzone .fsreset svg{ width:18px; height:18px; }
-/* portrait rotate screen — a clean solid prompt (no squished chart behind), with a phone that
-   animates from portrait to landscape to signal "turn your device". Landscape hides it entirely. */
-.tzone .fsrotate{ position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:var(--bg); color:var(--tx); font-family:var(--mono); font-size:15px; letter-spacing:.05em; text-transform:uppercase; text-align:center; padding:24px; }
-.tzone .fsrotate .fsrotate-ph{ width:64px; height:64px; color:var(--live); transform-origin:50% 50%; animation:fsrot 2.4s ease-in-out infinite; }
-@keyframes fsrot{ 0%,20%{ transform:rotate(0deg) } 55%,80%{ transform:rotate(-90deg) } 100%{ transform:rotate(0deg) } }
-@media(prefers-reduced-motion:reduce){ .tzone .fsrotate .fsrotate-ph{ animation:none; transform:rotate(-90deg) } }
-.tzone .fsrotate small{ font-size:11px; letter-spacing:.1em; color:var(--faint); }
-/* the "go fullscreen" button that lives next to Share on the chart page + on the city */
+/* The fullscreen / landscape chart viewer was removed: iOS Safari refuses requestFullscreen on
+   anything that isn't a <video>, so on iPhone it was never fullscreen — just a CSS overlay sitting
+   under the URL bar and the tab bar, with touch-action:none suppressing the browser's own pinch.
+   Charts now use that native pinch. Only the CITY keeps a fullscreen button (.fsbtn below), which
+   goes through the real Fullscreen API where the platform allows it. */
 .tzone .fsbtn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px 12px; border-radius:7px; border:1px solid var(--line2); background:linear-gradient(180deg,var(--panel),var(--panel2)); color:var(--dim); cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:.04em; text-transform:uppercase; }
 .tzone .fsbtn:hover{ color:var(--tx); border-color:var(--faint); }
 .tzone .fsbtn svg{ width:14px; height:14px; }
