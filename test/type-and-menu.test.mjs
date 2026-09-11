@@ -76,3 +76,24 @@ test("the font files are small enough to preload", () => {
   }
   assert.match(read("index.html"), /rel="preload" as="font"[^>]*Geist\.woff2/, "and they are preloaded");
 });
+
+test("the launcher title is balanced against the buttons, not the leftover space", () => {
+  // The left side carries back + all-sections and the right only close, so the title (a flex child
+  // by design, so it can never overlap the left buttons) sat 27px right of the bar's true centre.
+  const nav = read("src/TerminalNav.jsx"), css = read("src/terminal.css");
+  assert.match(nav, /className="tsbbtn tsbspacer" aria-hidden="true"/, "a spacer balances the right side");
+  assert.match(css, /\.tzone \.tsbspacer\{[^}]*pointer-events:none/, "and it is inert");
+});
+
+test("the launcher is square-cornered throughout, like the rest of the site", () => {
+  const css = read("src/terminal.css");
+  for (const sel of ["tsbbtn", "tsbsearchin", "tsbchip", "tsbdocki", "tsbdockout"]) {
+    const at = css.indexOf(`.tzone .${sel}{`);
+    assert.ok(at > -1, `${sel} has a rule`);
+    const block = css.slice(at, css.indexOf("}", at));
+    assert.ok(block.includes("border-radius:0"), `${sel} is square — found: ${(block.match(/border-radius:[^;]*/) || ["none"])[0]}`);
+  }
+  // and the tiles themselves
+  const tile = css.indexOf(".tzone .tsbcell{");
+  assert.ok(css.slice(tile, css.indexOf("}", tile)).includes("border-radius:0"), "tiles are square");
+});

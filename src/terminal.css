@@ -406,8 +406,9 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
   font-family:var(--label); text-transform:uppercase; letter-spacing:.07em; font-size:15px; line-height:1.14; font-weight:800; color:var(--tx); }
 @media(max-width:400px){ .tzone .tbrand b{ display:none; } }  /* 320–400px: logo only, the text + toggle can't share the bar */
 @media(max-width:380px){ .tzone .tsbtitle{ letter-spacing:.03em; font-size:14px; } .tzone .tsbtop{ gap:7px; } }
-.tzone .tsbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:9px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
+.tzone .tsbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
 .tzone .tsbbtn:active{ border-color:var(--live); }
+.tzone .tsbspacer{ border-color:transparent; background:none; pointer-events:none; }
 .tzone .tsbbtn svg{ width:21px; height:21px; }
 .tzone .tsbbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px 14px calc(env(safe-area-inset-bottom,0px) + 40px); }
 /* command line + rainbow hairline — the site's signature header */
@@ -492,6 +493,10 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 /* a hard bar of the section's own colour along the top edge — the strongest, cheapest identifier,
    and the same device the chart rows and cluster rims use */
 .tzone .tsbcell::after{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--tc); }
+/* the motif runs behind the name — a bottom scrim keeps the label readable over any of them
+   without dimming the artwork itself (the labels are position:relative, so they sit above this) */
+.tzone .tsbcell::before{ content:""; position:absolute; left:0; right:0; bottom:0; height:62%;
+  background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--panel2) 88%, transparent) 62%, var(--panel2) 100%); }
 .tzone .tsbcell:active{ transform:scale(.975); border-color:var(--tc); background:linear-gradient(157deg, color-mix(in srgb, var(--tc) 38%, var(--panel)) 0%, var(--panel2) 72%); }
 .tzone .tsbcell .tsbcellbg{ position:absolute; left:0; right:0; bottom:0; height:62%; opacity:.2; color:var(--tc); pointer-events:none; }
 .tzone .tsbcell .tsbcellbg svg{ width:100%; height:100%; display:block; }
@@ -565,7 +570,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 /* ── Explore discovery: search, topic chips, result rows, rails ──────────────────────────────── */
 .tzone .tsbsearch{ position:relative; display:flex; align-items:center; margin:0 0 10px; }
 .tzone .tsbsearchico{ position:absolute; left:13px; width:18px; height:18px; color:var(--dim); pointer-events:none; }
-.tzone .tsbsearchin{ width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--line2); border-radius:12px;
+.tzone .tsbsearchin{ width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--line2); border-radius:0;
   background:var(--panel); color:var(--tx); font-family:var(--sans); font-size:16px; /* 16px: iOS zooms the page on focus below that */ }
 .tzone .tsbsearchin::placeholder{ color:var(--dim); }
 .tzone .tsbsearchin:focus{ outline:none; border-color:var(--live); }
@@ -574,7 +579,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 
 .tzone .tsbchips{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin:0 -14px 14px; padding:0 14px 2px; }
 .tzone .tsbchips::-webkit-scrollbar{ display:none; }
-.tzone .tsbchip{ flex:none; min-height:40px; padding:0 15px; border:1px solid var(--line2); border-radius:20px; background:var(--panel);
+.tzone .tsbchip{ flex:none; min-height:40px; padding:0 15px; border:1px solid var(--line2); border-radius:0; background:var(--panel);
   color:var(--tx); font-family:var(--sans); font-size:14.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
 .tzone .tsbchip.on{ border-color:var(--live); color:var(--live); background:color-mix(in srgb, var(--live) 12%, var(--panel)); }
 
@@ -603,7 +608,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbdock{ flex:none; display:flex; align-items:center; justify-content:center; gap:14px; padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 15px); border-top:1px solid var(--line); position:relative; }
 .tzone .tsbdock::before{ content:""; position:absolute; left:0; right:0; top:-2.5px; height:2.5px; pointer-events:none;
   background:linear-gradient(90deg,#8b5cf6,#3b82f6,#22c55e,#eab308,#f97316,#ef4444); opacity:.9; }
-.tzone .tsbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:13px; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; padding:0; overflow:hidden; }
+.tzone .tsbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; padding:0; overflow:hidden; }
 .tzone .tsbdocki:active{ border-color:var(--live); }
 .tzone .tsbdocki:not(.tsbtheme) svg{ width:20px; height:20px; fill:currentColor; }
 .tzone .tsbdocki.tsbtheme svg{ width:20px; height:20px; }
@@ -611,7 +616,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbdocki.dfauth{ border-color:var(--live); color:var(--live); }
 .tzone .tsbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 .tzone .tsbdocki.dfauth img{ width:100%; height:100%; object-fit:cover; display:block; }
-.tzone .tsbdockout{ font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:none; border:1px solid var(--line2); border-radius:13px; height:48px; padding:0 14px; cursor:pointer; }
+.tzone .tsbdockout{ font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:none; border:1px solid var(--line2); border-radius:0; height:48px; padding:0 14px; cursor:pointer; }
 .tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:16px; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
 .tzone .tsbdf:active{ transform:scale(.985); border-color:var(--live); }
 .tzone .tsbdf .tsbdftx{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }

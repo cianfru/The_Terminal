@@ -469,10 +469,10 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   const SECS = [
     { id: "rainbow", name: "Rainbow", sub: "the foundation chart", color: "#a78bfa", onTap: () => go(openRainbow) },
     { id: "charts", name: "Charts", groups: CHART_GROUPS, color: GCOL[1], onAll: () => go(openGallery) },
-    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, color: GCOL[2], onAll: () => go(openCity) },
+    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, color: "#38bdf8", onAll: () => go(openCity) },
     { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, color: GCOL[3], onAll: () => go(openAeon) },
     { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "members · your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
-    { id: "manual", name: "Manual", sub: "how to read it all", color: "#5eead4", onTap: () => go(() => openDocs && openDocs("index")) },
+    { id: "manual", name: "Manual", sub: "how to read it all", color: "#e879f9", onTap: () => go(() => openDocs && openDocs("index")) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -525,6 +525,10 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
         <button className="tsbbtn" onClick={onClose} aria-label="Close">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>
         </button>
+        {/* The left side carries TWO buttons (back + all-sections) and the right only one, so the
+            title — a flex child, deliberately, so it can never overlap them — centred in the
+            leftover space and sat 27px right of the bar's true centre. This balances the sides. */}
+        <span className="tsbbtn tsbspacer" aria-hidden="true" />
       </div>
       <div className="tsbbody">
         {/* Search + chips sit at the TOP of Explore, above the destinations: on a 74-chart catalog
