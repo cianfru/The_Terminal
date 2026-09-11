@@ -125,12 +125,12 @@ export default function ExitFlowChart({ isMobile }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="n" type="number" allowDataOverflow
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56}
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56}
               tickFormatter={spx ? fSpx : fN} />
             {!cumulative && (
               <YAxis yAxisId="price" orientation="right" type="number" scale="log" domain={view.pDomain} allowDataOverflow
                 tick={{ fill: PRICE, fontSize: isMobile ? 9 : 11, fontFamily: MONO }} tickFormatter={fP}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }} tickLine={false} width={isMobile ? 44 : 56} />
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }} tickLine={false} width={isMobile ? 55 : 56} />
             )}
             <Tooltip content={<Tip cumulative={cumulative} spx={spx} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {cumulative ? (

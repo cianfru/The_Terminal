@@ -104,7 +104,7 @@ export default function FreeFloatChart({ isMobile, preview = false }) {
               label={{ value: "age since launch", position: "insideBottom", offset: -16, fill: "#7c879b", fontSize: 12, fontFamily: SANS }} />
             <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow
               tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {spxLastDay > 0 && spxLastDay >= view.xDomain[0] && spxLastDay <= view.xDomain[1] && (
               <ReferenceLine x={spxLastDay} stroke="#e2e8f0" strokeDasharray="6 6" strokeOpacity={0.5}

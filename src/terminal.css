@@ -441,6 +441,58 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
+/* ── MOBILE CHART SYSTEM ─────────────────────────────────────────────────────────────────────
+   Floors enforced in CSS so they reach ALL charts, not only the ones migrated to chart-tokens.js.
+   The audit found 179 inline font sizes under 12px; rather than edit 60 files, the shared rules
+   below raise the type everywhere, and charts adopt the tokens as they are touched. */
+
+/* One-line insight above the plot: the value, which way it is going, what it means. */
+.tzone .chart-insight{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; justify-content:center;
+  max-width:900px; margin:0 auto 12px; text-align:center; }
+.tzone .chart-insight-v{ font-size:26px; font-weight:700; letter-spacing:-.01em; }
+.tzone .chart-insight-d{ font-family:var(--mono); font-size:15px; font-weight:700; white-space:nowrap; }
+.tzone .chart-insight-s{ color:var(--ch-mut,#aab4c4); font-weight:400; }
+.tzone .chart-insight-m{ flex:1 1 100%; color:var(--ch-body,#b4bfd0); line-height:1.55; }
+
+/* Explanatory copy: 16px on a phone (the plan's floor), 15px on desktop. */
+.tzone .chart-explain{ font-size:15px; }
+.tzone .chart-caption{ font-size:13px; }   /* desktop: charts may still set their own inline size */
+
+@media(max-width:760px){
+  /* AXIS TEXT NEVER BELOW 12px. recharts writes the size inline from each chart's `tick` prop,
+     so this needs !important to lift the charts that still pass `isMobile ? 10 : 12`. Fewer ticks
+     is the right answer to crowding, never smaller ticks. */
+  .tzone .recharts-cartesian-axis-tick-value, .tzone .recharts-polar-angle-axis-tick-value{ font-size:12px !important; }
+  /* The first and last x-axis labels are centred ON their tick, so half of each hangs outside the
+     plot and gets cut by the SVG edge — worse now the ticks are 12px. Anchor the edge labels
+     inward instead of widening every chart's margins. (CSS beats recharts' textAnchor attribute.)
+     NB recharts 3 hoists tick LABELS into their own z-index layer (.recharts-xAxis-tick-labels),
+     NOT inside .recharts-xAxis — selecting through the axis group silently matches nothing. */
+  .tzone .recharts-xAxis-tick-labels > g:last-of-type text{ text-anchor:end; }
+  .tzone .recharts-xAxis-tick-labels > g:first-of-type text{ text-anchor:start; }
+  .tzone .chart-explain{ font-size:16px; }
+  .tzone .chart-caption{ font-size:15px !important; line-height:1.6; }
+
+  /* Legends wrapped into three stacked rows and ate the plot. One row that scrolls sideways
+     instead — the series stay reachable without stealing height. */
+  .tzone .recharts-legend-wrapper{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+  .tzone .recharts-legend-wrapper::-webkit-scrollbar{ display:none; }
+  .tzone .recharts-default-legend{ white-space:nowrap !important; display:inline-flex !important; gap:6px; padding-inline:2px !important; }
+  .tzone .recharts-legend-item{ display:inline-flex !important; align-items:center; margin-right:12px !important; }
+  .tzone .recharts-legend-item-text{ font-size:13px !important; }
+
+  /* View / range toggles: a sticky toolbar under the sticky nav, so switching view never means
+     scrolling back up. 51px is the header bar's height. */
+  .tzone .chart-toolbar{ position:sticky; top:51px; z-index:20; margin-inline:-14px; padding:8px 14px;
+    background:color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; flex-wrap:nowrap !important; justify-content:flex-start !important; }
+  .tzone .chart-toolbar::-webkit-scrollbar{ display:none; }
+  .tzone .chart-toolbar .vtab{ flex:none; min-height:40px; }
+
+  /* The metric row is the summary a phone reads first — let it breathe, and keep it on one line. */
+  .tzone .chart-insight-v{ font-size:24px; }
+}
+
 /* Gallery tile blurb: one outcome-shaped line on a phone, the full text after you open the chart.
    Clamping beats rewriting 73 descriptions — no invented copy, nothing lost, just deferred. 12.5px
    was also under the project's readable-text floor. */

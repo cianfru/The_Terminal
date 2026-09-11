@@ -87,7 +87,7 @@ export default function LivelinessChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={view.yDomain} allowDataOverflow tickFormatter={v => v.toFixed(2)}
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Area type="monotone" dataKey="liveliness" stroke={ACC} strokeWidth={1.8} fill="url(#lvfill)" dot={false} isAnimationActive={false} name="Liveliness" />
             {selL != null && selR != null && selL !== selR && (

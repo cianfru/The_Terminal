@@ -70,7 +70,7 @@ export default function CexSupplyChart({ isMobile, preview = false }) {
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis domain={[0, view.yMax]} tickFormatter={fMlab} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={false} tickLine={false} width={isMobile ? 42 : 54} />
+              axisLine={false} tickLine={false} width={isMobile ? 53 : 54} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Area type="monotone" dataKey="lp" stackId="1" stroke={LP} fill={LP} fillOpacity={0.5} strokeWidth={1.5} isAnimationActive={false} name="Uniswap LP" />
             <Area type="monotone" dataKey="cex" stackId="1" stroke={CEX} fill={CEX} fillOpacity={0.5} strokeWidth={1.5} isAnimationActive={false} name="Exchanges" />

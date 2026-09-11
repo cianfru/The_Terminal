@@ -208,7 +208,7 @@ export default function MvrvContextChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" scale="log" domain={view.yDomain} allowDataOverflow
               tickFormatter={fMvrv} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             <ReferenceLine y={1} stroke="rgba(255,255,255,0.45)" strokeDasharray="5 5"
               label={preview ? undefined : { value: "break-even 1×", position: "insideBottomRight", fill: "#94a3b8", fontSize: 10.5, fontFamily: MONO }} />
             {/* SPX6900's neighbourhood, the ±band whose crossings are the "similar" BTC moments */}
@@ -249,7 +249,7 @@ export default function MvrvContextChart({ isMobile, preview = false }) {
                 label={preview ? undefined : { value: "years of MVRV history (each from its first reading)", position: "insideBottom", offset: -12, fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} />
               <YAxis type="number" scale="log" domain={ageView.yDomain} allowDataOverflow
                 tickFormatter={fMvrv} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
               <ReferenceLine y={1} stroke="rgba(255,255,255,0.45)" strokeDasharray="5 5"
                 label={preview ? undefined : { value: "break-even 1×", position: "insideBottomRight", fill: "#94a3b8", fontSize: 10.5, fontFamily: MONO }} />
               {/* today's SPX age — where SPX's line ends */}

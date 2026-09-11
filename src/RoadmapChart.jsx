@@ -98,7 +98,7 @@ export default function RoadmapChart({ series, m, isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" scale="log" domain={view.yDomain} ticks={yTicks} allowDataOverflow
               tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 62} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 62} />
             {targets.map((t, i) => (
               <ReferenceLine key={i} y={t.price} stroke={t.c} strokeDasharray="5 4" strokeOpacity={0.8}
                 label={{ value: `${t.label} · ${fMonY(t.ts)}`, position: "insideTopLeft", fill: t.c, fontSize: 12, fontFamily: MONO, fontWeight: 700 }} />

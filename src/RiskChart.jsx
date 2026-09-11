@@ -124,7 +124,7 @@ export default function RiskChart({ series, m, isMobile }) {
           <YAxis
             domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 32 : 44}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 44}
           />
           {BAND_LABELS.map((b, i) => (
             <ReferenceArea key={i} y1={i / 9} y2={(i + 1) / 9} fill={b.c} fillOpacity={0.34} stroke="none" />

@@ -4,7 +4,8 @@ import {
 } from "recharts";
 import { loadValuation } from "./history-data.js";
 import ChartZoomHint from "./ChartZoomHint.jsx";
-import { SANS, MONO, MAX_W, Metric, TipBox, ZoomBar, Explain } from "./chart-ui.jsx";
+import { SANS, MONO, MAX_W, Metric, TipBox, ZoomBar, Explain, Insight } from "./chart-ui.jsx";
+import { useChartTokens, useTipProps } from "./chart-tokens.js";
 import { useDragZoom } from "./use-drag-zoom.js";
 
 const fShort = t => new Date(t).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
@@ -34,8 +35,19 @@ export default function ValuationComposite({ isMobile, preview = false }) {
     return data.series.map(([ts, v, n]) => ({ ts, v, n })).filter(r => Number.isFinite(r.ts) && Number.isFinite(r.v)).sort((a, b) => a.ts - b.ts);
   }, [data]);
 
+  const TK = useChartTokens();
+  const tip = useTipProps();
   const { zoom, setZoom, selL, selR, onDown, onMove, onUp, zoomed } = useDragZoom(
     (a, b) => all && all.filter(r => r.ts >= a && r.ts <= b).length >= 2);
+
+  // 90-day move of the composite, from the FULL series (not the zoom window the reader controls).
+  const d90 = useMemo(() => {
+    if (!all || all.length < 2) return null;
+    const last = all.at(-1), target = last.ts - 90 * 864e5;
+    let prev = null;
+    for (const r of all) { if (r.ts <= target) prev = r; else break; }
+    return prev ? (last.v - prev.v) * 100 : null;
+  }, [all]);
 
   const view = useMemo(() => {
     if (!all || all.length < 2) return null;
@@ -73,6 +85,10 @@ export default function ValuationComposite({ isMobile, preview = false }) {
         <strong style={{ color: "#4ade80" }}> Low / green</strong> = undervalued; <strong style={{ color: "#f87171" }}>high / red</strong> = overvalued. A valuation position over time, not a buy signal.
       </Explain>
 
+      <Insight value={`${(cur.composite * 100).toFixed(0)}% · ${curZone.label}`} color={curZone.color}
+        dir={d90 == null ? null : d90 > 2 ? "up" : d90 < -2 ? "down" : "flat"}
+        since={d90 == null ? null : `${d90 >= 0 ? "+" : ""}${d90.toFixed(0)}pt in 90 days`}
+        meaning="0 = the cheapest this has ever read, 100 = the most expensive. Where it sits versus its own history, not a buy or sell call." />
       <div style={{ display: "flex", gap: isMobile ? 16 : 30, justifyContent: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <Metric label="composite" value={`${(cur.composite * 100).toFixed(0)}%`} color={curZone.color} sub={curZone.label} />
         <Metric label="axes" value={`${breakdown.length}`} color="#a78bfa" sub="weighted, independent" />
@@ -82,8 +98,8 @@ export default function ValuationComposite({ isMobile, preview = false }) {
 
       <div style={{ position: "relative" }}>
         {!preview && <ChartZoomHint />}
-        <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
-          <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
+        <ResponsiveContainer width="100%" height={TK.height}>
+          <ComposedChart data={view.vis} margin={TK.margin}
             onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
             <defs>
               <linearGradient id="valfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#f8fafc" stopOpacity={0.18} /><stop offset="100%" stopColor="#f8fafc" stopOpacity={0} /></linearGradient>
@@ -94,10 +110,10 @@ export default function ValuationComposite({ isMobile, preview = false }) {
               <ReferenceArea key={z.label} y1={i === 0 ? 0 : zones[i - 1].max} y2={Math.min(z.max, 1)} fill={z.color} fillOpacity={i === 0 || i === zones.length - 1 ? 0.3 : i === 2 ? 0.16 : 0.22} stroke={z.color} strokeOpacity={0.28} label={zLbl(z.label, z.color)} />
             ))}
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
-              tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
+              tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: TK.tick, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, 1]} ticks={[0, 0.2, 0.4, 0.6, 0.8, 1]} allowDataOverflow
-              tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 50} />
-            <Tooltip content={p => Tip(p, zones)} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
+              tickFormatter={v => `${(v * 100).toFixed(0)}%`} tick={{ fill: "#cbd5e1", fontSize: TK.tick, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={TK.yWidth} />
+            <Tooltip content={p => Tip(p, zones)} cursor={{ stroke: "rgba(255,255,255,0.2)" }} {...tip} />
             {/* dark halo underlay so the white line stays crisp over bright bands */}
             <Area type="monotone" dataKey="v" stroke="#03040a" strokeWidth={5.5} strokeOpacity={0.5} fill="none" dot={false} isAnimationActive={false} legendType="none" />
             <Area type="monotone" dataKey="v" stroke="#ffffff" strokeWidth={1.5} fill="url(#valfill)" dot={false} isAnimationActive={false} name="composite" />

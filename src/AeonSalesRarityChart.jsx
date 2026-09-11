@@ -74,7 +74,7 @@ export default function AeonSalesRarityChart({ isMobile }) {
           <XAxis dataKey="rank" type="number" scale="log" domain={[rmin, rmax]} allowDataOverflow ticks={isMobile ? [1, 100, rmax] : [1, 10, 100, 1000, rmax]}
             tickFormatter={v => v === 1 ? "rarest" : v >= 1000 ? (v / 1000).toFixed(v === rmax ? 1 : 0) + "k" : v} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false}
             label={{ value: isMobile ? "← rarer          more common →" : "← rarer      rarity rank      more common →", position: "insideBottom", offset: -14, fill: "#64748b", fontSize: isMobile ? 10.5 : 12, fontFamily: SANS }} />
-          <YAxis dataKey="price" type="number" scale="log" domain={[pmin * 0.8, pmax * 1.15]} allowDataOverflow tickFormatter={fEth} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+          <YAxis dataKey="price" type="number" scale="log" domain={[pmin * 0.8, pmax * 1.15]} allowDataOverflow tickFormatter={fEth} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
           <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.15)" }} />
           <Line data={line} dataKey="fair" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="6 5" dot={false} isAnimationActive={false} type="monotone" />
           <Scatter data={pts} isAnimationActive={false}>

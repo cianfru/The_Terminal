@@ -105,13 +105,13 @@ export default function RunningRoiChart({ series, isMobile, preview = false }) {
             yAxisId="price" type="number" scale="log" domain={view.pDomain} ticks={pTicks} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())}
             tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 46 : 58}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 58 : 58}
           />
           <YAxis
             yAxisId="roi" orientation="right" type="number" scale="log" domain={view.rDomain} ticks={rTicks} allowDataOverflow
             tickFormatter={v => v + "×"}
             tick={{ fill: GROWTH, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52}
           />
           <ReferenceLine yAxisId="roi" y={1} stroke="#4ade80" strokeWidth={1.6} strokeOpacity={0.85}
             label={{ value: "start · 1×", position: "insideBottomRight", fill: "#4ade80", fontSize: 11, fontFamily: MONO }} />

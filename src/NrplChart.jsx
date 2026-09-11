@@ -82,7 +82,7 @@ export default function NrplChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={view.yDomain} allowDataOverflow tickFormatter={v => money(v)}
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.55)" />
             <Tooltip content={<Tip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
             <Bar dataKey="nrpl" isAnimationActive={false} name="Net realized P/L">

@@ -88,9 +88,9 @@ export default function CexFlowChart({ isMobile, preview = false }) {
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="flow" domain={[-view.om, view.om]} tickFormatter={v => (v / 1e6).toFixed(0) + "M"}
-              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 40 : 52} />
+              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 50 : 52} />
             <YAxis yAxisId="price" orientation="right" scale="log" domain={[view.pMin * 0.9, view.pMax * 1.1]} allowDataOverflow
-              tickFormatter={v => "$" + (v >= 1 ? v.toFixed(1) : v.toFixed(2))} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 40 : 54} />
+              tickFormatter={v => "$" + (v >= 1 ? v.toFixed(1) : v.toFixed(2))} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 50 : 54} />
             <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,0.45)" />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Bar yAxisId="flow" dataKey="roll" isAnimationActive={false} maxBarSize={6}>

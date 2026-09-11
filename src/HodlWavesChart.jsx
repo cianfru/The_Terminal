@@ -5,7 +5,8 @@ import {
 import { SPX_ONCHAIN } from "./spx-onchain.js";
 import { loadOnchain } from "./history-data.js";
 import ChartZoomHint from "./ChartZoomHint.jsx";
-import { SANS, MONO, MAX_W, Metric, TipBox, ZoomBar, Explain } from "./chart-ui.jsx";
+import { SANS, MONO, MAX_W, Metric, TipBox, ZoomBar, Explain, Insight } from "./chart-ui.jsx";
+import { useChartTokens, useTipProps } from "./chart-tokens.js";
 import { useDragZoom } from "./use-drag-zoom.js";
 
 // bottom → top = youngest → oldest (warm → cool); 1y+ is the diamond-hands tier.
@@ -47,8 +48,20 @@ export default function HodlWavesChart({ isMobile, preview = false }) {
       .filter(r => Number.isFinite(r.ts)).sort((a, b) => a.ts - b.ts),
     [live]);
 
+  const TK = useChartTokens();
+  const tip = useTipProps();
   const { zoom, setZoom, selL, selR, onDown, onMove, onUp, zoomed } = useDragZoom(
     (a, b) => all.filter(r => r.ts >= a && r.ts <= b).length >= 2);
+
+  // 90-day direction of the diamond band, read off the FULL history (never the zoom window, which
+  // the reader controls) so the headline can't be changed by panning.
+  const d90 = useMemo(() => {
+    if (all.length < 2) return null;
+    const last = all.at(-1), target = last.ts - 90 * 864e5;
+    let prev = null;
+    for (const r of all) { if (r.ts <= target) prev = r; else break; }
+    return prev ? last.a4 - prev.a4 : null;
+  }, [all]);
 
   const view = useMemo(() => {
     if (all.length < 2) return null;
@@ -69,6 +82,10 @@ export default function HodlWavesChart({ isMobile, preview = false }) {
         Every coin coloured by <strong style={{ color: "#e2e8f0" }}>how long since it last moved</strong>, warm (bottom) = freshly traded, cool (top) = held for over a year.
         The bands started <strong style={{ color: "#f87171" }}>all fresh</strong> at launch and have matured: a third of supply now sits in the <strong style={{ color: "#818cf8" }}>1-year+ diamond tier</strong>. Coins settling into strong hands.
       </Explain>
+      <Insight value={`${cur.a4.toFixed(1)}% held 1 year+`} color={BANDS[4].c}
+        dir={d90 == null ? null : d90 > 0.5 ? "up" : d90 < -0.5 ? "down" : "flat"}
+        since={d90 == null ? null : `${d90 >= 0 ? "+" : ""}${d90.toFixed(1)}pt in 90 days`}
+        meaning="Share of supply that hasn't moved in a year. It rises when coins sit still and falls when long-held coins change hands." />
       <div style={{ display: "flex", gap: isMobile ? 16 : 30, justifyContent: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <Metric label="held 1 year+" value={cur.a4.toFixed(1) + "%"} color={BANDS[4].c} sub="diamond tier" />
         <Metric label="held under 1 month" value={cur.a0.toFixed(1) + "%"} color={BANDS[0].c} sub="freshly moved" />
@@ -78,17 +95,17 @@ export default function HodlWavesChart({ isMobile, preview = false }) {
 
       <div style={{ position: "relative" }}>
         {!preview && <ChartZoomHint />}
-        <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
-          <AreaChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
+        <ResponsiveContainer width="100%" height={TK.height}>
+          <AreaChart data={view.vis} margin={TK.margin}
             onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
-              tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
+              tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: TK.tick, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow
-              tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
-            <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
+              tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: TK.tick, fontFamily: MONO }}
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={TK.yWidth} />
+            <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} {...tip} />
             {BANDS.map(b => (
               <Area key={b.key} type="monotone" dataKey={b.key} stackId="1" stroke={b.c} strokeWidth={0.5}
                 fill={b.c} fillOpacity={0.82} dot={false} isAnimationActive={false} name={b.label} />

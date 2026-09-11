@@ -141,7 +141,7 @@ export default function RelativeChart({ series, isMobile, which, setWhich }) {
               <YAxis domain={metric === "z" ? [-zExtent, zExtent] : [0, 100]}
                 tickFormatter={v => (metric === "z" ? v + "σ" : v + "%")}
                 tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 38 : 48} />
+                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 48} />
               <Tooltip content={<OscTip metric={metric} />} />
 
               {metric === "z" ? (

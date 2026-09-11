@@ -82,7 +82,7 @@ export default function HolderConcentrationChart({ isMobile, preview = false }) 
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, 75]} ticks={[0, 25, 50, 75]} allowDataOverflow
               tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Area type="monotone" dataKey="t100" stroke={A100} strokeWidth={1.9} fill="url(#ccArea)" dot={false} isAnimationActive={false} name="top 100" />
             <Line type="monotone" dataKey="t10" stroke={A10} strokeWidth={1.9} dot={false} isAnimationActive={false} name="top 10" />

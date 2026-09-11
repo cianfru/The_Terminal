@@ -181,3 +181,73 @@ test("390px: the search field can't trigger iOS zoom-on-focus", async () => {
   assert.ok(fs >= 16, `search input is >=16px (${fs}px) — Safari zooms the page below that`);
   await ctx.close();
 });
+
+test("390px: the mobile chart system holds across charts, migrated or not", async () => {
+  // The floors live in CSS so they reach every chart, including ones still carrying their own
+  // `isMobile ? 10 : 12`. mvrv and cexvenues are deliberately NOT migrated to chart-tokens.js.
+  const ctx = await browser.newContext(phone(390));
+  for (const route of ["hodlwaves", "valuation", "mvrv", "cexvenues", "nupl", "concentration"]) {
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/?chart=${route}`, { waitUntil: "networkidle" });
+    await page.waitForTimeout(1400);
+    const m = await page.evaluate(() => {
+      const svg = document.querySelector(".recharts-wrapper svg");
+      const ticks = [...document.querySelectorAll(".recharts-cartesian-axis-tick-value")];
+      const sb = svg?.getBoundingClientRect();
+      return {
+        minTick: ticks.length ? Math.min(...ticks.map(t => parseFloat(getComputedStyle(t).fontSize))) : null,
+        explain: (e => e ? parseFloat(getComputedStyle(e).fontSize) : null)(document.querySelector(".chart-explain")),
+        caption: (e => e ? parseFloat(getComputedStyle(e).fontSize) : null)(document.querySelector(".chart-caption")),
+        clipped: !sb ? [] : ticks.filter(t => t.getBoundingClientRect().width > 0
+          && (t.getBoundingClientRect().left < sb.left - 0.5 || t.getBoundingClientRect().right > sb.right + 0.5)).map(t => t.textContent),
+        sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth,
+      };
+    });
+    assert.ok(m.minTick === null || m.minTick >= 12, `${route}: axis text >=12px (got ${m.minTick})`);
+    if (m.explain !== null) assert.ok(m.explain >= 16, `${route}: explainer >=16px (got ${m.explain})`);
+    if (m.caption !== null) assert.ok(m.caption >= 15, `${route}: caption >=15px (got ${m.caption})`);
+    assert.deepEqual(m.clipped, [], `${route}: no axis label is cut off by the plot edge`);
+    assert.equal(m.sw, m.cw, `${route}: no sideways scroll`);
+    await page.close();
+  }
+  await ctx.close();
+});
+
+test("390px: view toggles sit in a sticky toolbar that survives scrolling", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=mvrv", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1200);
+  const before = await page.evaluate(() => {
+    const t = document.querySelector(".chart-toolbar");
+    return t ? { pos: getComputedStyle(t).position, overflowX: getComputedStyle(t).overflowX } : null;
+  });
+  assert.ok(before, "the chart has a toolbar");
+  assert.equal(before.pos, "sticky");
+  assert.equal(before.overflowX, "auto", "toggles scroll sideways rather than wrapping");
+  await page.evaluate(() => window.scrollTo(0, 1200));
+  await page.waitForTimeout(400);
+  const top = await page.evaluate(() => Math.round(document.querySelector(".chart-toolbar").getBoundingClientRect().top));
+  assert.ok(top >= 0 && top < 200, `toolbar stays in reach after scrolling (top ${top})`);
+  await ctx.close();
+});
+
+test("390px: the insight line answers the chart before the plot does", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  await page.waitForTimeout(1400);
+  const ins = await page.evaluate(() => {
+    const el = document.querySelector(".chart-insight");
+    if (!el) return null;
+    const plot = document.querySelector(".recharts-wrapper");
+    return { v: el.querySelector(".chart-insight-v")?.textContent, d: el.querySelector(".chart-insight-d")?.textContent,
+      m: el.querySelector(".chart-insight-m")?.textContent, abovePlot: el.getBoundingClientRect().top < plot.getBoundingClientRect().top };
+  });
+  assert.ok(ins, "insight rendered");
+  assert.match(ins.v, /%/, "carries the current value");
+  assert.match(ins.d, /90 days/, "carries a direction over a stated window");
+  assert.ok(ins.m && ins.m.length > 20, "says what it means in plain words");
+  assert.ok(ins.abovePlot, "sits above the plot");
+  await ctx.close();
+});

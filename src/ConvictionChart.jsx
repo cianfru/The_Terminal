@@ -81,7 +81,7 @@ export default function ConvictionChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, 100]} ticks={[0, 20, 40, 60, 80, 100]}
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 34 : 44} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 44} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Area type="monotone" dataKey="score" stroke={ACC} strokeWidth={1.9} fill="url(#convfill)" dot={false} isAnimationActive={false} name="Conviction" />
             {selL != null && selR != null && selL !== selR && (

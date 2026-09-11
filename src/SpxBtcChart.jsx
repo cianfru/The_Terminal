@@ -107,7 +107,7 @@ export default function SpxBtcChart({ series, isMobile }) {
           <YAxis
             scale="log" domain={["auto", "auto"]} tickFormatter={fSats}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52}
           />
           <Tooltip content={<RatioTip />} />
           <Area type="monotone" dataKey="sats" stroke="#f59e0b" strokeWidth={1.5} fill="url(#btcFill)" isAnimationActive={false} />

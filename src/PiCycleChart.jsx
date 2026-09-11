@@ -89,7 +89,7 @@ export default function PiCycleChart({ series, isMobile, preview = false }) {
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={view.yDomain} allowDataOverflow tickFormatter={fR}
-              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <ReferenceLine y={z.btcTop} stroke="#64748b" strokeWidth={1.2} strokeDasharray="3 5"
               label={preview ? undefined : { value: "Bitcoin's top 1.0", position: "insideRight", fill: "#64748b", fontSize: 10.5, fontFamily: MONO }} />
             <ReferenceLine y={z.top} stroke="#f87171" strokeWidth={1.4} strokeDasharray="6 4"

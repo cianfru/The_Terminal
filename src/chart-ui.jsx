@@ -1,4 +1,5 @@
 import { useCoarsePointer } from "./viewport.js";
+import { useChartTokens } from "./chart-tokens.js";
 import { useState, useRef, useEffect } from "react";
 // Shared UI vocabulary for the interactive chart pages. Every chart previously
 // re-declared these fonts, the Metric readout, the tooltip container and the
@@ -26,14 +27,33 @@ export function inkColor(c) {
 
 // Big-number readout shown in the metrics row above a chart.
 export function Metric({ label, value, color = "#f8fafc", sub }) {
+  const t = useChartTokens();
   return (
     <div style={{ textAlign: "center", minWidth: 96 }}>
-      <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--ch-mut,#aab4c4)", letterSpacing: 1.1, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, color: inkColor(color) }}>{value}</div>
-      {sub && <div style={{ fontFamily: SANS, fontSize: 11, color: "var(--ch-dim,#8b96a8)" }}>{sub}</div>}
+      <div style={{ fontFamily: MONO, fontSize: t.metricLabel, color: "var(--ch-mut,#aab4c4)", letterSpacing: 1.1, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontFamily: MONO, fontSize: t.metricValue, fontWeight: 700, color: inkColor(color) }}>{value}</div>
+      {sub && <div style={{ fontFamily: SANS, fontSize: t.metricSub, color: "var(--ch-dim,#8b96a8)" }}>{sub}</div>}
     </div>
   );
 }
+
+// ONE-LINE INSIGHT — what the chart says right now, above the plot: the current value, which way it
+// is moving, and what that means in plain words. On a phone this is often the only thing read, so it
+// carries the answer rather than decorating it. `dir` is "up" | "down" | "flat" (or null to omit).
+const ARROW = { up: "\u2197", down: "\u2198", flat: "\u2192" };
+export function Insight({ value, dir = null, since, meaning, color = "#f8fafc" }) {
+  const t = useChartTokens();
+  return (
+    <div className="chart-insight">
+      <span className="chart-insight-v" style={{ fontFamily: MONO, color: inkColor(color) }}>{value}</span>
+      {dir && <span className="chart-insight-d" style={{ color: dir === "up" ? "#4ade80" : dir === "down" ? "#f87171" : "var(--ch-mut,#aab4c4)" }}>
+        {ARROW[dir]}{since ? <span className="chart-insight-s"> {since}</span> : null}
+      </span>}
+      {meaning && <span className="chart-insight-m" style={{ fontFamily: SANS, fontSize: t.body }}>{meaning}</span>}
+    </div>
+  );
+}
+
 
 // Tooltip container, charts supply their own rows (and an optional bold title
 // line). `style` merges over the defaults for per-chart accents (border, padding).
@@ -55,7 +75,7 @@ export function Explain({ q, accent = "#38bdf8", children }) {
   // Just a clean explanation — no box, no bold callout heading. A green ">" prompt leads, then
   // the question and answer flow as one plain paragraph in the site's sans.
   return (
-    <div className="chart-explain" style={{ maxWidth: MAX_W, margin: "0 auto 22px", fontFamily: SANS, fontSize: 15, color: "var(--ch-body,#b4bfd0)", lineHeight: 1.7 }}>
+    <div className="chart-explain" style={{ maxWidth: MAX_W, margin: "0 auto 22px", fontFamily: SANS, color: "var(--ch-body,#b4bfd0)", lineHeight: 1.7 }}>
       {q && <><span style={{ color: "#4ade80", fontFamily: MONO, marginRight: 10, fontWeight: 700 }}>&gt;</span>{q}{" "}</>}
       {children}
     </div>
@@ -105,7 +125,7 @@ export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, c
 // one system. Styling lives in .vtab CSS (terminal.css, scoped under .tzone).
 export function ViewTabs({ tabs, value, onChange, style }) {
   return (
-    <div className="viewtabs" style={style}>
+    <div className="viewtabs chart-toolbar" style={style}>
       {tabs.map(([k, l]) => <TypeTab key={k} label={l} on={k === value} onClick={() => onChange(k)} />)}
     </div>
   );

@@ -122,7 +122,7 @@ export default function CostBasisLadder({ isMobile, preview = false }) {
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" scale="log" domain={view.yDomain} ticks={view.yTicks} allowDataOverflow
-              tickFormatter={usd} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              tickFormatter={usd} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {PCT_KEYS.map((k, i) => (
               <Line key={k} type="monotone" dataKey={k} stroke={COLORS[i]} strokeWidth={1.3} dot={false} isAnimationActive={false} name={LADDER_PCTS[i] + "th %"} />

@@ -148,10 +148,10 @@ export default function CityHistoryChart({ isMobile, preview = false, initialVie
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="L" type="number" domain={[0, "auto"]} allowDataOverflow
               tickFormatter={fmt} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 62} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 62} />
             <YAxis yAxisId="P" orientation="right" scale="log" domain={["auto", "auto"]} allowDataOverflow
               tickFormatter={v => "$" + (v < 0.1 ? v.toFixed(3) : v.toFixed(2))} tick={{ fill: "#64748b", fontSize: isMobile ? 9 : 11, fontFamily: MONO }}
-              axisLine={false} tickLine={false} width={isMobile ? 42 : 54} />
+              axisLine={false} tickLine={false} width={isMobile ? 53 : 54} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {isSky
               ? tiers.map(t => (

@@ -1366,7 +1366,7 @@ export default function App() {
             <YAxis
               scale="log" domain={[yMin, yMax]} ticks={logT} tickFormatter={fT}
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 13, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 46 : 68}
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 58 : 68}
               allowDataOverflow
             />
 
@@ -1478,11 +1478,20 @@ export default function App() {
         const gcol = gcolFor(grp);
         const title = CHART_META[tab]?.title ?? "";
         const { prev: prevC, next: nextC, idx, sibs } = siblingCharts(tab);
-        const onTStart = e => { const t = e.touches[0]; swipeRef.current = { x: t.clientX, y: t.clientY, t: Date.now() }; };
+        // Chart-to-chart flick is scoped to the SCREEN EDGES. Across the middle of the page that
+        // gesture belongs to the chart (and to the browser); starting it only from a 32px gutter
+        // keeps "next chart" from firing while someone is reading a plot. EDGE is also the width a
+        // thumb naturally rests in.
+        const EDGE = 32;
+        const onTStart = e => {
+          const t = e.touches[0];
+          const fromEdge = t.clientX <= EDGE || t.clientX >= window.innerWidth - EDGE;
+          swipeRef.current = fromEdge ? { x: t.clientX, y: t.clientY, t: Date.now() } : null;
+        };
         const onTEnd = e => {
           const s = swipeRef.current; if (!s) return; swipeRef.current = null;
           const t = e.changedTouches[0]; const dx = t.clientX - s.x, dy = t.clientY - s.y;
-          // a deliberate horizontal flick (not a vertical scroll, not a chart drag): flip charts
+          // a deliberate horizontal flick from the edge (not a vertical scroll): flip charts
           if (Math.abs(dx) > 64 && Math.abs(dx) > 1.8 * Math.abs(dy) && Date.now() - s.t < 600) {
             if (dx > 0 && prevC) goChart(prevC.id); else if (dx < 0 && nextC) goChart(nextC.id);
           }

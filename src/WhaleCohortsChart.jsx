@@ -99,7 +99,7 @@ export default function WhaleCohortsChart({ isMobile, initialView }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, view.yMax]} allowDataOverflow
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52} />
             <Tooltip content={<Tip mode={stacked} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {stacked
               ? BANDS.map(b => (

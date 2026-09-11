@@ -79,7 +79,7 @@ function Waves({ bands, view, isMobile, preview, accent, zoomProps, tip }) {
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
           <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow
             tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
           <Tooltip content={tip} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
           {bands.map(b => (
             <Area key={b.key} type="monotone" dataKey={b.key} stackId="1" stroke={b.c} strokeWidth={0.5}
@@ -274,7 +274,7 @@ export function WhalesChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} allowDataOverflow
               tickFormatter={v => v + "%"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 54} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 54} />
             <Tooltip content={<WhaleTip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <ReferenceLine y={50} stroke="rgba(255,255,255,0.18)" strokeDasharray="4 6" />
             <Line type="monotone" dataKey="pct" stroke="#f472b6" strokeWidth={1.7} dot={false} isAnimationActive={false} name="share of supply" />

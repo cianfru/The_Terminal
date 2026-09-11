@@ -98,10 +98,10 @@ export default function HoldersPriceChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="holders" type="number" domain={view.hDomain} allowDataOverflow
               tickFormatter={fNum} tick={{ fill: HOLDERS, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             <YAxis yAxisId="price" orientation="right" type="number" scale="log" domain={view.pDomain} ticks={pTicks} allowDataOverflow
               tickFormatter={v => (v < 1 ? "$" + v : "$" + v)} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Line yAxisId="holders" type="monotone" dataKey="holders" stroke={HOLDERS} strokeWidth={1.8} dot={false} isAnimationActive={false} name="holders" fill="url(#hpFill)" />
             <Line yAxisId="price" type="monotone" dataKey="price" stroke={PRICE} strokeWidth={1.8} strokeOpacity={0.9} dot={false} isAnimationActive={false} name="price" />

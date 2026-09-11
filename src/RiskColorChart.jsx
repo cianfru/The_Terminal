@@ -83,7 +83,7 @@ export default function RiskColorChart({ series, m, isMobile }) {
             type="number" scale="log" domain={yDomain} ticks={yTicks} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 60}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 60}
           />
           <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
           <Area dataKey="price" stroke="none" fill="url(#zarea)" isAnimationActive={false} activeDot={false} />
