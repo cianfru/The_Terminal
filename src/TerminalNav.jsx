@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, Suspense, Fragment } from "react";
 import { CHART_INDEX, TOPICS, chartsForTopic, searchCharts, newestCharts, addedOn, START_HERE } from "./chart-index.js";
 import { useRecents, recordSearch } from "./recents.js";
 import { useFavs } from "./favs.js";
+import { useDialog } from "./use-dialog.js";
 import { CHART_GROUPS, AEON_GROUPS, CITY_GROUPS, CHART_VIEWS } from "./charts-catalog.js";
 import { GCOL } from "./terminal-colors.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -91,11 +92,13 @@ function DeepFieldTab({ onClick, title }) {
 // Character-by-character typewriter, shared by the section headers (types on hover) and the
 // mobile drill-down rows (types on tap) so the sleek effect matches the landing everywhere.
 function useTypewriter(text, speed = 45) {
+  // Reduced motion: hand back the finished text and make type()/reset() no-ops.
+  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion:reduce)").matches;
   const [shown, setShown] = useState(text);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => { setShown(text); }, [text]);
-  const type = () => { clearTimeout(timer.current); let j = 0; const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, speed); } }; setShown(""); step(); };
+  const type = () => { if (still) return; clearTimeout(timer.current); let j = 0; const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, speed); } }; setShown(""); step(); };
   const reset = () => { clearTimeout(timer.current); setShown(text); };
   return { shown, type, reset };
 }
@@ -435,6 +438,7 @@ function SbRail({ title, note, items, favs, toggleFav, goChart, close, noteOf })
 
 function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
+  const sheetRef = useRef(null);
   const [q, setQ] = useState("");
   const [topic, setTopic] = useState(null);
   const [favs, toggleFav] = useFavs();
@@ -443,6 +447,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   const go = fn => { onClose(); fn && fn(); };
   const push = v => { setStack(s => [...s, v]); try { window.history.pushState({ tsb: true }, ""); } catch { /* */ } };
   useEffect(() => { if (open) setStack([{ t: "sections" }]); }, [open]);
+  useDialog(open, sheetRef, onClose);
   // hardware / swipe back walks up a level (or closes at the root)
   useEffect(() => {
     if (!open) return;
@@ -499,7 +504,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   const newItems = newestCharts(5);
 
   return (
-    <div className={"tsb" + (open ? " open" : "")} aria-hidden={!open}>
+    <div ref={sheetRef} className={"tsb" + (open ? " open" : "")} aria-hidden={!open} role="dialog" aria-modal="true" aria-label="Explore charts">
       <div className="tsbtop">
         <button className="tsbbtn" onClick={back} style={{ visibility: stack.length > 1 ? "visible" : "hidden" }} aria-label="Back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>

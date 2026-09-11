@@ -1238,7 +1238,7 @@ export default function App() {
             <h2 style={{ fontFamily: "var(--sans)", fontSize: isMobile ? 28 : 42, fontWeight: 800, margin: 0, color: "var(--tx)", letterSpacing: "-0.02em", textTransform: "uppercase", lineHeight: 1 }}>Rainbow</h2>
           </div>
           <div style={{ height: 3, borderRadius: 2, background: "var(--rainbow)", margin: "13px 0 14px", maxWidth: 620 }} />
-          <div style={{ fontFamily: "var(--sans)", fontSize: isMobile ? 14.5 : 16, color: "var(--dim)", maxWidth: 980, lineHeight: 1.55 }}><span style={{ color: "#4ade80", fontFamily: "var(--mono)", marginRight: 10, fontWeight: 700 }}>&gt;</span>The foundation chart: SPX6900 price inside its power-law valuation bands, Fire Sale to Max Bubble.</div>
+          <div style={{ fontFamily: "var(--sans)", fontSize: isMobile ? 14.5 : 16, color: "var(--dim)", maxWidth: 980, lineHeight: 1.55 }}><span style={{ color: "var(--acc-green,#4ade80)", fontFamily: "var(--mono)", marginRight: 10, fontWeight: 700 }}>&gt;</span>The foundation chart: SPX6900 price inside its power-law valuation bands, Fire Sale to Max Bubble.</div>
         </div>
       )}
       {/* Header (home only, the rainbow route uses the terminal header above) */}
@@ -1503,7 +1503,7 @@ export default function App() {
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
             <MenuBtn onClick={back} title={`Back to ${label}`}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>} />
-            <span style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--tx)" }}>{grp}<span className="tgcur" style={{ "--curc": gcol }}>_</span></span>
+            <span style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--tx)" }}>{grp}<span className="tgcur" aria-hidden="true" style={{ "--curc": gcol }}>_</span></span>
             <MenuBtn onClick={() => setFsOpen(true)}
               title="Open a full-screen chart" label={isMobile ? "" : "Fullscreen"} style={{ marginLeft: "auto" }}
               icon={<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3" /></svg>} />
@@ -1522,7 +1522,7 @@ export default function App() {
               The longer in-chart Explain box sits under the chart itself. */}
           {CHART_META[tab]?.desc && (
             <div style={{ fontFamily: "var(--sans)", fontSize: isMobile ? 14.5 : 16, color: "var(--dim)", maxWidth: 980, lineHeight: 1.55, marginBottom: 16 }}>
-              <span style={{ color: "#4ade80", fontFamily: "var(--mono)", marginRight: 10, fontWeight: 700 }}>&gt;</span>{CHART_META[tab].desc}
+              <span style={{ color: "var(--acc-green,#4ade80)", fontFamily: "var(--mono)", marginRight: 10, fontWeight: 700 }}>&gt;</span>{CHART_META[tab].desc}
             </div>
           )}
           <ChartFreshness chartId={tab} />

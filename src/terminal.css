@@ -286,6 +286,57 @@ html[data-theme="light"] .tzone .tbrand .tlogo{ mix-blend-mode:normal; }
 html[data-theme="light"] .tzone .drop, html[data-theme="light"] .tzone .subdrop,
 html[data-theme="light"] .tzone .leafprev{ box-shadow:0 12px 34px rgba(20,30,50,.14); }
 
+/* ── BRIGHT-THEME CONTRAST ───────────────────────────────────────────────────────────────────
+   The theme tokens are near-black and read fine. What failed the audit is VIVID ACCENT TEXT:
+   #4ade80, #f87171, #f59e0b and friends are tuned for a near-black ground and land at 1.6–2.8:1
+   on white. They are written inline, per chart, across ~70 files.
+
+   A `filter: brightness()` darkens them, but it does NOT change computed `color`, so neither an
+   audit nor a test can prove it worked — the same silent-no-op trap as the recharts selector in
+   phase 3. React serialises inline colours as `rgb(r, g, b)`, so each accent can instead be matched
+   by its own attribute substring and given a real light-theme value. Measurable, and one deliberate
+   mapping per colour rather than a blanket dim. Scoped to PROSE so chart marks keep their palette. */
+:root, .tzone{
+  --acc-green:#4ade80; --acc-red:#f87171; --acc-sky:#38bdf8; --acc-violet:#a78bfa;
+  --acc-amber:#fbbf24; --acc-amber2:#f59e0b; --acc-cyan:#22d3ee; --acc-indigo:#818cf8;
+  --acc-rose:#fb7185; --acc-teal:#5eead4; --acc-lightsky:#7dd3fc; --doc-accent:#5eead4;
+}
+html[data-theme="light"] .tzone{
+  /* same hues, taken down to >=4.5:1 on the #f7f8fa ground */
+  --acc-green:#067a3c; --acc-red:#b91c1c; --acc-sky:#0369a1; --acc-violet:#6d28d9;
+  --acc-amber:#8a5a06; --acc-amber2:#a04e07; --acc-cyan:#0e7490; --acc-indigo:#4338ca;
+  --acc-rose:#be123c; --acc-teal:#0f766e; --acc-lightsky:#0369a1; --doc-accent:#0f766e;
+}
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(74, 222, 128)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(74, 222, 128)"]{ color:var(--acc-green) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(248, 113, 113)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(248, 113, 113)"]{ color:var(--acc-red) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(56, 189, 248)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(56, 189, 248)"]{ color:var(--acc-sky) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(167, 139, 250)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(167, 139, 250)"]{ color:var(--acc-violet) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(251, 191, 36)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(251, 191, 36)"]{ color:var(--acc-amber) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(245, 158, 11)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(245, 158, 11)"]{ color:var(--acc-amber2) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(34, 211, 238)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(34, 211, 238)"]{ color:var(--acc-cyan) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(129, 140, 248)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(129, 140, 248)"]{ color:var(--acc-indigo) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(251, 113, 133)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(251, 113, 133)"]{ color:var(--acc-rose) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(94, 234, 212)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(94, 234, 212)"]{ color:var(--acc-teal) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(125, 211, 252)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(125, 211, 252)"]{ color:var(--acc-lightsky) !important; }
+/* greys written for a dark ground: force to the theme's own ink rather than guessing a hue */
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(203, 213, 225)"],
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(148, 163, 184)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(203, 213, 225)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(148, 163, 184)"]{ color:var(--ch-ink) !important; }
+/* the blinking group cursor is decorative, but it is still visible text — give it real ink */
+html[data-theme="light"] .tzone .tgcur, html[data-theme="light"] .tzone .tcur{ color:var(--ch-mut) !important; }
+
 /* recharts greyscale INK — grid, axis lines, tick labels are set as SVG presentation attributes with
    near-white / white-alpha values (invisible on a light ground). A CSS fill/stroke rule overrides a
    presentation attribute, so we recolour them globally for every recharts chart in one place. */

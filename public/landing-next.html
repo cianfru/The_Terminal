@@ -638,6 +638,16 @@
   .curblink{ animation:cur .5s steps(1) infinite; }
   @keyframes cur{ 50%{opacity:0} } @keyframes fin{ to{opacity:1} } @keyframes prog{ to{width:100%} } @keyframes bootout{ to{opacity:0;visibility:hidden} }
 
+  /* Reduced motion means STOP, not "go slower": a 90s marquee still moves, and the blinking
+     cursors and the bobbing scroll cue kept running. The ticker becomes a scrollable strip so its
+     content is still reachable without motion. */
+  @media(prefers-reduced-motion:reduce){
+    .tape{ animation:none !important; }
+    .ticker{ overflow-x:auto; scrollbar-width:none; }
+    .ticker::-webkit-scrollbar{ display:none; }
+    .bcur, .cur, .blk, [class*="cur"]{ animation:none !important; opacity:1 !important; }
+    #scrollcue, #scrollcue *, .mcue, .mcue *{ animation:none !important; }
+  }
   @media(prefers-reduced-motion:reduce){ .tape{ animation-duration:90s } .curblink,.bar .sys .fdot{ animation:none } .boot{ animation:bootout .3s ease .2s forwards } .boot .prog i{ animation:none; width:100% } .boot .bl div{ opacity:1 }
     .crt .roll,.crt .flick,.crt .power{ animation:none } .crt .roll,.crt .power{ display:none } .crt .flick{ opacity:.04 }
     .aurora{ animation:none } }
@@ -953,6 +963,7 @@
     if(!id||id.charAt(0)==='@') return '';
     return `<div class="mprev-frame"><img loading="lazy" alt="" src="/chart-thumbs/${encodeURIComponent(id)}.png" onerror="var f=this.closest('.mprev-frame'); if(f) f.style.display='none'"></div>`; }
   function wireTypeRow(mi){ const lbl=mi.querySelector('.lbl')||mi.querySelector('.ml-term')||mi.querySelector('.mml'); if(!lbl) return;
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches) return;   // no typing animation; the label is already rendered
     if(lbl.getAttribute('data-t')==null) lbl.setAttribute('data-t', lbl.textContent); // headers/mobile rows carry no data-t; capture it once
     mi.addEventListener('mouseenter',()=>{ if(mi._c)mi._c(); mi._c=typeLbl(lbl); });
     mi.addEventListener('mouseleave',()=>{ if(mi._c){mi._c();mi._c=null;} lbl.textContent=lbl.getAttribute('data-t')||''; }); }

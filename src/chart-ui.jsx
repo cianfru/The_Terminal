@@ -17,12 +17,22 @@ export const MAX_W = 1400;
 // semantic colours (green/red/amber…) are passed through untouched.
 const WHITE_INK = new Set(["#f8fafc", "#f1f5f9", "#f4f6f9", "#fafafa", "#ffffff", "#fff", "#e2e8f0", "#e5e7eb", "#eef2f8"]);
 const MUTED_INK = new Set(["#cbd5e1", "#94a3b8", "#aab4c4", "#9aa6b6", "#8b96a8", "#64748b", "#7c8a9e", "#b4bfd0", "#a8b3c4"]);
+// The vivid accents are tuned for a near-black ground and fall to ~2:1 on the bright theme. Each
+// maps to a token that carries the SAME hue at a readable weight per theme (see terminal.css), so a
+// green readout stays green and still passes AA. Charts keep passing plain hexes; this reroutes them.
+const ACCENT_VAR = {
+  "#4ade80": "green", "#22c55e": "green", "#f87171": "red", "#ef4444": "red",
+  "#38bdf8": "sky", "#0ea5e9": "sky", "#7dd3fc": "lightsky", "#a78bfa": "violet", "#8b5cf6": "violet",
+  "#fbbf24": "amber", "#eab308": "amber", "#f59e0b": "amber2", "#22d3ee": "cyan",
+  "#818cf8": "indigo", "#fb7185": "rose", "#5eead4": "teal",
+};
 export function inkColor(c) {
   if (!c) return "var(--ch-ink)";
   const k = String(c).toLowerCase();
   if (WHITE_INK.has(k)) return "var(--ch-ink)";
   if (MUTED_INK.has(k)) return "var(--ch-mut)";
-  return c;
+  const a = ACCENT_VAR[k];
+  return a ? `var(--acc-${a},${k})` : c;
 }
 
 // Big-number readout shown in the metrics row above a chart.
@@ -46,7 +56,7 @@ export function Insight({ value, dir = null, since, meaning, color = "#f8fafc" }
   return (
     <div className="chart-insight">
       <span className="chart-insight-v" style={{ fontFamily: MONO, color: inkColor(color) }}>{value}</span>
-      {dir && <span className="chart-insight-d" style={{ color: dir === "up" ? "#4ade80" : dir === "down" ? "#f87171" : "var(--ch-mut,#aab4c4)" }}>
+      {dir && <span className="chart-insight-d" style={{ color: dir === "up" ? inkColor("#4ade80") : dir === "down" ? inkColor("#f87171") : "var(--ch-mut,#aab4c4)" }}>
         {ARROW[dir]}{since ? <span className="chart-insight-s"> {since}</span> : null}
       </span>}
       {meaning && <span className="chart-insight-m" style={{ fontFamily: SANS, fontSize: t.body }}>{meaning}</span>}
@@ -76,7 +86,7 @@ export function Explain({ q, accent = "#38bdf8", children }) {
   // the question and answer flow as one plain paragraph in the site's sans.
   return (
     <div className="chart-explain" style={{ maxWidth: MAX_W, margin: "0 auto 22px", fontFamily: SANS, color: "var(--ch-body,#b4bfd0)", lineHeight: 1.7 }}>
-      {q && <><span style={{ color: "#4ade80", fontFamily: MONO, marginRight: 10, fontWeight: 700 }}>&gt;</span>{q}{" "}</>}
+      {q && <><span style={{ color: "var(--acc-green,#4ade80)", fontFamily: MONO, marginRight: 10, fontWeight: 700 }}>&gt;</span>{q}{" "}</>}
       {children}
     </div>
   );
@@ -85,11 +95,14 @@ export function Explain({ q, accent = "#38bdf8", children }) {
 // Hover typewriter, identical to the top nav menu: the label types itself out on hover while the
 // control reserves its FULL width with an invisible ghost, so nothing reflows as characters stream.
 export function useHoverType(text) {
+  // Reduced motion: hand back the finished text and make type()/reset() no-ops.
+  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion:reduce)").matches;
   const [shown, setShown] = useState(text);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => { setShown(text); }, [text]);
   const type = () => {
+    if (still) return;
     clearTimeout(timer.current);
     let j = 0;
     const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, 42); } };
@@ -112,7 +125,7 @@ export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, c
       style={style}>
       {icon && !iconRight && <span className="menubtn-ic">{icon}</span>}
       {label !== "" && (
-        <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur">_</i></span><span className="menubtn-y">{shown}<i className="tcur">_</i></span></span>
+        <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur" aria-hidden="true">_</i></span><span className="menubtn-y">{shown}<i className="tcur" aria-hidden="true">_</i></span></span>
       )}
       {icon && iconRight && <span className="menubtn-ic">{icon}</span>}
     </button>
@@ -139,7 +152,7 @@ export function TypeTab({ label, sub, on, onClick, title, style, className = "" 
   return (
     <button type="button" className={"vtab" + (on ? " on" : "") + (className ? " " + className : "")}
       onMouseEnter={type} onMouseLeave={reset} onClick={onClick} title={title} style={style}>
-      <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur">_</i></span><span className="menubtn-y">{shown}<i className="tcur">_</i></span></span>
+      <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur" aria-hidden="true">_</i></span><span className="menubtn-y">{shown}<i className="tcur" aria-hidden="true">_</i></span></span>
       {sub != null && <span className="vtsub">{sub}</span>}
     </button>
   );

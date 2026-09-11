@@ -93,7 +93,7 @@ function DripCover({ color, mode }) {
   const glyph = loading ? "" : released ? "🔭" : "◱";
   const kicker = loading ? "Deep Field" : released ? "Deep Field · members" : "Under construction";
   const line = loading ? "…" : released ? "Log in with X to unlock" : "Releasing soon";
-  const acc = released ? color : loading ? T.faint : "#f59e0b";
+  const acc = released ? color : loading ? "#7c8a9e" : "#f59e0b";   // fixed ink: the cover ground is always dark
   return (
     <div style={{
       position: "relative", width: "100%", aspectRatio: "1180 / 700", overflow: "hidden",
@@ -107,9 +107,12 @@ function DripCover({ color, mode }) {
           <rect key={i} x={x} y={34 - h} width="7" height={h} fill={acc} />
         ))}
       </svg>
-      <div style={{ position: "relative", fontSize: 27, lineHeight: 1 }}>{glyph}</div>
-      <div style={{ position: "relative", fontFamily: MONO, fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: acc }}>{kicker}</div>
-      <div style={{ position: "relative", fontFamily: SANS, fontSize: 12.5, color: T.dim }}>{line}</div>
+      <div aria-hidden="true" style={{ position: "relative", fontSize: 27, lineHeight: 1 }}>{glyph}</div>
+      <div style={{ position: "relative", fontFamily: MONO, fontSize: 11.5, letterSpacing: ".18em", textTransform: "uppercase", color: "#cbd5e1" }}>{kicker}</div>
+      {/* The cover keeps its own DARK ground in both themes (it is a deliberate "locked" object), so
+          its text must be fixed light ink — theme tokens go near-black on the bright theme and the
+          whole cover became unreadable. */}
+      <div style={{ position: "relative", fontFamily: SANS, fontSize: 13, color: "#9aa7bb" }}>{line}</div>
     </div>
   );
 }
@@ -190,7 +193,8 @@ function SearchBar({ q, setQ, count, total, isMobile }) {
         placeholder={isMobile ? "grep charts…" : "grep charts, “cost basis”, “bitcoin”, “rarity”"}
         style={{
           flex: 1, background: "transparent", border: "none", outline: "none",
-          fontFamily: MONO, fontSize: 14, color: T.tx, minWidth: 0, letterSpacing: ".01em",
+          // 16px on a phone: Safari zooms the whole page when a focused input is smaller.
+          fontFamily: MONO, fontSize: isMobile ? 16 : 14, color: T.tx, minWidth: 0, letterSpacing: ".01em",
         }}
       />
       <span style={{ fontFamily: MONO, fontSize: 11, color: T.faint, flexShrink: 0, whiteSpace: "nowrap", letterSpacing: ".08em" }}>

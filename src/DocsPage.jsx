@@ -10,8 +10,11 @@ import { useEffect, useMemo } from "react";
 import { DOCS } from "./docs-content.js";
 import { SANS, MONO } from "./chart-ui.jsx";
 
-const DIM = "#7c8a9e", BODY = "#9aa7bb", NEAR = "#cbd5e1", TEXT = "#f1f5f9";
-const RULE = "#1c1c21", HEADRULE = "#2a2a31", ACCENT = "#5eead4";
+// Themed, not hardcoded. These were fixed dark-theme values, so on the bright theme the whole manual
+// rendered at ~1.4:1 on white — 61 failing nodes, the worst contrast anywhere on the site. The
+// fallbacks keep the original dark appearance if the tokens are ever missing.
+const DIM = "var(--ch-mut,#7c8a9e)", BODY = "var(--ch-body,#9aa7bb)", NEAR = "var(--ch-ink,#cbd5e1)", TEXT = "var(--ch-ink,#f1f5f9)";
+const RULE = "var(--line,#1c1c21)", HEADRULE = "var(--line2,#2a2a31)", ACCENT = "var(--doc-accent,#5eead4)";
 
 // Prose styling for the generated HTML. Scoped to .doc-body so it can't leak into the rest of the
 // site, and written once here rather than inlined per element by the generator.
@@ -24,7 +27,7 @@ const CSS = `
 .doc-body p { margin: 0 0 14px; }
 .doc-body strong { color: ${NEAR}; font-weight: 600; }
 .doc-body em { color: ${NEAR}; font-style: italic; }
-.doc-body a { color: ${ACCENT}; text-decoration: none; border-bottom: 1px solid rgba(94,234,212,0.3); }
+.doc-body a { color: ${ACCENT}; text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--doc-accent,#5eead4) 42%, transparent); }
 .doc-body a:hover { border-bottom-color: ${ACCENT}; }
 .doc-body ul, .doc-body ol { margin: 0 0 16px; padding-left: 20px; }
 .doc-body li { margin: 0 0 7px; }

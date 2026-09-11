@@ -23,7 +23,7 @@ export default function ChartFreshness({ chartId }) {
   const f = freshnessOf(date, key);
   // Freshness is signalled by the text colour alone (no dot, no pill) so the tag reads as a
   // quiet terminal-style line in keeping with the rest of the site. Stale → amber/red; fresh → muted.
-  const color = date == null ? "#8b98ad" : f.stale ? (f.manual ? "#f0a915" : "#f87171") : "#8b98ad";
+  const color = date == null ? "var(--ch-mut,#8b98ad)" : f.stale ? (f.manual ? "var(--acc-amber,#f0a915)" : "var(--acc-red,#f87171)") : "var(--ch-mut,#8b98ad)";
   const ago = date == null ? "" : f.days === 0 ? " · today" : f.days === 1 ? " · 1 day ago" : ` · ${f.days} days ago`;
   const txt = date == null ? "data unavailable" : `data as of ${fMon(date)}${ago}`;
   return (

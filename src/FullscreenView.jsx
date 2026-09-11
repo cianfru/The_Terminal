@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { useDialog } from "./use-dialog.js";
 
 // A fullscreen / landscape viewer for a chart or the city. Works everywhere:
 //  • Android / desktop: requests the real Fullscreen API + locks orientation to landscape.
@@ -22,6 +23,9 @@ export default function FullscreenView({ open, onClose, children }) {
   const lastTap = useRef(0);
 
   const apply = nt => { tRef.current = nt; setT(nt); };
+  // Escape closes and focus is trapped/restored. The native Fullscreen API handles Escape itself on
+  // desktop, but the iOS path is a plain overlay where nothing would have closed it from a keyboard.
+  useDialog(open, ref, onClose);
 
   // native Fullscreen API + orientation lock where available
   useEffect(() => {
