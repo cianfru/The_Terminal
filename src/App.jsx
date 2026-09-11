@@ -1,3 +1,4 @@
+import { recordChartView } from "./recents.js";
 import { useViewport, useMedia, MOBILE_MQ, TABLET_BP } from "./viewport.js";
 import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from "react";
 import {
@@ -476,7 +477,7 @@ export default function App() {
   // First-party page intel: a pageview per route, plus chart/city opens (see src/track.js).
   useEffect(() => {
     track("pageview");
-    if (route === "chart" && tab) track("chart_open", { chart: tab });
+    if (route === "chart" && tab) { track("chart_open", { chart: tab }); recordChartView(tab); }
     else if (route === "city") track("city_open");
   }, [route, tab]);
 

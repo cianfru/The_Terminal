@@ -428,8 +428,8 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .cityfsbtn{ position:absolute; top:12px; left:12px; z-index:30; background:color-mix(in srgb, var(--panel) 82%, transparent); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 
 /* fullscreen 2×2 quadrant launcher (springboard sections level) — each section its own rich tile */
-.tzone .tsbbody-fill{ overflow:hidden; display:flex; flex-direction:column; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); }
-.tzone .tsbgrid-quad{ flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; }
+.tzone .tsbgrid-quad{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tzone .tsbgrid-quad .tsbcell{ aspect-ratio:1/1; min-height:150px; }
 .tzone .tsbcell{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:5px; padding:18px; min-height:0; border:1px solid var(--line2); border-radius:20px; background:linear-gradient(150deg, color-mix(in srgb, var(--tc) 20%, var(--panel)), var(--panel2) 78%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
 .tzone .tsbcell:active{ transform:scale(.97); border-color:var(--tc); }
 .tzone .tsbcell .tsbcellbg{ position:absolute; left:0; right:0; bottom:0; height:62%; opacity:.14; color:var(--tc); pointer-events:none; }
@@ -437,10 +437,54 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell .tsbcellico{ position:absolute; top:16px; left:17px; width:32px; height:32px; color:var(--tc); }
 .tzone .tsbcell .tsbcellico svg{ width:100%; height:100%; }
 .tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--sans); font-weight:800; font-size:19px; letter-spacing:-.01em; line-height:1.05; }
-.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
+.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
 .tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
+/* Gallery tile blurb: one outcome-shaped line on a phone, the full text after you open the chart.
+   Clamping beats rewriting 73 descriptions — no invented copy, nothing lost, just deferred. 12.5px
+   was also under the project's readable-text floor. */
+.tzone .tiledesc{ font-size:14px; }
+@media(max-width:760px){
+  .tzone .tiledesc{ font-size:14px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+}
+
+/* ── Explore discovery: search, topic chips, result rows, rails ──────────────────────────────── */
+.tzone .tsbsearch{ position:relative; display:flex; align-items:center; margin:0 0 10px; }
+.tzone .tsbsearchico{ position:absolute; left:13px; width:18px; height:18px; color:var(--dim); pointer-events:none; }
+.tzone .tsbsearchin{ width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--line2); border-radius:12px;
+  background:var(--panel); color:var(--tx); font-family:var(--sans); font-size:16px; /* 16px: iOS zooms the page on focus below that */ }
+.tzone .tsbsearchin::placeholder{ color:var(--dim); }
+.tzone .tsbsearchin:focus{ outline:none; border-color:var(--live); }
+.tzone .tsbsearchin::-webkit-search-cancel-button{ display:none; }
+.tzone .tsbsearchx{ position:absolute; right:4px; width:44px; height:44px; border:none; background:none; color:var(--dim); font-size:26px; line-height:1; cursor:pointer; }
+
+.tzone .tsbchips{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin:0 -14px 14px; padding:0 14px 2px; }
+.tzone .tsbchips::-webkit-scrollbar{ display:none; }
+.tzone .tsbchip{ flex:none; min-height:40px; padding:0 15px; border:1px solid var(--line2); border-radius:20px; background:var(--panel);
+  color:var(--tx); font-family:var(--sans); font-size:14.5px; font-weight:600; cursor:pointer; white-space:nowrap; }
+.tzone .tsbchip.on{ border-color:var(--live); color:var(--live); background:color-mix(in srgb, var(--live) 12%, var(--panel)); }
+
+.tzone .tsbresh{ font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin:2px 0 10px; }
+.tzone .tsbempty{ font-family:var(--sans); font-size:15px; color:var(--tx); line-height:1.6; padding:14px 0; }
+.tzone .tsbrecentq{ background:none; border:none; padding:0 4px; color:var(--live); font:inherit; cursor:pointer; text-decoration:underline; }
+
+.tzone .tsbrow{ display:flex; align-items:stretch; gap:0; border-bottom:1px solid var(--line); }
+.tzone .tsbrowmain{ flex:1; min-width:0; display:flex; align-items:center; gap:12px; min-height:56px; padding:9px 4px 9px 0;
+  background:none; border:none; text-align:left; cursor:pointer; color:var(--tx); }
+.tzone .tsbrowmain:active{ background:var(--panel); }
+.tzone .tsbrowedge{ flex:none; width:3px; align-self:stretch; margin:6px 11px 6px 0; border-radius:2px; background:var(--tc,var(--live)); }
+.tzone .tsbrowtx{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.tzone .tsbrownm{ font-family:var(--sans); font-size:15.5px; font-weight:650; color:var(--tx); line-height:1.25; }
+.tzone .tsbrowsub{ font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tzone .tsbstar{ flex:none; width:48px; min-height:48px; align-self:center; border:none; background:none; cursor:pointer; color:var(--dim); font-size:20px; line-height:1; }
+.tzone .tsbstar.on{ color:#fbbf24; }
+
+.tzone .tsbrail{ margin-top:22px; }
+.tzone .tsbrailh{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin:0 0 6px;
+  font-family:var(--mono); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--tx); font-weight:700; }
+.tzone .tsbrailnote{ font-size:11.5px; letter-spacing:.03em; text-transform:none; color:var(--dim); font-weight:400; }
+
 /* utility dock at the foot of the springboard: login/avatar · X · Kraken — the bar's icon group on phones */
 .tzone .tsbdock{ flex:none; display:flex; align-items:center; justify-content:center; gap:14px; padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 15px); border-top:1px solid var(--line); position:relative; }
 .tzone .tsbdock::before{ content:""; position:absolute; left:0; right:0; top:-2.5px; height:2.5px; pointer-events:none;

@@ -120,3 +120,64 @@ test("760px band: JS isMobile and the CSS hamburger agree (no desktop layout und
     await ctx.close();
   }
 });
+
+test("390px Explore: search, chips and rails make a 73-chart catalogue reachable", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  // seed a view so the Recently-viewed rail has something in it
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  await page.waitForTimeout(900);
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  await page.tap(".tmobtog");
+  await page.waitForTimeout(500);
+
+  // search: title matches lead
+  await page.fill(".tsbsearchin", "whale");
+  await page.waitForTimeout(400);
+  const names = await page.$$eval(".tsbrownm", els => els.map(e => e.textContent));
+  assert.ok(names.length >= 4, `search returns results (${names.length})`);
+  assert.ok(/whale/i.test(names[0]), `title hits rank first (got "${names[0]}")`);
+
+  // a chip narrows rather than dumping the catalogue
+  await page.fill(".tsbsearchin", "");
+  await page.waitForTimeout(300);
+  await page.tap(".tsbchip >> nth=0");
+  await page.waitForTimeout(400);
+  const chipCount = (await page.$$(".tsbrownm")).length;
+  assert.ok(chipCount > 0 && chipCount < 30, `chip filters to a usable set (${chipCount})`);
+
+  // saving a chart puts it on the Saved rail
+  await page.tap(".tsbstar >> nth=0");
+  await page.waitForTimeout(300);
+  await page.tap(".tsbchip >> nth=0");            // clear the chip, back to the rails
+  await page.waitForTimeout(400);
+  const rails = await page.$$eval(".tsbrailh", els => els.map(e => e.textContent));
+  assert.ok(rails.some(r => /Saved/i.test(r)), `Saved rail appears (${JSON.stringify(rails)})`);
+  assert.ok(rails.some(r => /Recently viewed/i.test(r)), "Recently viewed rail appears");
+  assert.ok(rails.some(r => /New/i.test(r)), "New rail appears");
+
+  // the root view still fits and still scrolls in one direction only
+  const o = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth }));
+  assert.equal(o.sw, o.cw, "Explore does not scroll sideways");
+
+  // the destination tiles must not collide with what follows them
+  const overlap = await page.evaluate(() => {
+    const cells = [...document.querySelectorAll(".tsbcell")].map(e => e.getBoundingClientRect());
+    const df = document.querySelector(".tsbdf")?.getBoundingClientRect();
+    if (!df || cells.length < 4) return "missing";
+    return cells.some(c => c.bottom > df.top + 1) ? "overlap" : "ok";
+  });
+  assert.equal(overlap, "ok", "destination tiles clear the Deep Field strip");
+  await ctx.close();
+});
+
+test("390px: the search field can't trigger iOS zoom-on-focus", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  await page.tap(".tmobtog");
+  await page.waitForTimeout(400);
+  const fs = await page.$eval(".tsbsearchin", e => parseFloat(getComputedStyle(e).fontSize));
+  assert.ok(fs >= 16, `search input is >=16px (${fs}px) — Safari zooms the page below that`);
+  await ctx.close();
+});

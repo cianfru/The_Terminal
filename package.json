@@ -6,12 +6,13 @@
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/build-docs.mjs && node scripts/build-landing-nav.mjs && vite build",
+    "build": "node scripts/build-docs.mjs && node scripts/build-chart-ages.mjs && node scripts/build-landing-nav.mjs && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "node --test",
     "test:e2e": "node scripts/e2e.mjs",
     "build:docs": "node scripts/build-docs.mjs",
+    "build:chart-ages": "node scripts/build-chart-ages.mjs",
     "build:landing-nav": "node scripts/build-landing-nav.mjs"
   },
   "dependencies": {

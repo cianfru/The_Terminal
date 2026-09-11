@@ -130,7 +130,7 @@ function Tile({ item, color, onOpen, renderPreview, released, me }) {
           color: hover ? color : T.faint, marginBottom: 7, transition: "color .14s",
         }}>{item.cat || ""}</div>
         <div style={{ fontFamily: SANS, fontSize: 15.5, fontWeight: 700, color: T.tx, lineHeight: 1.15, marginBottom: 5 }}>{item.title}</div>
-        <div style={{ fontFamily: SANS, fontSize: 12.5, color: T.dim, lineHeight: 1.45 }}>{item.desc}</div>
+        <div className="tiledesc" style={{ fontFamily: SANS, color: T.dim, lineHeight: 1.45 }}>{item.desc}</div>
       </div>
     </button>
   );

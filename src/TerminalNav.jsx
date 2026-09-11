@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect, Suspense, Fragment } from "react";
+import { CHART_INDEX, TOPICS, chartsForTopic, searchCharts, newestCharts, addedOn, START_HERE } from "./chart-index.js";
+import { useRecents, recordSearch } from "./recents.js";
+import { useFavs } from "./favs.js";
 import { CHART_GROUPS, AEON_GROUPS, CITY_GROUPS, CHART_VIEWS } from "./charts-catalog.js";
 import { GCOL } from "./terminal-colors.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -371,8 +374,71 @@ function SbChartTile({ item, color, group, render, spark, onTap }) {
   );
 }
 
+// ── Discovery: search box, topic chips and the rails (Saved / Recent / New / Start here) ─────────
+// A 74-chart catalog is unusable on a phone by drill-down alone, so Explore opens with a search
+// field and plain-language chips, and offers what you saved, what you just looked at, and what is
+// genuinely new before any of the groups.
+
+function SbSearch({ q, setQ, onSubmit }) {
+  return (
+    <div className="tsbsearch">
+      <svg className="tsbsearchico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+      <input type="search" inputMode="search" enterKeyHint="search" value={q} placeholder={`Search ${CHART_INDEX.length} charts…`}
+        aria-label="Search charts" className="tsbsearchin"
+        onChange={e => setQ(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { e.currentTarget.blur(); onSubmit(e.currentTarget.value); } }} />
+      {q && <button className="tsbsearchx" onClick={() => setQ("")} aria-label="Clear search">×</button>}
+    </div>
+  );
+}
+
+function SbChips({ topics, active, onPick }) {
+  return (
+    <div className="tsbchips" role="group" aria-label="Filter by topic">
+      {topics.map(t => (
+        <button key={t} className={"tsbchip" + (active === t ? " on" : "")} aria-pressed={active === t}
+          onClick={() => onPick(active === t ? null : t)}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+// A compact result / rail row: title, the group it belongs to, and a save star.
+function SbRow({ item, saved, onToggleSave, onTap, note }) {
+  return (
+    <div className="tsbrow" style={{ "--tc": item.color }}>
+      <button className="tsbrowmain" onClick={onTap}>
+        <span className="tsbrowedge" aria-hidden="true" />
+        <span className="tsbrowtx">
+          <span className="tsbrownm">{item.title}</span>
+          <span className="tsbrowsub">{note || item.group}</span>
+        </span>
+      </button>
+      <button className={"tsbstar" + (saved ? " on" : "")} onClick={onToggleSave}
+        aria-pressed={saved} aria-label={(saved ? "Unsave " : "Save ") + item.title}>{saved ? "★" : "☆"}</button>
+    </div>
+  );
+}
+
+function SbRail({ title, note, items, favs, toggleFav, goChart, close, noteOf }) {
+  if (!items.length) return null;
+  return (
+    <section className="tsbrail">
+      <h3 className="tsbrailh">{title}{note && <span className="tsbrailnote">{note}</span>}</h3>
+      {items.map(c => (
+        <SbRow key={c.id} item={c} saved={favs.has(c.href)} note={noteOf && noteOf(c)}
+          onToggleSave={() => toggleFav(c.href)} onTap={() => { close(); goChart(c.id); }} />
+      ))}
+    </section>
+  );
+}
+
 function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
+  const [q, setQ] = useState("");
+  const [topic, setTopic] = useState(null);
+  const [favs, toggleFav] = useFavs();
+  const { charts: recentIds, searches } = useRecents();
   const view = stack[stack.length - 1];
   const go = fn => { onClose(); fn && fn(); };
   const push = v => { setStack(s => [...s, v]); try { window.history.pushState({ tsb: true }, ""); } catch { /* */ } };
@@ -422,6 +488,16 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
     });
   }
 
+  // Search wins over a chip; a chip alone filters; neither shows the destinations + rails.
+  const query = q.trim();
+  const discovering = view.t === "sections" && (!!query || !!topic);
+  const base = topic ? chartsForTopic(topic) : CHART_INDEX;
+  const results = query ? searchCharts(query, base) : (topic ? base : []);
+  const byId = id => CHART_INDEX.find(c => c.id === id);
+  const savedItems = [...favs].map(h => CHART_INDEX.find(c => c.href === h)).filter(Boolean);
+  const recentItems = recentIds.map(byId).filter(Boolean).filter(c => !savedItems.includes(c)).slice(0, 5);
+  const newItems = newestCharts(5);
+
   return (
     <div className={"tsb" + (open ? " open" : "")} aria-hidden={!open}>
       <div className="tsbtop">
@@ -436,7 +512,31 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>
         </button>
       </div>
-      <div className={"tsbbody" + (grid === "quad" ? " tsbbody-fill" : "")}>
+      <div className="tsbbody">
+        {/* Search + chips sit at the TOP of Explore, above the destinations: on a 74-chart catalog
+            typing a word beats drilling three levels. Only on the root view — inside a section the
+            back/home buttons are the right affordance. */}
+        {view.t === "sections" && (<>
+          <SbSearch q={q} setQ={setQ} onSubmit={recordSearch} />
+          <SbChips topics={TOPICS} active={topic} onPick={setTopic} />
+        </>)}
+        {discovering ? (
+          <div className="tsbresults">
+            <div className="tsbresh">{results.length} {results.length === 1 ? "chart" : "charts"}{topic && !q.trim() ? ` · ${topic}` : ""}</div>
+            {results.map(c => (
+              <SbRow key={c.id} item={c} saved={favs.has(c.href)}
+                onToggleSave={() => toggleFav(c.href)}
+                onTap={() => { if (q.trim()) recordSearch(q); go(() => goChart(c.id)); }} />
+            ))}
+            {!results.length && (
+              <div className="tsbempty">
+                Nothing matches <b>{q.trim() || topic}</b>.
+                {searches.length > 0 && <> Recent: {searches.slice(0, 3).map((t, i) => (
+                  <button key={t} className="tsbrecentq" onClick={() => setQ(t)}>{t}{i < Math.min(searches.length, 3) - 1 ? "," : ""}</button>))}</>}
+              </div>
+            )}
+          </div>
+        ) : (<>
         <div className="tsbcmd"><span className="tsbprompt">spx6900 ~ %</span> {cmd}</div>
         <div className="tsbrule" />
         <div className={"tsbgrid tsbgrid-" + grid}>{tiles}</div>
@@ -448,6 +548,15 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
             <span className="tsbdfarrow" aria-hidden="true">→</span>
           </button>
         )}
+        {/* Rails: what you saved, what you just read, what actually changed — before the catalog. */}
+        {view.t === "sections" && (<>
+          <SbRail title="Saved" items={savedItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+          <SbRail title="Recently viewed" items={recentItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+          <SbRail title="New" note="newest first, dated from the repo" items={newItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()}
+            noteOf={c => `${c.group} · added ${addedOn(c.id)}`} />
+          <SbRail title="Start here" note="a hand-picked shortlist, not a ranking" items={START_HERE} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+        </>)}
+        </>)}
       </div>
       {/* utility dock — the bar's icon group (login/avatar · X · Kraken) lives here on phones, so the
           header keeps room for the ☰ toggle. Mirrors the landing's .sbdock. */}
@@ -608,7 +717,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
-      <MobileSpringboard open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
+      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
     </div>
   );
 }
