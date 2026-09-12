@@ -218,21 +218,23 @@ test("no full-screen overlay uses inset:0 under the blurred nav", () => {
   }
 });
 
-test("the brand watermark is one line to apply, and off-by-default stays off", () => {
-  // "Make sure this can be easily implemented": the mark used to be a hardcoded <img> inside the
-  // rainbow panel and existed on that chart alone. It is a component now, so any chart adds it
-  // with <Watermark />. The domain LABEL is the half that actually attributes a screenshot — a 7%
-  // logo says nothing about where a chart came from — but it defaults OFF so that adding the
-  // component changes nothing visually until the owner asks for it.
-  const ui = read("src/chart-ui.jsx"), app = read("src/App.jsx");
-  assert.match(ui, /export function Watermark\(/, "it is a reusable component");
-  assert.match(ui, /export const SITE = "spx6900rainbow\.xyz"/, "the domain lives in one place");
-  assert.match(ui, /label = false/, "the label ships off by default");
-  assert.match(app, /<Watermark \/>/, "the rainbow uses the component");
-  assert.ok(!/src="\/spx6900logo\.png"[\s\S]{0,400}opacity: 0\.07/.test(app), "and no longer inlines it");
-  // Both halves must stay untouchable: they sit over the plot.
-  const at = ui.indexOf("export function Watermark(");
-  const body = ui.slice(at, ui.indexOf("\n}\n", at));
-  assert.equal((body.match(/pointerEvents: "none"/g) || []).length, 2, "logo and label are both click-through");
-  assert.equal((body.match(/aria-hidden="true"/g) || []).length, 2, "and both hidden from screen readers");
+test("the ghost watermark covers every chart page from one mount, and cannot be cropped off", () => {
+  // This is main's implementation, not something this branch invented. A reshared screenshot
+  // carried no attribution, and a corner mark or footer does not survive a crop — so the mark is
+  // centred BEHIND the plot, where cropping it out means cropping the data out too, and it is
+  // mounted once in the shared chart-page wrapper rather than per chart.
+  const wm = read("src/ChartWatermark.jsx"), app = read("src/App.jsx"), css = read("src/index.css");
+  assert.match(app, /<ChartWatermark \/>/, "mounted on the chart page");
+  // One mount, not one per chart. (Prose must not spell the tag out — a comment mentioning it
+  // counted as a second mount, so the component is referred to by name in comments, never as JSX.)
+  assert.equal((app.match(/<ChartWatermark \/>/g) || []).length, 1, "exactly one mount covers every chart");
+  assert.match(wm, /spx6900rainbow\.xyz/, "the domain is what actually attributes it");
+  assert.match(wm, /aria-hidden="true"/, "hidden from screen readers");
+  // Sticky + negative margin is what keeps it in view on a long mobile scroll without taking space.
+  const at = css.indexOf(".chartwm{");
+  const block = css.slice(at, css.indexOf("}", at));
+  assert.match(block, /position:sticky/, "follows the viewport so a mobile screenshot catches it");
+  assert.match(block, /margin-bottom:-100vh/, "and claims no layout height while doing it");
+  assert.match(block, /pointer-events:none/, "never intercepts a tap on the plot");
+  assert.match(block, /z-index:0/, "sits behind the data");
 });

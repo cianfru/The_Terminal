@@ -116,11 +116,12 @@ const CITY_IDS = new Set(CITY_GROUPS[0].charts.map(c => c.id));
 const ALIAS = { whalewatch: "spxcity", aeonskyline: "spxcity" };
 const resolveId = id => ALIAS[id] || id;
 import ChartFreshness from "./ChartFreshness.jsx";
+import ChartWatermark from "./ChartWatermark.jsx";
 import BandStats from "./BandStats.jsx";
 // Secondary tab charts are lazy-loaded so their code only ships when the tab is opened.
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import BandHistory from "./BandHistory.jsx";
-import { SANS, MONO, MAX_W, MenuBtn, TypeTab, ZoomBar, Watermark } from "./chart-ui.jsx";
+import { SANS, MONO, MAX_W, MenuBtn, TypeTab, ZoomBar } from "./chart-ui.jsx";
 import { useDragZoom } from "./use-drag-zoom.js";
 import "./terminal.css";
 import TerminalNav from "./TerminalNav.jsx";
@@ -1321,11 +1322,18 @@ export default function App() {
         backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)",
         transition: "background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease",
       }}>
-        {/* Brand watermark — the faint coin logo bleeding off the bottom-right corner (the panel's
-            overflow:hidden clips it), plus the domain. This was inline here and on this chart
-            ALONE; it is now <Watermark /> from chart-ui, so any of the other 72 charts can carry
-            the same mark with one line. The logo renders exactly as before. */}
-        <Watermark />
+        {/* The rainbow hero's own corner mark — the faint coin logo bleeding off the bottom-right
+            (the panel's overflow:hidden clips it). Distinct from the ChartWatermark component, which is the
+            centred ghost lockup behind every CHART PAGE; this panel is the home hero and is not
+            rendered through that wrapper. */}
+        <img
+          src="/spx6900logo.png" alt="" aria-hidden="true" draggable="false"
+          style={{
+            position: "absolute", bottom: isMobile ? 26 : 44, right: isMobile ? "-10%" : -64,
+            width: isMobile ? "58%" : "42%", maxWidth: 440, opacity: 0.07, zIndex: 0,
+            pointerEvents: "none", userSelect: "none",
+          }}
+        />
         <div style={{ position: "relative", zIndex: 2 }}>
           <ZoomBar zoomed={zoomed} onReset={() => setZoom(null)} accent="#a78bfa" />
         </div>
@@ -1516,11 +1524,20 @@ export default function App() {
             </div>
           )}
           <ChartFreshness chartId={tab} />
-          <ErrorBoundary key={tab}>
-          <Suspense fallback={<div style={{ minHeight: isMobile ? 620 : 760, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", color: "var(--faint)" }}>loading chart…</div>}>
-            {chartEl(tab)}
-          </Suspense>
-          </ErrorBoundary>
+          {/* The ghost brand mark sits behind the chart here, in the ONE shared wrapper every
+              chart page passes through — so every chart is covered by a single mount. */}
+          <div style={{ position: "relative" }}>
+            <ChartWatermark />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <ErrorBoundary key={tab}>
+              {/* the fallback reserves the chart's height so the page cannot shift when the
+                  lazy chunk lands — keep it, it is what holds mobile CLS down */}
+              <Suspense fallback={<div style={{ minHeight: isMobile ? 620 : 760, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", color: "var(--faint)" }}>loading chart…</div>}>
+                {chartEl(tab)}
+              </Suspense>
+              </ErrorBoundary>
+            </div>
+          </div>
           {/* walk between charts in this group — tap the arrows, swipe on mobile, or ← / → on desktop */}
           {sibs.length > 1 && (
             <div className="chartpager">

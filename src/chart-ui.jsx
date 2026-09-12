@@ -166,56 +166,6 @@ export function ZoomResetButton({ onReset, accent = "#38bdf8", fontSize = 12, pa
   );
 }
 
-// ── BRAND WATERMARK ──────────────────────────────────────────────────────────────────────────
-// The site is meant to be shared; the point is that a screenshot still says where it came from.
-// Drop <Watermark /> into any chart panel that is position:relative with overflow:hidden — one
-// line, no other wiring:
-//
-//     <div style={{ position:"relative", overflow:"hidden" }}>
-//       <Watermark />
-//       …the chart…
-//     </div>
-//
-// Two parts, separately controllable. The LOGO is the faint coin mark the rainbow panel has always
-// carried. The LABEL is the domain, and it is the half that actually does the job: a 7% logo tells
-// a stranger nothing about where a chart came from, while the bot's own shared cards have always
-// footed every image with "spx6900rainbow.xyz". This brings the site in line with the cards.
-// Both are aria-hidden and pointer-events:none, so nothing here is reachable by a reader or a
-// screen reader, and neither can intercept a tap on the plot.
-export const SITE = "spx6900rainbow.xyz";
-
-// NOTE the default: label is OFF, so adding <Watermark /> reproduces exactly what production has
-// today and changes nothing visually. Turning the domain on is `<Watermark label />` per chart, or
-// flip this default to true to switch it on everywhere at once. That decision is the owner's.
-export function Watermark({ logo = true, label = false, opacity = 0.07, labelOpacity = 0.34, accent = "var(--ch-mut,#7c8a9e)" }) {
-  const { mobile } = useChartTokens();
-  return (
-    <>
-      {logo && (
-        <img
-          src="/spx6900logo.png" alt="" aria-hidden="true" draggable="false"
-          style={{
-            position: "absolute", bottom: mobile ? 26 : 44, right: mobile ? "-10%" : -64,
-            width: mobile ? "58%" : "42%", maxWidth: 440, opacity, zIndex: 0,
-            pointerEvents: "none", userSelect: "none",
-          }}
-        />
-      )}
-      {label && (
-        <span
-          aria-hidden="true"
-          style={{
-            position: "absolute", bottom: mobile ? 6 : 10, right: mobile ? 10 : 16, zIndex: 3,
-            fontFamily: MONO, fontSize: mobile ? 10.5 : 11.5, letterSpacing: ".1em",
-            textTransform: "lowercase", color: accent, opacity: labelOpacity,
-            pointerEvents: "none", userSelect: "none", whiteSpace: "nowrap",
-          }}
-        >{SITE}</span>
-      )}
-    </>
-  );
-}
-
 // The status row above a zoomable chart: hint text + reset button when zoomed.
 export function ZoomBar({ zoomed, onReset, accent = "#38bdf8", viewing = "Viewing a selected window." }) {
   const coarse = useCoarsePointer();
