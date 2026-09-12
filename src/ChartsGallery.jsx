@@ -122,7 +122,7 @@ function Tile({ item, color, onOpen, renderPreview, released, me, isMobile }) {
       title={drip && !canSee ? `${item.title} — ${isReleased ? "Deep Field members chart" : "releasing soon"}` : `Open the interactive ${item.title} chart`}
       style={{
         display: "flex", flexDirection: "column", textAlign: "left", padding: 0, cursor: "pointer",
-        borderRadius: 10, overflow: "hidden",
+        borderRadius: 0, overflow: "hidden",
         background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
         border: `1px solid ${hover ? color : T.line2}`,
         ...(isMobile ? { borderLeft: `3px solid ${color}` } : null),
@@ -138,12 +138,20 @@ function Tile({ item, color, onOpen, renderPreview, released, me, isMobile }) {
         : isMobile ? null
           : <LivePreview render={() => renderPreview(item.id)} />}
       <div style={{ padding: isMobile ? "13px 14px" : "12px 14px 14px", borderTop: isMobile ? "none" : `1px solid ${color}2e` }}>
+        {/* Typed like the site's MENU, not like a marketing card: mono throughout, the name
+            uppercase and letterspaced exactly as the launcher bars and the nav bar set it. The
+            title used to be bold sans, which belonged to headlines and made this one surface read
+            as a different product. Descriptions stay sentence case — the landing's body copy is
+            mono sentence case too, and uppercasing a full sentence costs more than it buys. */}
         <div style={{
-          fontFamily: MONO, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase",
-          color: hover ? color : T.faint, marginBottom: 7, transition: "color .14s",
+          fontFamily: MONO, fontSize: 12, letterSpacing: ".14em", textTransform: "uppercase",
+          color: hover ? color : T.dim, marginBottom: 7, transition: "color .14s",
         }}>{item.cat || ""}</div>
-        <div style={{ fontFamily: SANS, fontSize: 15.5, fontWeight: 700, color: T.tx, lineHeight: 1.15, marginBottom: 5 }}>{item.title}</div>
-        <div className="tiledesc" style={{ fontFamily: SANS, color: T.dim, lineHeight: 1.45 }}>{item.desc}</div>
+        <div style={{
+          fontFamily: MONO, fontSize: isMobile ? 17 : 16, fontWeight: 700, letterSpacing: ".02em",
+          textTransform: "uppercase", color: T.tx, lineHeight: 1.15, marginBottom: 6,
+        }}>{item.title}</div>
+        <div className="tiledesc" style={{ fontFamily: MONO, color: T.dim, lineHeight: 1.5 }}>{item.desc}</div>
       </div>
     </button>
   );
@@ -175,7 +183,7 @@ function SearchBar({ q, setQ, count, total, isMobile }) {
     // label forwards the tap to its input, so the whole 44px box focuses it.
     <label style={{
       display: "flex", alignItems: "center", gap: 10, maxWidth: 560, margin: "0 auto",
-      border: `1px solid ${focus ? T.live : T.line2}`, borderRadius: 8,
+      border: `1px solid ${focus ? T.live : T.line2}`, borderRadius: 0,
       background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
       padding: "9px 13px", minHeight: isMobile ? 44 : undefined, boxSizing: "border-box",
       transition: "border-color .14s", cursor: "text",
@@ -247,8 +255,8 @@ export default function ChartsGallery({
           fontFamily: SANS, fontSize: isMobile ? 30 : 46, fontWeight: 800, margin: "0 0 4px",
           letterSpacing: "-0.02em", color: T.tx, textTransform: "uppercase", lineHeight: 1,
         }}>{title}</h2>
-        <div style={{ height: 3, borderRadius: 2, background: RAINBOW, margin: "12px 0 14px", maxWidth: 620 }} />
-        <div style={{ fontFamily: SANS, fontSize: isMobile ? 13.5 : 15.5, color: T.dim, maxWidth: 720, lineHeight: 1.5 }}>
+        <div style={{ height: 3, borderRadius: 0, background: RAINBOW, margin: "12px 0 14px", maxWidth: 620 }} />
+        <div style={{ fontFamily: MONO, fontSize: isMobile ? 14 : 15, color: T.dim, maxWidth: 720, lineHeight: 1.5 }}>
           {sub}
         </div>
         <div style={{ marginTop: 20 }}>
@@ -262,7 +270,7 @@ export default function ChartsGallery({
         <button
           onClick={onHome} title="Open the Rainbow chart"
           style={{
-            display: "flex", width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 12, overflow: "hidden",
+            display: "flex", width: "100%", textAlign: "left", cursor: "pointer", borderRadius: 0, overflow: "hidden",
             padding: isMobile ? "20px 22px" : "28px 34px", gap: 18, alignItems: "center", justifyContent: "space-between",
             background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
             border: `1px solid ${T.line2}`, position: "relative",
@@ -274,7 +282,7 @@ export default function ChartsGallery({
           <div style={{ paddingLeft: 6 }}>
             <span style={{ fontFamily: MONO, fontSize: 10.5, fontWeight: 700, letterSpacing: ".16em", textTransform: "uppercase", color: T.faint }}>Featured · Home</span>
             <div style={{ fontFamily: SANS, fontSize: isMobile ? 24 : 32, fontWeight: 800, color: T.tx, lineHeight: 1.05, margin: "8px 0 7px", textTransform: "uppercase", letterSpacing: "-0.01em" }}>Rainbow Chart</div>
-            <div style={{ fontFamily: SANS, fontSize: isMobile ? 13.5 : 15, color: T.dim, lineHeight: 1.5, maxWidth: 640 }}>
+            <div style={{ fontFamily: MONO, fontSize: isMobile ? 13.5 : 15, color: T.dim, lineHeight: 1.5, maxWidth: 640 }}>
               The flagship: SPX6900's price across nine power-law valuation bands, from Fire Sale to Sell.
             </div>
           </div>
@@ -293,7 +301,7 @@ export default function ChartsGallery({
               color: T.tx, fontWeight: 600,
             }}>{group.title}<span className="tgcur" style={{ "--curc": gc }}>_</span></span>
             <span style={{ fontFamily: MONO, fontSize: 12, color: T.faint }}>[{group.charts.length}]</span>
-            <span style={{ fontFamily: SANS, fontSize: isMobile ? 12.5 : 13.5, color: T.dim }}>{group.desc}</span>
+            <span style={{ fontFamily: MONO, fontSize: isMobile ? 13 : 13.5, color: T.dim }}>{group.desc}</span>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${isMobile ? 300 : 372}px), 1fr))`, gap: isMobile ? 12 : 15 }}>
             {group.charts.map(item => (
@@ -321,7 +329,7 @@ export default function ChartsGallery({
           <button onClick={onOther} style={{
             fontFamily: MONO, fontSize: 12.5, color: T.tx, cursor: "pointer", letterSpacing: ".04em",
             background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`, border: `1px solid ${T.line2}`,
-            borderRadius: 8, padding: "9px 18px",
+            borderRadius: 0, padding: "9px 18px",
           }}>
             {otherHits} more in <strong style={{ color: T.live }}>{otherName}</strong> →
           </button>

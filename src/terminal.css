@@ -564,7 +564,7 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 /* Gallery tile blurb: one outcome-shaped line on a phone, the full text after you open the chart.
    Clamping beats rewriting 73 descriptions — no invented copy, nothing lost, just deferred. 12.5px
    was also under the project's readable-text floor. */
-.tzone .tiledesc{ font-size:14px; }
+.tzone .tiledesc{ font-family:var(--mono); font-size:14px; }
 @media(max-width:760px){
   .tzone .tiledesc{ font-size:14px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
 }
@@ -815,12 +815,12 @@ html[data-theme="light"] .favlaunch{ --fa:#077a45; --fpanel:#ffffff; --fpanel2:#
 
 /* z above the full-bleed landing iframe (z-index:60) so the corner works on the home page too */
 .favlaunch .favtab{ position:fixed; left:0; top:44%; z-index:62; display:flex; flex-direction:column; align-items:center; gap:9px;
-  padding:13px 6px; border:1px solid var(--fline); border-left:none; border-radius:0 8px 8px 0;
+  padding:13px 6px; border:1px solid var(--fline); border-left:none; border-radius:0;
   background:var(--fpanel2); color:var(--fdim); cursor:pointer; transition:color .14s, border-color .14s;
   writing-mode:vertical-rl; }
 .favlaunch .favtab:hover{ color:var(--fa); border-color:var(--fa); }
 .favlaunch .favtab-star{ writing-mode:horizontal-tb; color:var(--fa); font-size:13px; }
-.favlaunch .favtab-lbl{ font-size:11px; letter-spacing:.2em; font-weight:700; text-transform:uppercase; }
+.favlaunch .favtab-lbl{ font-family:var(--mono); font-size:12px; letter-spacing:.18em; font-weight:700; text-transform:uppercase; }
 
 .favlaunch .favscrim{ position:fixed; inset:0; z-index:62; background:rgba(2,4,10,.5); }
 .favlaunch .favpanel{ position:fixed; left:0; top:0; bottom:0; z-index:63; width:min(320px, 86vw); overflow-y:auto;
