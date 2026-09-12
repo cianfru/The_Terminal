@@ -207,18 +207,23 @@ a.neon-pill:hover { text-decoration: none; }
 .chart-preview .chart-caption { display: none !important; }
 
 /* ── Ghost brand mark behind the charts (src/ChartWatermark.jsx) ──────────────
-   Centred so it cannot be cropped out without cropping the data, with the domain
-   locked ON the sphere so a tight crop can never take the logo and leave the
-   attribution behind. Low contrast by design: the charts are reshared because they
-   look clean, and a loud watermark would cost more reach than the credit is worth.
-   Light theme needs a touch more — the same colours carry less against white. */
+   STICKY, not absolutely centred on the block. A chart page is far taller than the
+   viewport (especially on a phone: stacked stats, donut, legend, prose, then the
+   line chart), so a mark centred on the whole block sits below the fold and a
+   screenshot of the donut would catch nothing. Sticking it to the viewport keeps
+   exactly one mark centred on whatever is actually on screen, so any screenshot of
+   any part of the chart carries it — while still showing only ONE mark, never a
+   tiled, spammy repeat. The negative margin keeps it out of the layout flow.
+   The domain is locked ON the sphere so a crop can't take the logo and leave the
+   attribution behind. Low contrast by design: these charts are reshared because
+   they look clean, and a loud watermark costs more reach than the credit is worth. */
 .chartwm{
-  position:absolute; inset:0; display:flex;
-  align-items:center; justify-content:center;
+  position:sticky; top:0; height:100vh; margin-bottom:-100vh;
+  display:flex; align-items:center; justify-content:center;
   pointer-events:none; user-select:none; z-index:0;
   opacity:.19;
 }
-.chartwm-lockup{ position:relative; display:flex; align-items:center; justify-content:center; max-width:62%; }
+.chartwm-lockup{ position:relative; display:flex; align-items:center; justify-content:center; width:min(62%, 420px); }
 .chartwm-lockup img{ display:block; width:100%; height:auto; }
 .chartwm-label{
   position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
@@ -226,4 +231,7 @@ a.neon-pill:hover { text-decoration: none; }
   font-size:20px; color:var(--tx); white-space:nowrap;
 }
 html[data-theme="light"] .chartwm{ opacity:.22; }
-@media (max-width:760px){ .chartwm-label{ font-size:13px; letter-spacing:.1em; } }
+@media (max-width:760px){
+  .chartwm-lockup{ width:min(72%, 300px); }
+  .chartwm-label{ font-size:13px; letter-spacing:.1em; }
+}
