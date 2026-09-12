@@ -13,7 +13,8 @@
     "test:e2e": "node scripts/e2e.mjs",
     "build:docs": "node scripts/build-docs.mjs",
     "build:chart-ages": "node scripts/build-chart-ages.mjs",
-    "build:landing-nav": "node scripts/build-landing-nav.mjs"
+    "build:landing-nav": "node scripts/build-landing-nav.mjs",
+    "build:og": "node scripts/build-og-brand.mjs"
   },
   "dependencies": {
     "@resvg/resvg-js": "^2.6.2",

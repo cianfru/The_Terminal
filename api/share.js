@@ -13,10 +13,12 @@ const SITE = "https://spx6900rainbow.xyz";
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const REL = new Set(["BTC", "ETH", "SOL", "BASKET"]);
 
+// No chart named (or an id we don't know) → the site's own identity card, matching index.html.
+// Deliberately not a chart: this is "someone shared the site", not "someone shared a chart".
 const DEFAULT = {
-  t: "SPX6900 Rainbow Chart",
-  d: "Logarithmic regression valuation bands for SPX6900 — plus on-chain, risk and relative-value charts.",
-  img: `${SITE}/api/og`,
+  t: "SPX6900/Rainbow",
+  d: "Independent analytics for SPX6900 — valuation, on-chain holder data, exchange flows and the 3D holder city.",
+  img: `${SITE}/og-brand.png`,
   app: `${SITE}/`,
 };
 

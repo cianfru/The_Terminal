@@ -18,15 +18,25 @@
     <title>SPX6900 Rainbow Chart — Logarithmic Regression Bands</title>
     <link rel="canonical" href="https://spx6900rainbow.xyz/" />
     <meta name="description" content="SPX6900 rainbow chart with logarithmic regression bands, multiple model fits, and price target timelines." />
-    <meta property="og:title" content="SPX6900 Rainbow Chart" />
-    <meta property="og:description" content="Logarithmic regression valuation bands for SPX6900, plus risk, drawdown and relative-value charts." />
-    <meta property="og:image" content="https://spx6900rainbow.xyz/api/og" />
+    <!-- Sharing the site ROOT unfurls as plain identity — the mark, the wordmark, one line — not a
+         chart. It used to preview as the rainbow chart, which sold a whole analytics desk as one
+         chart. A per-chart deep link still unfurls with its own chart card (api/share.js). The
+         image is a committed static PNG (scripts/build-og-brand.mjs), not a serverless render:
+         crawlers are impatient and cache hard, so nothing about the site's own preview should
+         depend on a function being warm. -->
+    <meta property="og:title" content="SPX6900/Rainbow" />
+    <meta property="og:description" content="Independent analytics for SPX6900 — valuation, on-chain holder data, exchange flows and the 3D holder city. Every number reproducible." />
+    <meta property="og:image" content="https://spx6900rainbow.xyz/og-brand.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="SPX6900/Rainbow — independent analytics for SPX6900" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://spx6900rainbow.xyz/" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://spx6900rainbow.xyz/api/og" />
+    <meta name="twitter:title" content="SPX6900/Rainbow" />
+    <meta name="twitter:description" content="Independent analytics for SPX6900 — valuation, on-chain holder data, exchange flows and the 3D holder city." />
+    <meta name="twitter:image" content="https://spx6900rainbow.xyz/og-brand.png" />
     <!-- Cloudflare Web Analytics — free forever, unlimited, privacy-first, no cookies, no DNS change.
          The heavy lifting (wallet searches, city/chart opens, geo, pages, referrers) is the first-party
          /api/intel pipeline, which works independently of this; CF just adds a polished general-traffic
