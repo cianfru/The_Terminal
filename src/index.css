@@ -205,3 +205,25 @@ a.neon-pill:hover { text-decoration: none; }
 .chart-preview .chart-explain,
 .chart-preview .chart-zoombar,
 .chart-preview .chart-caption { display: none !important; }
+
+/* ── Ghost brand mark behind the charts (src/ChartWatermark.jsx) ──────────────
+   Centred so it cannot be cropped out without cropping the data, with the domain
+   locked ON the sphere so a tight crop can never take the logo and leave the
+   attribution behind. Low contrast by design: the charts are reshared because they
+   look clean, and a loud watermark would cost more reach than the credit is worth.
+   Light theme needs a touch more — the same colours carry less against white. */
+.chartwm{
+  position:absolute; inset:0; display:flex;
+  align-items:center; justify-content:center;
+  pointer-events:none; user-select:none; z-index:0;
+  opacity:.12;
+}
+.chartwm-lockup{ position:relative; display:flex; align-items:center; justify-content:center; max-width:62%; }
+.chartwm-lockup img{ display:block; width:100%; height:auto; }
+.chartwm-label{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  font-family:var(--mono); font-weight:700; letter-spacing:.14em;
+  font-size:20px; color:var(--tx); white-space:nowrap;
+}
+html[data-theme="light"] .chartwm{ opacity:.16; }
+@media (max-width:760px){ .chartwm-label{ font-size:13px; letter-spacing:.1em; } }

@@ -114,6 +114,7 @@ const CITY_IDS = new Set(CITY_GROUPS[0].charts.map(c => c.id));
 const ALIAS = { whalewatch: "spxcity", aeonskyline: "spxcity" };
 const resolveId = id => ALIAS[id] || id;
 import ChartFreshness from "./ChartFreshness.jsx";
+import ChartWatermark from "./ChartWatermark.jsx";
 import FullscreenView from "./FullscreenView.jsx";
 import BandStats from "./BandStats.jsx";
 // Secondary tab charts are lazy-loaded so their code only ships when the tab is opened.
@@ -1521,11 +1522,18 @@ export default function App() {
             </div>
           )}
           <ChartFreshness chartId={tab} />
-          <ErrorBoundary key={tab}>
-          <Suspense fallback={<div style={{ textAlign: "center", fontFamily: "var(--mono)", color: "var(--faint)", padding: 40 }}>loading chart…</div>}>
-            {chartEl(tab)}
-          </Suspense>
-          </ErrorBoundary>
+          {/* The ghost brand mark sits behind the chart here, in the ONE shared wrapper every
+              chart page passes through — so all 63 charts are covered by a single mount. */}
+          <div style={{ position: "relative" }}>
+            <ChartWatermark />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <ErrorBoundary key={tab}>
+              <Suspense fallback={<div style={{ textAlign: "center", fontFamily: "var(--mono)", color: "var(--faint)", padding: 40 }}>loading chart…</div>}>
+                {chartEl(tab)}
+              </Suspense>
+              </ErrorBoundary>
+            </div>
+          </div>
           {/* walk between charts in this group — tap the arrows, swipe on mobile, or ← / → on desktop */}
           {sibs.length > 1 && (
             <div className="chartpager">
