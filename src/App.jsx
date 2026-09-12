@@ -120,7 +120,7 @@ import BandStats from "./BandStats.jsx";
 // Secondary tab charts are lazy-loaded so their code only ships when the tab is opened.
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import BandHistory from "./BandHistory.jsx";
-import { SANS, MONO, MAX_W, MenuBtn, TypeTab, ZoomBar } from "./chart-ui.jsx";
+import { SANS, MONO, MAX_W, MenuBtn, TypeTab, ZoomBar, Watermark } from "./chart-ui.jsx";
 import { useDragZoom } from "./use-drag-zoom.js";
 import "./terminal.css";
 import TerminalNav from "./TerminalNav.jsx";
@@ -1321,16 +1321,11 @@ export default function App() {
         backdropFilter: "blur(7px)", WebkitBackdropFilter: "blur(7px)",
         transition: "background 0.6s ease, border-color 0.6s ease, box-shadow 0.6s ease",
       }}>
-        {/* Brand watermark, large, faint coin logo bleeding off the empty
-            bottom-right corner (panel's overflow:hidden clips it to the edge). */}
-        <img
-          src="/spx6900logo.png" alt="" aria-hidden="true" draggable="false"
-          style={{
-            position: "absolute", bottom: isMobile ? 26 : 44, right: isMobile ? "-10%" : -64,
-            width: isMobile ? "58%" : "42%", maxWidth: 440, opacity: 0.07, zIndex: 0,
-            pointerEvents: "none", userSelect: "none",
-          }}
-        />
+        {/* Brand watermark — the faint coin logo bleeding off the bottom-right corner (the panel's
+            overflow:hidden clips it), plus the domain. This was inline here and on this chart
+            ALONE; it is now <Watermark /> from chart-ui, so any of the other 72 charts can carry
+            the same mark with one line. The logo renders exactly as before. */}
+        <Watermark />
         <div style={{ position: "relative", zIndex: 2 }}>
           <ZoomBar zoomed={zoomed} onReset={() => setZoom(null)} accent="#a78bfa" />
         </div>

@@ -217,3 +217,22 @@ test("no full-screen overlay uses inset:0 under the blurred nav", () => {
     assert.match(block, /width:100vw/, `${sel} spans the real viewport`);
   }
 });
+
+test("the brand watermark is one line to apply, and off-by-default stays off", () => {
+  // "Make sure this can be easily implemented": the mark used to be a hardcoded <img> inside the
+  // rainbow panel and existed on that chart alone. It is a component now, so any chart adds it
+  // with <Watermark />. The domain LABEL is the half that actually attributes a screenshot — a 7%
+  // logo says nothing about where a chart came from — but it defaults OFF so that adding the
+  // component changes nothing visually until the owner asks for it.
+  const ui = read("src/chart-ui.jsx"), app = read("src/App.jsx");
+  assert.match(ui, /export function Watermark\(/, "it is a reusable component");
+  assert.match(ui, /export const SITE = "spx6900rainbow\.xyz"/, "the domain lives in one place");
+  assert.match(ui, /label = false/, "the label ships off by default");
+  assert.match(app, /<Watermark \/>/, "the rainbow uses the component");
+  assert.ok(!/src="\/spx6900logo\.png"[\s\S]{0,400}opacity: 0\.07/.test(app), "and no longer inlines it");
+  // Both halves must stay untouchable: they sit over the plot.
+  const at = ui.indexOf("export function Watermark(");
+  const body = ui.slice(at, ui.indexOf("\n}\n", at));
+  assert.equal((body.match(/pointerEvents: "none"/g) || []).length, 2, "logo and label are both click-through");
+  assert.equal((body.match(/aria-hidden="true"/g) || []).length, 2, "and both hidden from screen readers");
+});
