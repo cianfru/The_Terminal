@@ -563,10 +563,10 @@
   /* A vertical LIST of bars, matching the in-app launcher: a grid of an odd number of
      destinations leaves a hole, a list never does. Rows flex with the viewport so all five fit. */
   .sbgrid.sections{ display:flex; flex-direction:column; flex:1; min-height:0; gap:8px; }
-  /* Do NOT let them stretch to fill: on a tall phone flex-grow turned a bar into a 127px block
-     with 45px of text floating in it. Same clamp as the in-app launcher, so a bar is a bar at
-     every size and the leftover height simply sits below the list. */
-  .sbgrid.sections .sbcell{ flex:0 0 auto; min-height:clamp(56px, 9.4vh, 96px); }
+  /* Bars FILL the sheet: this view holds nothing but the destinations, so leaving a dead gap above
+     the dock wastes the page. (I capped these once on the theory that a tall bar stops reading as
+     a bar — owner overruled it, and on the device the filled version is plainly better.) */
+  .sbgrid.sections .sbcell{ flex:1 1 auto; min-height:clamp(56px, 9.4vh, 96px); }
   /* Deep Field door — the members strip under the launcher grid (green accent = the members area) */
   .sbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:15px 17px; border:1.5px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:0; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 22%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left;
     box-shadow:0 12px 30px -12px color-mix(in srgb, var(--live) 42%, transparent), inset 0 1px 0 rgba(255,255,255,.12); transition:transform .1s ease, border-color .12s; }

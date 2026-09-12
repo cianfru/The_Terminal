@@ -392,7 +392,14 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .galback:hover{ color:var(--tx); border-color:var(--faint); }
 
 /* ── MOBILE SPRINGBOARD — the app-launcher nav, styled as an extension of the terminal ── */
-.tzone .tsb{ position:fixed; inset:0; z-index:300; background:radial-gradient(120% 55% at 50% -8%, rgba(78,231,154,.05), transparent 60%), var(--bg); display:none; flex-direction:column; }
+/* ⚠ SAME TRAP AS .tmobmenu ABOVE, and it shipped: the sticky sub-page <nav> has backdrop-filter,
+   which makes it the containing block for position:fixed descendants. With inset:0 this sheet
+   sized to the 51px nav bar — the body collapsed to nothing, so opening Explore on a chart page
+   showed only the header, the search field and the dock, floating over the page underneath.
+   Safari applies the containing-block rule to backdrop-filter; Chromium does not, so neither the
+   e2e suite nor any local screenshot could see it. Viewport units, never inset:0, under a blurred
+   or transformed ancestor. */
+.tzone .tsb{ position:fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh; z-index:300; background:radial-gradient(120% 55% at 50% -8%, rgba(78,231,154,.05), transparent 60%), var(--bg); display:none; flex-direction:column; }
 .tzone .tsb.open{ display:flex; }
 .tzone .tsbtop{ display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 11px; border-bottom:1px solid var(--line); flex:none; }
 /* Title is a FLEX child between the buttons (not absolutely centred), so it can never overlap the

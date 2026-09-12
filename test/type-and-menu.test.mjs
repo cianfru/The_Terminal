@@ -59,7 +59,9 @@ test("the launcher is a list of full-width bars, sized to the viewport", () => {
   assert.ok(!nav.includes('className="tsbdf"'), "the odd full-width strip is gone");
   assert.match(css, /\.tzone \.tsbgrid-quad\{ display:flex; flex-direction:column/, "a single column list");
   assert.match(css, /\.tzone \.tsbgrid-quad \.tsbcell\{[^}]*min-height:clamp\(/, "bar height scales with the viewport");
-  assert.match(read("public/landing-next.html"), /\.sbgrid\.sections \.sbcell\{ flex:0 0 auto; min-height:clamp\(/, "landing bars match, and never stretch");
+  // The landing sheet holds only the destinations, so its bars GROW to fill it — leaving a dead
+  // gap above the dock wastes the page. The in-app sheet has no gap to fill: the rails follow.
+  assert.match(read("public/landing-next.html"), /\.sbgrid\.sections \.sbcell\{ flex:1 1 auto; min-height:clamp\(/, "landing bars fill the sheet");
   assert.match(css, /\.tzone \.tsbcell\{[^}]*border-radius:0;/, "square corners, like the rest of the site");
   assert.match(css, /\.tzone \.tsbcell::after\{[^}]*width:3px; background:var\(--tc\)/, "section colour down the left edge");
   // The background artwork went with the grid: a bar is type, not a picture.
@@ -191,4 +193,27 @@ test("tile subtitles stay at the readable floor, never shrunk to fit", () => {
   }
   const narrow = landing.match(/@media\(max-width:340px\)\{ \.sbcellsub\{[^}]*\}/)?.[0] || "";
   assert.ok(!/font-size/.test(narrow), "the narrow-width rule adjusts tracking, not size");
+});
+
+test("no full-screen overlay uses inset:0 under the blurred nav", () => {
+  // The sub-page <nav> carries backdrop-filter, which makes it the containing block for every
+  // position:fixed descendant. An overlay with inset:0 therefore fills the 51px nav bar instead
+  // of the screen. Safari enforces this; Chromium does not — so it cannot be caught by the e2e
+  // suite or any screenshot taken here, and it reached a real iPhone once already. Viewport units
+  // are the only safe form, and this is a static check precisely because the runtime one is blind.
+  const css = read("src/terminal.css");
+  const offenders = [];
+  for (const m of css.matchAll(/(\.tzone [^{]*)\{([^}]*)\}/g)) {
+    const [, sel, body] = m;
+    if (/position:fixed/.test(body) && /inset:0/.test(body)) offenders.push(sel.trim());
+  }
+  assert.deepEqual(offenders, [], `these must use top/left + 100vw/100dvh instead of inset:0`);
+  // And the two known overlays must actually carry the viewport units.
+  for (const sel of [".tzone .tsb{", ".tzone .tmobmenu{"]) {
+    const at = css.indexOf(sel);
+    assert.ok(at > -1, `${sel} exists`);
+    const block = css.slice(at, css.indexOf("}", at));
+    assert.match(block, /height:100dvh/, `${sel} sizes to the real viewport`);
+    assert.match(block, /width:100vw/, `${sel} spans the real viewport`);
+  }
 });
