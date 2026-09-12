@@ -48,19 +48,24 @@ test("3D overlay labels use the site typeface, not a second one", () => {
   }
 });
 
-test("the launcher is equal tiles, not four squares and a strip", () => {
-  // FIVE now, not six: the Manual was pulled out. It is the SPX City manual, so at top level it
-  // read as random next to Rainbow and Charts, and it competed with what people come for.
+test("the launcher is a list of full-width bars, sized to the viewport", () => {
+  // It was a 2-column grid of picture-tiles. Five destinations left a hole in a 2-col grid, and
+  // the artwork cost height for decoration, so the destinations are a vertical list of bars whose
+  // height scales with the screen — five always fit, on a 568px phone as on a 932px one.
   const nav = read("src/TerminalNav.jsx"), css = read("src/terminal.css");
   const ids = [...nav.matchAll(/\{ id: "(rainbow|charts|city|aeon|deepfield|manual)"/g)].map(m => m[1]);
   assert.deepEqual(ids, ["rainbow", "charts", "city", "aeon", "deepfield"], "five destinations");
   assert.ok(!ids.includes("manual"), "the Manual is not a top-level tile");
   assert.ok(!nav.includes('className="tsbdf"'), "the odd full-width strip is gone");
-  assert.match(css, /\.tzone \.tsbgrid-quad\{ display:grid; grid-template-columns:1fr 1fr/, "2 columns");
+  assert.match(css, /\.tzone \.tsbgrid-quad\{ display:flex; flex-direction:column/, "a single column list");
+  assert.match(css, /\.tzone \.tsbgrid-quad \.tsbcell\{[^}]*min-height:clamp\(/, "bar height scales with the viewport");
+  assert.match(read("public/landing-next.html"), /\.sbgrid\.sections \.sbcell\{ flex:0 0 auto; min-height:clamp\(/, "landing bars match, and never stretch");
   assert.match(css, /\.tzone \.tsbcell\{[^}]*border-radius:0;/, "square corners, like the rest of the site");
-  assert.match(css, /\.tzone \.tsbcell::after\{[^}]*background:var\(--tc\)/, "a hard bar of the section colour");
-  assert.ok(nav.includes("  deepfield: <svg"), "deepfield has its own motif");
-  assert.ok(!nav.includes("  manual: <svg"), "and the Manual's motif went with its tile");
+  assert.match(css, /\.tzone \.tsbcell::after\{[^}]*width:3px; background:var\(--tc\)/, "section colour down the left edge");
+  // The background artwork went with the grid: a bar is type, not a picture.
+  for (const [src, sel] of [[nav, "SB_MOTIF"], [nav, "tsbcellbg"], [read("public/landing-next.html"), "sbcellbg"]])
+    assert.ok(!src.includes(sel), `${sel} is gone`);
+
 });
 
 test("the launcher invents no destination, and drops the docs prop it no longer needs", () => {
@@ -163,19 +168,15 @@ test("launcher tiles carry no corner icon, and say what a section IS, not how ma
     assert.ok(!landing.includes(c), `landing dropped the unused ${c}`);
 });
 
-test("tile subtitles reserve two lines, so names align across a row even when one wraps", () => {
-  // Tiles are bottom-anchored: a one-line subtitle next to a two-line one pushed the names out of
-  // line with each other. Reserving the height is what keeps the row level at any width.
+test("bar subtitles are one line, and cannot silently truncate the name", () => {
+  // The old 2-column tiles reserved two subtitle lines so names stayed level across a row. A bar
+  // is one row, so they line up by construction and a full-width bar fits any descriptor.
   const css = read("src/terminal.css"), landing = read("public/landing-next.html");
-  const app = css.slice(css.indexOf(".tzone .tsbcell .tsbcellsub{"));
-  assert.match(app.slice(0, app.indexOf("}")), /min-height:2\.5em/, "app reserves two lines");
-  const land = landing.slice(landing.indexOf(".sbcell .sbcellsub{"));
-  assert.match(land.slice(0, land.indexOf("}")), /min-height:2\.5em/, "landing reserves two lines");
-  // The reserve is 2 lines at the declared line-height; if one changes the other has to follow.
-  for (const [block, label] of [[app.slice(0, app.indexOf("}")), "app"], [land.slice(0, land.indexOf("}")), "landing"]]) {
-    const lh = Number(block.match(/line-height:([\d.]+)/)?.[1]);
-    const min = Number(block.match(/min-height:([\d.]+)em/)?.[1]);
-    assert.equal(min, 2 * lh, `${label} reserve matches two lines of its own line-height`);
+  for (const [src, sel, label] of [[css, ".tzone .tsbcell .tsbcellsub{", "app"], [landing, ".sbcell .sbcellsub{", "landing"]]) {
+    const at = src.indexOf(sel), block = src.slice(at, src.indexOf("}", at));
+    assert.ok(!/min-height:2\.5em/.test(block), `${label} drops the two-line reserve`);
+    assert.match(block, /white-space:nowrap/, `${label} keeps a descriptor on one line`);
+    assert.match(block, /text-overflow:ellipsis/, `${label} truncates visibly rather than wrapping`);
   }
 });
 

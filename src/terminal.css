@@ -464,23 +464,21 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 /* SIX equal tiles, 2x3 — the launcher used to be four squares plus a full-width strip, which read
    as lopsided. Square corners and a hard colour edge to match the rest of the site (the icon
    buttons, the view tabs and the pills are all radius 0); no rounded cards anywhere else. */
-.tzone .tsbgrid-quad{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-.tzone .tsbgrid-quad .tsbcell{ aspect-ratio:1/0.74; min-height:118px; }
-@media(max-height:700px){ .tzone .tsbgrid-quad .tsbcell{ aspect-ratio:1/0.6; min-height:100px; } }
-.tzone .tsbcell{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:5px;
-  padding:15px 14px 14px; min-height:0; border:1px solid color-mix(in srgb, var(--tc) 46%, var(--line2)); border-radius:0;
-  background:linear-gradient(157deg, color-mix(in srgb, var(--tc) 26%, var(--panel)) 0%, var(--panel2) 72%);
+/* The destinations are a vertical LIST of full-width bars, not a grid of picture-tiles. A grid of
+   an odd number leaves a hole (and five is what we have); a list never does, and it reads in one
+   downward scan. Height adapts to the viewport — vh-scaled with hard floor and ceiling — so all
+   five fit on a short phone without shrinking to nothing on a tall one. */
+.tzone .tsbgrid-quad{ display:flex; flex-direction:column; gap:8px; }
+.tzone .tsbgrid-quad .tsbcell{ flex:1 1 auto; min-height:clamp(56px, 9.4vh, 96px); }
+.tzone .tsbcell{ position:relative; overflow:hidden; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:12px;
+  padding:10px 16px 10px 19px; min-height:0; border:1px solid color-mix(in srgb, var(--tc) 46%, var(--line2)); border-radius:0;
+  background:linear-gradient(100deg, color-mix(in srgb, var(--tc) 22%, var(--panel)) 0%, var(--panel2) 62%);
   color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s, background .12s; }
-/* a hard bar of the section's own colour along the top edge — the strongest, cheapest identifier,
-   and the same device the chart rows and cluster rims use */
-.tzone .tsbcell::after{ content:""; position:absolute; left:0; right:0; top:0; height:3px; background:var(--tc); }
-/* the motif runs behind the name — a bottom scrim keeps the label readable over any of them
-   without dimming the artwork itself (the labels are position:relative, so they sit above this) */
-.tzone .tsbcell::before{ content:""; position:absolute; left:0; right:0; bottom:0; height:62%;
-  background:linear-gradient(180deg, transparent, color-mix(in srgb, var(--panel2) 88%, transparent) 62%, var(--panel2) 100%); }
-.tzone .tsbcell:active{ transform:scale(.975); border-color:var(--tc); background:linear-gradient(157deg, color-mix(in srgb, var(--tc) 38%, var(--panel)) 0%, var(--panel2) 72%); }
-.tzone .tsbcell .tsbcellbg{ position:absolute; left:0; right:0; bottom:0; height:62%; opacity:.2; color:var(--tc); pointer-events:none; }
-.tzone .tsbcell .tsbcellbg svg{ width:100%; height:100%; display:block; }
+.tzone .tsbcell .tsbcelltx{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+/* a hard bar of the section's own colour down the LEFT edge — the same device the chart rows and
+   cluster rims use, moved to where a list row is read from */
+.tzone .tsbcell::after{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc); }
+.tzone .tsbcell:active{ transform:scale(.975); border-color:var(--tc); background:linear-gradient(100deg, color-mix(in srgb, var(--tc) 34%, var(--panel)) 0%, var(--panel2) 62%); }
 /* The launcher speaks the SAME language as the website's menu bar (.mtop > .mhead): mono,
    uppercase, letterspaced — not the bold sans it used, which belonged to headlines.
    The small corner icon that used to sit above this is gone: it repeated the motif already
@@ -492,12 +490,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--mono); font-weight:700; font-size:19px;
   letter-spacing:.02em; text-transform:uppercase; line-height:1.1; color:var(--tx); white-space:nowrap; }
 @media(max-width:380px){ .tzone .tsbcell .tsbcellnm{ font-size:17px; letter-spacing:.01em; } }
-/* Two lines of height are reserved whether or not the copy needs them, so the names sit on one
-   baseline across the row: at 320px a descriptor still wraps, and without this the tiles in a row
-   drifted out of line with each other. */
-.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; line-height:1.25; color:var(--dim);
-  min-height:2.5em; display:flex; align-items:flex-start; }
-.tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
+/* No reserved height any more: one bar is one row, so the names line up by construction, and a
+   full-width bar gives every descriptor room for a single line. */
+.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; line-height:1.2; color:var(--dim);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tzone .tsbcell .tsbcellarrow{ flex:none; color:var(--tc); font-size:18px; line-height:1; opacity:.8; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
 /* ── MOBILE CHART SYSTEM ─────────────────────────────────────────────────────────────────────

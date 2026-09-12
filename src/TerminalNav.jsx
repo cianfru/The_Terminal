@@ -294,24 +294,17 @@ function MobRow({ label, chev, cls = "", onTap }) {
 const sbCount = groups => groups.reduce((n, g) => n + g.charts.filter(c => !c.dev).length, 0);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-// Faint per-section background motif for the fullscreen 2×2 launcher — gives each quadrant identity.
-const SB_MOTIF = {
-  rainbow: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="none" stroke="currentColor"><path d="M-6 78a66 66 0 0 1 132 0" strokeWidth="7" /><path d="M12 78a48 48 0 0 1 96 0" strokeWidth="7" /><path d="M30 78a30 30 0 0 1 60 0" strokeWidth="7" /><path d="M48 78a12 12 0 0 1 24 0" strokeWidth="7" /></svg>,
-  charts: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="6" y="46" width="12" height="34" rx="2" /><rect x="26" y="30" width="12" height="50" rx="2" /><rect x="46" y="52" width="12" height="28" rx="2" /><rect x="66" y="20" width="12" height="60" rx="2" /><rect x="86" y="38" width="12" height="42" rx="2" /><rect x="106" y="10" width="12" height="70" rx="2" /></svg>,
-  city: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36" /><rect x="24" y="28" width="16" height="52" /><rect x="44" y="52" width="14" height="28" /><rect x="62" y="18" width="18" height="62" /><rect x="84" y="38" width="14" height="42" /><rect x="102" y="26" width="16" height="54" /></svg>,
-  aeon: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round"><path d="M60 8 96 28v34L60 82 24 62V28z" /><path d="M60 82V44M24 28l36 16 36-16" /></svg>,
-  deepfield: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="currentColor"><circle cx="22" cy="20" r="2.6" /><circle cx="52" cy="12" r="1.7" /><circle cx="86" cy="24" r="3.2" /><circle cx="104" cy="48" r="1.8" /><circle cx="34" cy="52" r="3.6" /><circle cx="66" cy="44" r="2.2" /><circle cx="14" cy="68" r="2" /><circle cx="92" cy="70" r="2.6" /><circle cx="58" cy="70" r="1.6" /></svg>,
-};
 
-// A fullscreen quadrant — one section, its colour washed across the tile, a background motif behind
-// the name and a one-line descriptor. The small corner icon was dropped: it repeated the motif that
-// already carries the section's colour, and at 390px it collided with a two-line subtitle.
-function SbQuad({ id, color, name, sub, onTap }) {
+// One destination as a full-width BAR. It was a 2-column grid of picture-tiles; the artwork was
+// decoration that cost height, and an odd number of destinations left a hole in the grid. A list
+// has no hole, reads in one vertical scan, and the rows flex with the viewport so five always fit.
+function SbQuad({ color, name, sub, onTap }) {
   return (
     <button className="tsbcell" style={{ "--tc": color }} onClick={onTap}>
-      <span className="tsbcellbg" aria-hidden="true">{SB_MOTIF[id]}</span>
-      <span className="tsbcellnm">{name}</span>
-      <span className="tsbcellsub">{sub}</span>
+      <span className="tsbcelltx">
+        <span className="tsbcellnm">{name}</span>
+        <span className="tsbcellsub">{sub}</span>
+      </span>
       <span className="tsbcellarrow" aria-hidden="true">→</span>
     </button>
   );
