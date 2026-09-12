@@ -243,6 +243,13 @@ a.neon-pill:hover { text-decoration: none; }
   font-size:20px; color:var(--tx); white-space:nowrap;
 }
 html[data-theme="light"] .chartwm{ opacity:.22; }
+/* Desktop: sit the mark in the upper third rather than dead centre. On a wide screen the
+   centre of the viewport is the lower chart, so the mark landed under the time-series and the
+   most-shared crops (donut + legend + copy) went out without it. Phones keep it centred — the
+   viewport is short and the content stacks, so centre already covers the crop. */
+@media (min-width:761px){
+  .chartwm-lockup{ transform:translateY(-17vh); }
+}
 @media (max-width:760px){
   .chartwm-lockup{ width:min(72%, 300px); }
   .chartwm-label{ font-size:13px; letter-spacing:.1em; }
