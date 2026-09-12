@@ -162,10 +162,22 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 /* mobile: the hover cascade is replaced by a full-screen, tap-driven menu (the ☰ hamburger) */
 .tmobtog{ display:none; }
 .tmobmenu{ display:none; }
+/* ONE mobile breakpoint: 760px here == MOBILE_BP in src/viewport.js == the landing's menu switch
+   (test/mobile-breakpoint.test.mjs pins all three together). */
 @media(max-width:760px){
   .tzone .tmenu{ display:none; }
-  .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; flex:none; margin-left:8px;
-    border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+  /* phones: the bar carries exactly three things — brand, ONE account chip, ONE ☰ Explore button.
+     Theme, X and Kraken are secondary and move to the springboard's utility dock. With all of them
+     in the bar a 390px header measured 443px wide and the ☰ sat off-screen (found 2026-09-11:
+     the primary nav was unreachable on every phone). */
+  .tzone .tbar .tsocial-ext, .tzone .tbar .tthemebtn{ display:none; }
+  /* ≥44px tap targets (WCAG 2.5.5 / Apple HIG) for everything left in the bar */
+  .tzone .tbar .siclink{ width:44px; height:44px; }
+  .tzone .tbar .tbrand{ min-width:44px; min-height:44px; justify-content:center; }
+  .tzone .tbar .siclink svg{ width:19px; height:19px; }
+  .tzone .tbar .siclink.krk svg{ width:22px; height:22px; }
+  .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:none; margin-left:8px;
+    border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
   .tzone .tmobtog svg{ width:22px; height:22px; }
   /* NB: the sticky sub-page nav has backdrop-filter, which makes it the containing block for
      position:fixed descendants — so inset:0 would fill the 51px bar, not the screen. The nav is
@@ -176,7 +188,7 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 }
 .tzone .tmobhead{ display:flex; align-items:center; justify-content:space-between; padding:15px 16px; border-bottom:1px solid var(--line); flex:none; }
 .tzone .tmobtitle{ font-family:var(--mono); text-transform:uppercase; letter-spacing:.18em; font-size:13px; color:var(--dim); }
-.tzone .tmobclose{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:8px; background:var(--panel); color:var(--tx); cursor:pointer; }
+.tzone .tmobclose{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
 .tzone .tmobclose svg{ width:22px; height:22px; }
 .tzone .tmobbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-bottom:48px; }
 .tzone .tmob-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; text-align:left; cursor:pointer;
@@ -274,6 +286,57 @@ html[data-theme="light"] .tzone .tbrand .tlogo{ mix-blend-mode:normal; }
 html[data-theme="light"] .tzone .drop, html[data-theme="light"] .tzone .subdrop,
 html[data-theme="light"] .tzone .leafprev{ box-shadow:0 12px 34px rgba(20,30,50,.14); }
 
+/* ── BRIGHT-THEME CONTRAST ───────────────────────────────────────────────────────────────────
+   The theme tokens are near-black and read fine. What failed the audit is VIVID ACCENT TEXT:
+   #4ade80, #f87171, #f59e0b and friends are tuned for a near-black ground and land at 1.6–2.8:1
+   on white. They are written inline, per chart, across ~70 files.
+
+   A `filter: brightness()` darkens them, but it does NOT change computed `color`, so neither an
+   audit nor a test can prove it worked — the same silent-no-op trap as the recharts selector in
+   phase 3. React serialises inline colours as `rgb(r, g, b)`, so each accent can instead be matched
+   by its own attribute substring and given a real light-theme value. Measurable, and one deliberate
+   mapping per colour rather than a blanket dim. Scoped to PROSE so chart marks keep their palette. */
+:root, .tzone{
+  --acc-green:#4ade80; --acc-red:#f87171; --acc-sky:#38bdf8; --acc-violet:#a78bfa;
+  --acc-amber:#fbbf24; --acc-amber2:#f59e0b; --acc-cyan:#22d3ee; --acc-indigo:#818cf8;
+  --acc-rose:#fb7185; --acc-teal:#5eead4; --acc-lightsky:#7dd3fc; --doc-accent:#5eead4;
+}
+html[data-theme="light"] .tzone{
+  /* same hues, taken down to >=4.5:1 on the #f7f8fa ground */
+  --acc-green:#067a3c; --acc-red:#b91c1c; --acc-sky:#0369a1; --acc-violet:#6d28d9;
+  --acc-amber:#8a5a06; --acc-amber2:#a04e07; --acc-cyan:#0e7490; --acc-indigo:#4338ca;
+  --acc-rose:#be123c; --acc-teal:#0f766e; --acc-lightsky:#0369a1; --doc-accent:#0f766e;
+}
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(74, 222, 128)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(74, 222, 128)"]{ color:var(--acc-green) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(248, 113, 113)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(248, 113, 113)"]{ color:var(--acc-red) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(56, 189, 248)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(56, 189, 248)"]{ color:var(--acc-sky) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(167, 139, 250)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(167, 139, 250)"]{ color:var(--acc-violet) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(251, 191, 36)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(251, 191, 36)"]{ color:var(--acc-amber) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(245, 158, 11)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(245, 158, 11)"]{ color:var(--acc-amber2) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(34, 211, 238)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(34, 211, 238)"]{ color:var(--acc-cyan) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(129, 140, 248)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(129, 140, 248)"]{ color:var(--acc-indigo) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(251, 113, 133)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(251, 113, 133)"]{ color:var(--acc-rose) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(94, 234, 212)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(94, 234, 212)"]{ color:var(--acc-teal) !important; }
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(125, 211, 252)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(125, 211, 252)"]{ color:var(--acc-lightsky) !important; }
+/* greys written for a dark ground: force to the theme's own ink rather than guessing a hue */
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(203, 213, 225)"],
+html[data-theme="light"] .tzone .chart-explain [style*="rgb(148, 163, 184)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(203, 213, 225)"],
+html[data-theme="light"] .tzone .chart-caption [style*="rgb(148, 163, 184)"]{ color:var(--ch-ink) !important; }
+/* the blinking group cursor is decorative, but it is still visible text — give it real ink */
+html[data-theme="light"] .tzone .tgcur, html[data-theme="light"] .tzone .tcur{ color:var(--ch-mut) !important; }
+
 /* recharts greyscale INK — grid, axis lines, tick labels are set as SVG presentation attributes with
    near-white / white-alpha values (invisible on a light ground). A CSS fill/stroke rule overrides a
    presentation attribute, so we recolour them globally for every recharts chart in one place. */
@@ -329,7 +392,14 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .galback:hover{ color:var(--tx); border-color:var(--faint); }
 
 /* ── MOBILE SPRINGBOARD — the app-launcher nav, styled as an extension of the terminal ── */
-.tzone .tsb{ position:fixed; inset:0; z-index:300; background:radial-gradient(120% 55% at 50% -8%, rgba(78,231,154,.05), transparent 60%), var(--bg); display:none; flex-direction:column; }
+/* ⚠ SAME TRAP AS .tmobmenu ABOVE, and it shipped: the sticky sub-page <nav> has backdrop-filter,
+   which makes it the containing block for position:fixed descendants. With inset:0 this sheet
+   sized to the 51px nav bar — the body collapsed to nothing, so opening Explore on a chart page
+   showed only the header, the search field and the dock, floating over the page underneath.
+   Safari applies the containing-block rule to backdrop-filter; Chromium does not, so neither the
+   e2e suite nor any local screenshot could see it. Viewport units, never inset:0, under a blurred
+   or transformed ancestor. */
+.tzone .tsb{ position:fixed; top:0; left:0; width:100vw; height:100vh; height:100dvh; z-index:300; background:radial-gradient(120% 55% at 50% -8%, rgba(78,231,154,.05), transparent 60%), var(--bg); display:none; flex-direction:column; }
 .tzone .tsb.open{ display:flex; }
 .tzone .tsbtop{ display:flex; align-items:center; gap:10px; padding:calc(env(safe-area-inset-top,0px) + 12px) 14px 11px; border-bottom:1px solid var(--line); flex:none; }
 /* Title is a FLEX child between the buttons (not absolutely centred), so it can never overlap the
@@ -341,9 +411,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbtitle{ flex:1 1 auto; min-width:0; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
   padding:0 4px; text-align:center; overflow:hidden; overflow-wrap:break-word;
   font-family:var(--label); text-transform:uppercase; letter-spacing:.07em; font-size:15px; line-height:1.14; font-weight:800; color:var(--tx); }
+@media(max-width:400px){ .tzone .tbrand b{ display:none; } }  /* 320–400px: logo only, the text + toggle can't share the bar */
 @media(max-width:380px){ .tzone .tsbtitle{ letter-spacing:.03em; font-size:14px; } .tzone .tsbtop{ gap:7px; } }
-.tzone .tsbbtn{ width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:9px; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
+.tzone .tsbbtn{ width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; flex:none; }
 .tzone .tsbbtn:active{ border-color:var(--live); }
+.tzone .tsbspacer{ border-color:transparent; background:none; pointer-events:none; }
 .tzone .tsbbtn svg{ width:21px; height:21px; }
 .tzone .tsbbody{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:15px 14px calc(env(safe-area-inset-bottom,0px) + 40px); }
 /* command line + rainbow hairline — the site's signature header */
@@ -353,11 +425,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .tsbgrid{ display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
 /* base tile: squared terminal panel, thin border, group-colour edge, lights up on press */
 .tzone .tsbtile{ position:relative; display:flex; flex-direction:column; text-align:left; cursor:pointer; overflow:hidden;
-  border:1px solid var(--line2); border-radius:11px; background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line2); border-radius:0; background:linear-gradient(180deg,var(--panel),var(--panel2));
   color:var(--tx); transition:transform .08s ease, border-color .12s; padding:0; }
 .tzone .tsbtile:active{ transform:scale(.975); border-color:var(--tc); }
 .tzone .tsbtile .tsbedge{ position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc); }
-.tzone .tsbtile .tsbnm{ font-family:var(--sans); font-weight:700; letter-spacing:-.01em; line-height:1.15; color:var(--tx); }
+.tzone .tsbtile .tsbnm{ font-family:var(--mono); font-weight:700; letter-spacing:.05em; text-transform:uppercase; line-height:1.15; color:var(--tx); }
 /* NAV tiles (sections / groups) */
 .tzone .tsbnav{ padding:15px 15px 14px 17px; min-height:118px; }
 .tzone .tsbnav .tsbhd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; }
@@ -384,30 +456,11 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .pgpos{ flex:none; font-family:var(--mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); text-align:center; }
 @media(max-width:560px){ .tzone .pgpos{ display:none; } .tzone .pgbtn{ max-width:48%; } }
 
-/* ── FULLSCREEN / LANDSCAPE viewer (charts + city) ── */
-.tzone .fsview{ position:fixed; inset:0; z-index:2000; background:var(--bg); display:flex; flex-direction:column; }
-.tzone .fsclose{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); right:calc(env(safe-area-inset-right,0px) + 12px); z-index:6; width:42px; height:42px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line2); border-radius:11px; background:var(--panel); color:var(--tx); cursor:pointer; }
-.tzone .fsclose svg{ width:22px; height:22px; }
-/* the touch surface: hidden overflow + touch-action:none so the browser never hijacks the
-   pinch (we drive zoom ourselves via a CSS transform on .fsscale — SVG, so it stays crisp) */
-.tzone .fsbody{ flex:1; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:6px; overflow:hidden; touch-action:none; }
-.tzone .fsview.fsportrait .fsbody{ visibility:hidden; }  /* while portrait, only the rotate prompt shows (hides the chart + its zoom-hint) */
-.tzone .fsscale{ width:100%; transform-origin:0 0; will-change:transform; }
-/* fading gesture hint, bottom-centre — disappears once the user pinches */
-.tzone .fshint{ position:absolute; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 10px); transform:translateX(-50%); z-index:5; padding:5px 12px; border-radius:999px; background:color-mix(in srgb, var(--panel) 82%, transparent); border:1px solid var(--line2); color:var(--dim); font-family:var(--mono); font-size:11px; letter-spacing:.04em; white-space:nowrap; pointer-events:none; animation:fshint 5s ease forwards; }
-@keyframes fshint{ 0%,70%{ opacity:.92 } 100%{ opacity:0 } }
-@media(prefers-reduced-motion:reduce){ .tzone .fshint{ animation:none; opacity:.7 } }
-/* reset-zoom button, top-left, appears once magnified */
-.tzone .fsreset{ position:absolute; top:calc(env(safe-area-inset-top,0px) + 10px); left:calc(env(safe-area-inset-left,0px) + 12px); z-index:5; display:inline-flex; align-items:center; gap:6px; height:42px; padding:0 13px; border:1px solid var(--line2); border-radius:11px; background:var(--panel); color:var(--tx); cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:.04em; text-transform:uppercase; }
-.tzone .fsreset svg{ width:18px; height:18px; }
-/* portrait rotate screen — a clean solid prompt (no squished chart behind), with a phone that
-   animates from portrait to landscape to signal "turn your device". Landscape hides it entirely. */
-.tzone .fsrotate{ position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; background:var(--bg); color:var(--tx); font-family:var(--mono); font-size:15px; letter-spacing:.05em; text-transform:uppercase; text-align:center; padding:24px; }
-.tzone .fsrotate .fsrotate-ph{ width:64px; height:64px; color:var(--live); transform-origin:50% 50%; animation:fsrot 2.4s ease-in-out infinite; }
-@keyframes fsrot{ 0%,20%{ transform:rotate(0deg) } 55%,80%{ transform:rotate(-90deg) } 100%{ transform:rotate(0deg) } }
-@media(prefers-reduced-motion:reduce){ .tzone .fsrotate .fsrotate-ph{ animation:none; transform:rotate(-90deg) } }
-.tzone .fsrotate small{ font-size:11px; letter-spacing:.1em; color:var(--faint); }
-/* the "go fullscreen" button that lives next to Share on the chart page + on the city */
+/* The fullscreen / landscape chart viewer was removed: iOS Safari refuses requestFullscreen on
+   anything that isn't a <video>, so on iPhone it was never fullscreen — just a CSS overlay sitting
+   under the URL bar and the tab bar, with touch-action:none suppressing the browser's own pinch.
+   Charts now use that native pinch. Only the CITY keeps a fullscreen button (.fsbtn below), which
+   goes through the real Fullscreen API where the platform allows it. */
 .tzone .fsbtn{ display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:6px 12px; border-radius:7px; border:1px solid var(--line2); background:linear-gradient(180deg,var(--panel),var(--panel2)); color:var(--dim); cursor:pointer; font-family:var(--mono); font-size:12px; letter-spacing:.04em; text-transform:uppercase; }
 .tzone .fsbtn:hover{ color:var(--tx); border-color:var(--faint); }
 .tzone .fsbtn svg{ width:14px; height:14px; }
@@ -415,20 +468,153 @@ html:not([data-theme="light"]) .tzone [style*="rgb(100, 116, 139)"]{ color:#b1bc
 .tzone .cityfsbtn{ position:absolute; top:12px; left:12px; z-index:30; background:color-mix(in srgb, var(--panel) 82%, transparent); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
 
 /* fullscreen 2×2 quadrant launcher (springboard sections level) — each section its own rich tile */
-.tzone .tsbbody-fill{ overflow:hidden; display:flex; flex-direction:column; padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px); }
-.tzone .tsbgrid-quad{ flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:12px; }
-.tzone .tsbcell{ position:relative; overflow:hidden; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; gap:5px; padding:18px; min-height:0; border:1px solid var(--line2); border-radius:20px; background:linear-gradient(150deg, color-mix(in srgb, var(--tc) 20%, var(--panel)), var(--panel2) 78%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
-.tzone .tsbcell:active{ transform:scale(.97); border-color:var(--tc); }
-.tzone .tsbcell .tsbcellbg{ position:absolute; left:0; right:0; bottom:0; height:62%; opacity:.14; color:var(--tc); pointer-events:none; }
-.tzone .tsbcell .tsbcellbg svg{ width:100%; height:100%; display:block; }
-.tzone .tsbcell .tsbcellico{ position:absolute; top:16px; left:17px; width:32px; height:32px; color:var(--tc); }
-.tzone .tsbcell .tsbcellico svg{ width:100%; height:100%; }
-.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--sans); font-weight:800; font-size:19px; letter-spacing:-.01em; line-height:1.05; }
-.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
-.tzone .tsbcell .tsbcellarrow{ position:absolute; top:16px; right:17px; color:var(--tc); font-size:17px; line-height:1; opacity:.65; }
+/* SIX equal tiles, 2x3 — the launcher used to be four squares plus a full-width strip, which read
+   as lopsided. Square corners and a hard colour edge to match the rest of the site (the icon
+   buttons, the view tabs and the pills are all radius 0); no rounded cards anywhere else. */
+/* The destinations are a vertical LIST of full-width bars, not a grid of picture-tiles. A grid of
+   an odd number leaves a hole (and five is what we have); a list never does, and it reads in one
+   downward scan. Height adapts to the viewport — vh-scaled with hard floor and ceiling — so all
+   five fit on a short phone without shrinking to nothing on a tall one. */
+.tzone .tsbgrid-quad{ display:flex; flex-direction:column; gap:8px; }
+.tzone .tsbgrid-quad .tsbcell{ flex:1 1 auto; min-height:clamp(56px, 9.4vh, 96px); }
+.tzone .tsbcell{ position:relative; overflow:hidden; display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap:12px;
+  padding:10px 16px 10px 19px; min-height:0; border:1px solid color-mix(in srgb, var(--tc) 46%, var(--line2)); border-radius:0;
+  background:linear-gradient(100deg, color-mix(in srgb, var(--tc) 22%, var(--panel)) 0%, var(--panel2) 62%);
+  color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s, background .12s; }
+.tzone .tsbcell .tsbcelltx{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+/* a hard bar of the section's own colour down the LEFT edge — the same device the chart rows and
+   cluster rims use, moved to where a list row is read from */
+.tzone .tsbcell::after{ content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc); }
+.tzone .tsbcell:active{ transform:scale(.975); border-color:var(--tc); background:linear-gradient(100deg, color-mix(in srgb, var(--tc) 34%, var(--panel)) 0%, var(--panel2) 62%); }
+/* The launcher speaks the SAME language as the website's menu bar (.mtop > .mhead): mono,
+   uppercase, letterspaced — not the bold sans it used, which belonged to headlines.
+   The small corner icon that used to sit above this is gone: it repeated the motif already
+   carrying the section colour, and it collided with the name whenever a subtitle wrapped. The
+   space it freed goes to the name and the subtitle, both of which were too small to read.
+   "PROJECT AEON" is the longest name, and at .04em tracking it needed 146px of a 148px box — a
+   margin thin enough that subpixel rounding decided whether it wrapped. The tighter tracking below
+   buys ~5px, and nowrap makes the outcome explicit rather than incidental. */
+.tzone .tsbcell .tsbcellnm{ position:relative; font-family:var(--mono); font-weight:700; font-size:19px;
+  letter-spacing:.02em; text-transform:uppercase; line-height:1.1; color:var(--tx); white-space:nowrap; }
+@media(max-width:380px){ .tzone .tsbcell .tsbcellnm{ font-size:17px; letter-spacing:.01em; } }
+/* No reserved height any more: one bar is one row, so the names line up by construction, and a
+   full-width bar gives every descriptor room for a single line. */
+.tzone .tsbcell .tsbcellsub{ position:relative; font-family:var(--mono); font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; line-height:1.2; color:var(--dim);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tzone .tsbcell .tsbcellarrow{ flex:none; color:var(--tc); font-size:18px; line-height:1; opacity:.8; }
 
 /* Deep Field door — a full-width members strip under the launcher grid (green accent = the members area) */
-.tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:16px; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
+/* ── MOBILE CHART SYSTEM ─────────────────────────────────────────────────────────────────────
+   Floors enforced in CSS so they reach ALL charts, not only the ones migrated to chart-tokens.js.
+   The audit found 179 inline font sizes under 12px; rather than edit 60 files, the shared rules
+   below raise the type everywhere, and charts adopt the tokens as they are touched. */
+
+/* One-line insight above the plot: the value, which way it is going, what it means. */
+.tzone .chart-insight{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; justify-content:center;
+  max-width:900px; margin:0 auto 12px; text-align:center; }
+.tzone .chart-insight-v{ font-size:26px; font-weight:700; letter-spacing:-.01em; }
+.tzone .chart-insight-d{ font-family:var(--mono); font-size:15px; font-weight:700; white-space:nowrap; }
+.tzone .chart-insight-s{ color:var(--ch-mut,#aab4c4); font-weight:400; }
+.tzone .chart-insight-m{ flex:1 1 100%; color:var(--ch-body,#b4bfd0); line-height:1.55; }
+
+/* Explanatory copy: 16px on a phone (the plan's floor), 15px on desktop. */
+.tzone .chart-explain{ font-size:15px; }
+.tzone .chart-caption{ font-size:13px; }   /* desktop: charts may still set their own inline size */
+
+@media(max-width:760px){
+  /* AXIS TEXT NEVER BELOW 12px. recharts writes the size inline from each chart's `tick` prop,
+     so this needs !important to lift the charts that still pass `isMobile ? 10 : 12`. Fewer ticks
+     is the right answer to crowding, never smaller ticks. */
+  .tzone .recharts-cartesian-axis-tick-value, .tzone .recharts-polar-angle-axis-tick-value{ font-size:12px !important; }
+  /* The first and last x-axis labels are centred ON their tick, so half of each hangs outside the
+     plot and gets cut by the SVG edge — worse now the ticks are 12px. Anchor the edge labels
+     inward instead of widening every chart's margins. (CSS beats recharts' textAnchor attribute.)
+     NB recharts 3 hoists tick LABELS into their own z-index layer (.recharts-xAxis-tick-labels),
+     NOT inside .recharts-xAxis — selecting through the axis group silently matches nothing. */
+  .tzone .recharts-xAxis-tick-labels > g:last-of-type text{ text-anchor:end; }
+  .tzone .recharts-xAxis-tick-labels > g:first-of-type text{ text-anchor:start; }
+  .tzone .chart-explain{ font-size:16px; }
+  .tzone .chart-caption{ font-size:15px !important; line-height:1.6; }
+
+  /* Legends wrapped into three stacked rows and ate the plot. One row that scrolls sideways
+     instead — the series stay reachable without stealing height. */
+  .tzone .recharts-legend-wrapper{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+  .tzone .recharts-legend-wrapper::-webkit-scrollbar{ display:none; }
+  .tzone .recharts-default-legend{ white-space:nowrap !important; display:inline-flex !important; gap:6px; padding-inline:2px !important; }
+  .tzone .recharts-legend-item{ display:inline-flex !important; align-items:center; margin-right:12px !important; }
+  .tzone .recharts-legend-item-text{ font-size:13px !important; }
+
+  /* View / range toggles: a sticky toolbar under the sticky nav, so switching view never means
+     scrolling back up. 51px is the header bar's height. */
+  .tzone .chart-toolbar{ position:sticky; top:51px; z-index:20; margin-inline:-14px; padding:8px 14px;
+    background:color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; flex-wrap:nowrap !important; justify-content:flex-start !important; }
+  .tzone .chart-toolbar::-webkit-scrollbar{ display:none; }
+  .tzone .chart-toolbar .vtab{ flex:none; min-height:40px; }
+
+  /* The metric row is the summary a phone reads first — let it breathe, and keep it on one line. */
+  .tzone .chart-insight-v{ font-size:24px; }
+}
+
+/* Gallery tile blurb: one outcome-shaped line on a phone, the full text after you open the chart.
+   Clamping beats rewriting 73 descriptions — no invented copy, nothing lost, just deferred. 12.5px
+   was also under the project's readable-text floor. */
+.tzone .tiledesc{ font-size:14px; }
+@media(max-width:760px){
+  .tzone .tiledesc{ font-size:14px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+}
+
+/* ── Explore discovery: search, topic chips, result rows, rails ──────────────────────────────── */
+.tzone .tsbsearch{ position:relative; display:flex; align-items:center; margin:0 0 10px; }
+.tzone .tsbsearchico{ position:absolute; left:13px; width:18px; height:18px; color:var(--dim); pointer-events:none; }
+.tzone .tsbsearchin{ width:100%; height:48px; padding:0 42px 0 40px; border:1px solid var(--line2); border-radius:0;
+  background:var(--panel); color:var(--tx); font-family:var(--mono); font-size:16px; letter-spacing:.02em; /* 16px: iOS zooms the page on focus below that */ }
+.tzone .tsbsearchin::placeholder{ color:var(--dim); }
+.tzone .tsbsearchin:focus{ outline:none; border-color:var(--live); }
+.tzone .tsbsearchin::-webkit-search-cancel-button{ display:none; }
+.tzone .tsbsearchx{ position:absolute; right:4px; width:44px; height:44px; border:none; background:none; color:var(--dim); font-size:26px; line-height:1; cursor:pointer; }
+
+.tzone .tsbchips{ display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin:0 -14px 14px; padding:0 14px 2px; }
+.tzone .tsbchips::-webkit-scrollbar{ display:none; }
+.tzone .tsbchip{ flex:none; min-height:40px; padding:0 15px; border:1px solid var(--line2); border-radius:0; background:var(--panel);
+  color:var(--tx); font-family:var(--mono); font-size:13.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; white-space:nowrap; }
+.tzone .tsbchip.on{ border-color:var(--live); color:var(--live); background:color-mix(in srgb, var(--live) 12%, var(--panel)); }
+
+.tzone .tsbresh{ font-family:var(--mono); font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin:2px 0 10px; }
+.tzone .tsbempty{ font-family:var(--sans); font-size:15px; color:var(--tx); line-height:1.6; padding:14px 0; }
+.tzone .tsbrecentq{ background:none; border:none; padding:0 4px; color:var(--live); font:inherit; cursor:pointer; text-decoration:underline; }
+
+.tzone .tsbrow{ display:flex; align-items:stretch; gap:0; border-bottom:1px solid var(--line); }
+.tzone .tsbrowmain{ flex:1; min-width:0; display:flex; align-items:center; gap:12px; min-height:56px; padding:9px 4px 9px 0;
+  background:none; border:none; text-align:left; cursor:pointer; color:var(--tx); }
+.tzone .tsbrowmain:active{ background:var(--panel); }
+.tzone .tsbrowedge{ flex:none; width:3px; align-self:stretch; margin:6px 11px 6px 0; border-radius:0; background:var(--tc,var(--live)); }
+.tzone .tsbrowtx{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.tzone .tsbrownm{ font-family:var(--mono); font-size:15px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--tx); line-height:1.25; }
+.tzone .tsbrowsub{ font-family:var(--mono); font-size:12.5px; letter-spacing:.04em; color:var(--dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tzone .tsbstar{ flex:none; width:48px; min-height:48px; align-self:center; border:none; background:none; cursor:pointer; color:var(--dim); font-size:20px; line-height:1; }
+.tzone .tsbstar.on{ color:#fbbf24; }
+
+.tzone .tsbrail{ margin-top:22px; }
+.tzone .tsbrailh{ display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; margin:0 0 6px;
+  font-family:var(--mono); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--tx); font-weight:700; }
+.tzone .tsbrailnote{ font-size:11.5px; letter-spacing:.03em; text-transform:none; color:var(--dim); font-weight:400; }
+
+/* utility dock at the foot of the springboard: login/avatar · X · Kraken — the bar's icon group on phones */
+.tzone .tsbcellarrow, .tzone .tsbstar, .tzone .tsbrowsub, .tzone .tsbchev{ font-family:var(--mono); }
+.tzone .tsbdock{ flex:none; display:flex; align-items:center; justify-content:center; gap:14px; padding:14px 16px calc(env(safe-area-inset-bottom,0px) + 15px); border-top:1px solid var(--line); position:relative; }
+.tzone .tsbdock::before{ content:""; position:absolute; left:0; right:0; top:-2.5px; height:2.5px; pointer-events:none;
+  background:linear-gradient(90deg,#8b5cf6,#3b82f6,#22c55e,#eab308,#f97316,#ef4444); opacity:.9; }
+.tzone .tsbdocki{ width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:1.5px solid color-mix(in srgb, var(--tx) 22%, var(--line2)); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; text-decoration:none; padding:0; overflow:hidden; }
+.tzone .tsbdocki:active{ border-color:var(--live); }
+.tzone .tsbdocki:not(.tsbtheme) svg{ width:20px; height:20px; fill:currentColor; }
+.tzone .tsbdocki.tsbtheme svg{ width:20px; height:20px; }
+.tzone .tsbdocki.krk svg{ width:24px; height:24px; fill:#9d5cf8; }
+.tzone .tsbdocki.dfauth{ border-color:var(--live); color:var(--live); }
+.tzone .tsbdocki.dfauth svg{ fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.tzone .tsbdocki.dfauth img{ width:100%; height:100%; object-fit:cover; display:block; }
+.tzone .tsbdockout{ font-family:var(--mono); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim); background:none; border:1px solid var(--line2); border-radius:0; height:48px; padding:0 14px; cursor:pointer; }
+.tzone .tsbdf{ flex:none; margin-top:12px; display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:1px solid color-mix(in srgb, var(--live) 55%, var(--line2)); border-radius:0; background:linear-gradient(150deg, color-mix(in srgb, var(--live) 15%, var(--panel)), var(--panel2) 82%); color:var(--tx); cursor:pointer; text-align:left; transition:transform .1s ease, border-color .12s; }
 .tzone .tsbdf:active{ transform:scale(.985); border-color:var(--live); }
 .tzone .tsbdf .tsbdftx{ display:flex; flex-direction:column; gap:2px; flex:1; min-width:0; }
 .tzone .tsbdf .tsbdftx b{ font-family:var(--sans); font-weight:800; font-size:16px; letter-spacing:-.01em; color:var(--live); }

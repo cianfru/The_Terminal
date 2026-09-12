@@ -62,7 +62,7 @@ export default function RiskColorChart({ series, m, isMobile }) {
 
       <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
         <ComposedChart data={rows} margin={{ top: 10, right: isMobile ? 14 : 32, bottom: 24, left: isMobile ? 0 : 12 }}
-          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+          onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
           <defs>
             <linearGradient id="zgrad" x1="0" y1="0" x2="1" y2="0">
               {stops.map((s, i) => <stop key={i} offset={s.off} stopColor={s.color} />)}
@@ -83,7 +83,7 @@ export default function RiskColorChart({ series, m, isMobile }) {
             type="number" scale="log" domain={yDomain} ticks={yTicks} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 60}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 60}
           />
           <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
           <Area dataKey="price" stroke="none" fill="url(#zarea)" isAnimationActive={false} activeDot={false} />

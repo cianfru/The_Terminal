@@ -118,19 +118,19 @@ export default function ExitFlowChart({ isMobile }) {
         <ChartZoomHint />
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 22, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="n" type="number" allowDataOverflow
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56}
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56}
               tickFormatter={spx ? fSpx : fN} />
             {!cumulative && (
               <YAxis yAxisId="price" orientation="right" type="number" scale="log" domain={view.pDomain} allowDataOverflow
                 tick={{ fill: PRICE, fontSize: isMobile ? 9 : 11, fontFamily: MONO }} tickFormatter={fP}
-                axisLine={{ stroke: "rgba(255,255,255,0.1)" }} tickLine={false} width={isMobile ? 44 : 56} />
+                axisLine={{ stroke: "rgba(255,255,255,0.1)" }} tickLine={false} width={isMobile ? 55 : 56} />
             )}
             <Tooltip content={<Tip cumulative={cumulative} spx={spx} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {cumulative ? (

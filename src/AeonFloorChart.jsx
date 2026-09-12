@@ -79,10 +79,10 @@ export default function AeonFloorChart({ isMobile }) {
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
           <YAxis yAxisId="floor" scale="log" domain={["auto", "auto"]} tickFormatter={fmt}
             tick={{ fill: "#2dd4bf", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 64} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 64} />
           <YAxis yAxisId="vol" orientation="right" tickFormatter={v => isEth ? Math.round(v) + "Ξ" : fmtUsd(v)}
             tick={{ fill: "#64748b", fontSize: isMobile ? 9 : 11, fontFamily: MONO }}
-            axisLine={false} tickLine={false} width={isMobile ? 44 : 56} />
+            axisLine={false} tickLine={false} width={isMobile ? 55 : 56} />
           <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
           <Bar yAxisId="vol" dataKey={volKey} fill="#64748b" fillOpacity={0.4} isAnimationActive={false} barSize={isMobile ? 4 : 7} />
           <Line yAxisId="floor" type="monotone" dataKey={floorKey} stroke="#2dd4bf" strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls />

@@ -22,3 +22,18 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+
+  # phone-viewport smoke test (built site + Playwright Chromium): ☰ toggle reachable, no sideways
+  # scroll, touch drag-to-zoom works, JS/CSS breakpoints agree. ~2 min. See e2e/mobile.e2e.mjs.
+  e2e-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Mobile e2e
+        run: npm run test:e2e

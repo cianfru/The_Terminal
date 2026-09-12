@@ -131,7 +131,7 @@ export default function CityFlowChart({ isMobile, preview = false, initialView }
               <XAxis dataKey="label" tick={{ fill: "#cbd5e1", fontSize: isMobile ? 9 : 12, fontFamily: MONO }} interval={0} angle={-32} textAnchor="end" height={54}
                 axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
               <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tickFormatter={v => v + "%"}
-                tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52} />
+                tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52} />
               <Tooltip content={<Tip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
               <Bar dataKey="pct" isAnimationActive={false} radius={[3, 3, 0, 0]}>
                 {vintages.map((v, i) => <Cell key={i} fill={survColor(v.pct)} fillOpacity={0.9} />)}
@@ -139,7 +139,7 @@ export default function CityFlowChart({ isMobile, preview = false, initialView }
             </BarChart>
           ) : (
           <ComposedChart data={vw.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 4 : 14 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={vw.xDomain} ticks={vw.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
@@ -147,7 +147,7 @@ export default function CityFlowChart({ isMobile, preview = false, initialView }
             <YAxis type="number" scale={view === "percap" ? "log" : "linear"}
               domain={view === "percap" ? [1000, "auto"] : ["auto", "auto"]} allowDataOverflow
               tickFormatter={fNum} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             {view === "flow" && <>
               <ReferenceLine y={0} stroke="rgba(255,255,255,0.25)" />

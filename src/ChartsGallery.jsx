@@ -42,7 +42,7 @@ export function LivePreview({ render }) {
     if (!el) return;
     const ro = new ResizeObserver(() => { if (el.clientWidth) setScale(el.clientWidth / BASE_W); });
     ro.observe(el);
-    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setShow(true); io.disconnect(); } }, { rootMargin: "500px" });
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setShow(true); io.disconnect(); } }, { rootMargin: "200px" });
     io.observe(el);
     return () => { ro.disconnect(); io.disconnect(); };
   }, []);
@@ -64,6 +64,12 @@ export function LivePreview({ render }) {
   );
 }
 
+// PHONE TILES DON'T MOUNT CHARTS. A real chart scaled from 1180px into a ~358px tile renders its
+// labels at roughly 3px — unreadable — while costing a recharts mount, its lazy chunk and its data
+// on the slowest devices we serve. So on mobile the preview is a cheap painted band in the chart's
+// own colour: same tile shape and colour language, no chart, no chunk. The real chart mounts when
+// the tile is opened. (Desktop keeps the live preview, where it is both legible and affordable.)
+
 // A Deep Field members chart shows this cover in the gallery instead of a live preview — release-aware,
 // so it tells the honest state without ever mounting the real (members-only) chart:
 //   • not released yet → "Under construction · releasing soon" (the two-path: this one isn't ready).
@@ -74,7 +80,7 @@ function DripCover({ color, mode }) {
   const glyph = loading ? "" : released ? "🔭" : "◱";
   const kicker = loading ? "Deep Field" : released ? "Deep Field · members" : "Under construction";
   const line = loading ? "…" : released ? "Log in with X to unlock" : "Releasing soon";
-  const acc = released ? color : loading ? T.faint : "#f59e0b";
+  const acc = released ? color : loading ? "#7c8a9e" : "#f59e0b";   // fixed ink: the cover ground is always dark
   return (
     <div style={{
       position: "relative", width: "100%", aspectRatio: "1180 / 700", overflow: "hidden",
@@ -88,14 +94,17 @@ function DripCover({ color, mode }) {
           <rect key={i} x={x} y={34 - h} width="7" height={h} fill={acc} />
         ))}
       </svg>
-      <div style={{ position: "relative", fontSize: 27, lineHeight: 1 }}>{glyph}</div>
-      <div style={{ position: "relative", fontFamily: MONO, fontSize: 11, letterSpacing: ".18em", textTransform: "uppercase", color: acc }}>{kicker}</div>
-      <div style={{ position: "relative", fontFamily: SANS, fontSize: 12.5, color: T.dim }}>{line}</div>
+      <div aria-hidden="true" style={{ position: "relative", fontFamily: SANS, fontSize: 27, lineHeight: 1 }}>{glyph}</div>
+      <div style={{ position: "relative", fontFamily: MONO, fontSize: 11.5, letterSpacing: ".18em", textTransform: "uppercase", color: "#cbd5e1" }}>{kicker}</div>
+      {/* The cover keeps its own DARK ground in both themes (it is a deliberate "locked" object), so
+          its text must be fixed light ink — theme tokens go near-black on the bright theme and the
+          whole cover became unreadable. */}
+      <div style={{ position: "relative", fontFamily: SANS, fontSize: 13, color: "#9aa7bb" }}>{line}</div>
     </div>
   );
 }
 
-function Tile({ item, color, onOpen, renderPreview, released, me }) {
+function Tile({ item, color, onOpen, renderPreview, released, me, isMobile }) {
   const [hover, setHover] = useState(false);
   // Deep Field members chart? Owner + released-chart members see the live preview; everyone else on a
   // drip chart sees the release-aware cover (under construction, or members / log in).
@@ -116,21 +125,25 @@ function Tile({ item, color, onOpen, renderPreview, released, me }) {
         borderRadius: 10, overflow: "hidden",
         background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
         border: `1px solid ${hover ? color : T.line2}`,
+        ...(isMobile ? { borderLeft: `3px solid ${color}` } : null),
         boxShadow: hover ? `0 0 0 1px ${color}, 0 12px 28px rgba(0,0,0,0.55)` : "0 8px 24px rgba(0,0,0,0.35)",
         transform: hover ? "translateY(-2px)" : "none",
         transition: "transform .14s, box-shadow .14s, border-color .14s",
       }}
     >
-      {showLive
-        ? <LivePreview render={() => renderPreview(item.id)} />
-        : <DripCover color={color} mode={coverMode} />}
-      <div style={{ padding: "12px 14px 14px", borderTop: `1px solid ${color}2e` }}>
+      {/* On a phone the tile is a LIST ROW, not a card: no preview block at all. It used to draw a
+          placeholder, then an empty colour band — both were dead space, and the phone's job here is
+          to let someone scan 57 names quickly. The colour moves to the tile's left edge. */}
+      {!showLive ? <DripCover color={color} mode={coverMode} />
+        : isMobile ? null
+          : <LivePreview render={() => renderPreview(item.id)} />}
+      <div style={{ padding: isMobile ? "13px 14px" : "12px 14px 14px", borderTop: isMobile ? "none" : `1px solid ${color}2e` }}>
         <div style={{
           fontFamily: MONO, fontSize: 10.5, letterSpacing: ".14em", textTransform: "uppercase",
           color: hover ? color : T.faint, marginBottom: 7, transition: "color .14s",
         }}>{item.cat || ""}</div>
         <div style={{ fontFamily: SANS, fontSize: 15.5, fontWeight: 700, color: T.tx, lineHeight: 1.15, marginBottom: 5 }}>{item.title}</div>
-        <div style={{ fontFamily: SANS, fontSize: 12.5, color: T.dim, lineHeight: 1.45 }}>{item.desc}</div>
+        <div className="tiledesc" style={{ fontFamily: SANS, color: T.dim, lineHeight: 1.45 }}>{item.desc}</div>
       </div>
     </button>
   );
@@ -171,7 +184,8 @@ function SearchBar({ q, setQ, count, total, isMobile }) {
         placeholder={isMobile ? "grep charts…" : "grep charts, “cost basis”, “bitcoin”, “rarity”"}
         style={{
           flex: 1, background: "transparent", border: "none", outline: "none",
-          fontFamily: MONO, fontSize: 14, color: T.tx, minWidth: 0, letterSpacing: ".01em",
+          // 16px on a phone: Safari zooms the whole page when a focused input is smaller.
+          fontFamily: MONO, fontSize: isMobile ? 16 : 14, color: T.tx, minWidth: 0, letterSpacing: ".01em",
         }}
       />
       <span style={{ fontFamily: MONO, fontSize: 11, color: T.faint, flexShrink: 0, whiteSpace: "nowrap", letterSpacing: ".08em" }}>
@@ -279,7 +293,7 @@ export default function ChartsGallery({
           </div>
           <div style={{ display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(min(100%, ${isMobile ? 300 : 372}px), 1fr))`, gap: isMobile ? 12 : 15 }}>
             {group.charts.map(item => (
-              <Tile key={item.id} item={item} color={gc} onOpen={onOpen} renderPreview={renderPreview} released={released} me={me} />
+              <Tile key={item.id} item={item} color={gc} onOpen={onOpen} renderPreview={renderPreview} released={released} me={me} isMobile={isMobile} />
             ))}
           </div>
         </div>

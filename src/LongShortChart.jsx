@@ -141,10 +141,10 @@ export default function LongShortChart({ series, isMobile }) {
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} minTickGap={isMobile ? 40 : 24} />
           <YAxis yAxisId="dev" orientation="right" type="number" domain={devDomain} ticks={aprTicks} allowDataOverflow
             tickFormatter={v => Math.round(v + neutral) + "%"} tick={{ fill: "#94a3b8", fontSize: isMobile ? 9 : 11, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
           <YAxis yAxisId="price" type="number" scale="log" domain={priceDomain} ticks={pTicks} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 46 : 58} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 58 : 58} />
           <Tooltip content={<Tip neutral={neutral} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
           <ReferenceLine yAxisId="dev" y={0} stroke="rgba(255,255,255,0.5)" strokeDasharray="6 6"
             label={{ value: `neutral ≈ ${Math.round(neutral)}% APR`, position: "insideTopLeft", fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} />

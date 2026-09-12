@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Drag-to-zoom state machine for Recharts: press-drag-release selects an x-window.
+// MOUSE ONLY, on purpose. The chart page binds a horizontal flick to the chart-to-chart pager
+// (App.jsx onTEnd), so wiring a touch drag here would make one swipe both flip the chart and draw
+// a selection. Phones use the browser's own pinch zoom instead — the custom fullscreen viewer
+// was removed because iOS Safari never granted it fullscreen in the first place.
 // `canZoom(a, b)` is the chart-specific guard (typically "≥2 data points inside")
 // so a too-narrow selection can't produce an empty view. Spread the handlers onto
 // the chart (`onMouseDown={onDown}` etc.) and render the selection rectangle
@@ -20,6 +24,15 @@ export function useDragZoom(canZoom) {
     }
     setSelL(null); setSelR(null);
   };
+  // Touch: the chart wrapper carries `touch-action: pan-y`, so a SIDEWAYS swipe stays with us (and
+  // zooms) while a vertical one scrolls the page. When the browser takes a vertical pan it fires
+  // touchcancel, not touchend, so drop any half-drawn selection then — otherwise a sliver stays lit.
+  useEffect(() => {
+    const clear = () => { setSelL(null); setSelR(null); };
+    window.addEventListener("touchcancel", clear, { passive: true });
+    window.addEventListener("pointercancel", clear, { passive: true });
+    return () => { window.removeEventListener("touchcancel", clear); window.removeEventListener("pointercancel", clear); };
+  }, []);
   return { zoom, setZoom, selL, selR, onDown, onMove, onUp, zoomed: !!zoom };
 }
 

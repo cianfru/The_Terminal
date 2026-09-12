@@ -1,4 +1,8 @@
 import { useState, useRef, useEffect, Suspense, Fragment } from "react";
+import { CHART_INDEX, TOPICS, chartsForTopic, searchCharts, newestCharts, addedOn, START_HERE } from "./chart-index.js";
+import { useRecents, recordSearch } from "./recents.js";
+import { useFavs } from "./favs.js";
+import { useDialog } from "./use-dialog.js";
 import { CHART_GROUPS, AEON_GROUPS, CITY_GROUPS, CHART_VIEWS } from "./charts-catalog.js";
 import { GCOL } from "./terminal-colors.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
@@ -13,7 +17,7 @@ import { CITY_KEY } from "./city-gate-key.js";
 // preview panel (not the tweet card). Built from the real catalog so every leaf
 // carries a live chart id and drives the app's own routing. Scoped under .tzone.
 
-const LOGO = "/logo_rainbow.png";
+const LOGO = "/logo_rainbow_128.png";   // 34px display, 3x DPR — the 1408px master was 217KB
 const X_URL = "https://x.com/SPX6900Rainbow";
 const KRAKEN_URL = "https://proinvite.kraken.com/9f1e/8985jw0l";
 
@@ -88,11 +92,13 @@ function DeepFieldTab({ onClick, title }) {
 // Character-by-character typewriter, shared by the section headers (types on hover) and the
 // mobile drill-down rows (types on tap) so the sleek effect matches the landing everywhere.
 function useTypewriter(text, speed = 45) {
+  // Reduced motion: hand back the finished text and make type()/reset() no-ops.
+  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion:reduce)").matches;
   const [shown, setShown] = useState(text);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => { setShown(text); }, [text]);
-  const type = () => { clearTimeout(timer.current); let j = 0; const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, speed); } }; setShown(""); step(); };
+  const type = () => { if (still) return; clearTimeout(timer.current); let j = 0; const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, speed); } }; setShown(""); step(); };
   const reset = () => { clearTimeout(timer.current); setShown(text); };
   return { shown, type, reset };
 }
@@ -172,7 +178,7 @@ function Scene3D({ seed, color }) {
 }
 
 // Dark ↔ bright theme toggle (mirrors the landing switch; shares localStorage 'spx_theme').
-function ThemeToggle() {
+function ThemeToggle({ className = "tthemebtn" }) {
   const [light, setLight] = useState(() => typeof document !== "undefined" && document.documentElement.getAttribute("data-theme") === "light");
   const toggle = () => {
     const next = !light; setLight(next);
@@ -184,7 +190,7 @@ function ThemeToggle() {
     });
   };
   return (
-    <button className="tthemebtn" onClick={toggle} aria-label="Toggle dark / bright theme" title={light ? "Switch to dark" : "Switch to bright"}>
+    <button className={className} onClick={toggle} aria-label="Toggle dark / bright theme" title={light ? "Switch to dark" : "Switch to bright"}>
       {light
         ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor" /></svg>
         : <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><circle cx="12" cy="12" r="4.2" /><path d="M12 2v2.6M12 19.4V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.6M19.4 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" /></svg>}
@@ -285,32 +291,20 @@ function MobRow({ label, chev, cls = "", onTap }) {
 // Sections → groups → charts as tappable tiles; chart tiles show a live preview (or the Scene3D
 // placeholder for the three.js charts). Each drill is a
 // real history entry, so the iOS edge-swipe and Android back button walk back up the levels natively.
-const SB_ICON = {
-  rainbow: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 16a9 9 0 0 1 18 0" /><path d="M6 16a6 6 0 0 1 12 0" /><path d="M9 16a3 3 0 0 1 6 0" /></svg>,
-  charts: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>,
-  city: <svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="10" width="3.2" height="10" rx="1" /><rect x="10.4" y="5" width="3.2" height="15" rx="1" /><rect x="16.8" y="12" width="3.2" height="8" rx="1" /></svg>,
-  aeon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2 4 7v10l8 5 8-5V7z" /><path d="M12 22V12" /><path d="M4 7l8 5 8-5" /></svg>,
-};
 const sbCount = groups => groups.reduce((n, g) => n + g.charts.filter(c => !c.dev).length, 0);
 const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-// Faint per-section background motif for the fullscreen 2×2 launcher — gives each quadrant identity.
-const SB_MOTIF = {
-  rainbow: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="none" stroke="currentColor"><path d="M-6 78a66 66 0 0 1 132 0" strokeWidth="7" /><path d="M12 78a48 48 0 0 1 96 0" strokeWidth="7" /><path d="M30 78a30 30 0 0 1 60 0" strokeWidth="7" /><path d="M48 78a12 12 0 0 1 24 0" strokeWidth="7" /></svg>,
-  charts: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="6" y="46" width="12" height="34" rx="2" /><rect x="26" y="30" width="12" height="50" rx="2" /><rect x="46" y="52" width="12" height="28" rx="2" /><rect x="66" y="20" width="12" height="60" rx="2" /><rect x="86" y="38" width="12" height="42" rx="2" /><rect x="106" y="10" width="12" height="70" rx="2" /></svg>,
-  city: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMax slice" fill="currentColor"><rect x="4" y="44" width="16" height="36" /><rect x="24" y="28" width="16" height="52" /><rect x="44" y="52" width="14" height="28" /><rect x="62" y="18" width="18" height="62" /><rect x="84" y="38" width="14" height="42" /><rect x="102" y="26" width="16" height="54" /></svg>,
-  aeon: <svg viewBox="0 0 120 80" preserveAspectRatio="xMidYMid slice" fill="none" stroke="currentColor" strokeWidth="5" strokeLinejoin="round"><path d="M60 8 96 28v34L60 82 24 62V28z" /><path d="M60 82V44M24 28l36 16 36-16" /></svg>,
-};
 
-// A fullscreen quadrant — one section, its colour washed across the tile, a big icon + a background
-// motif, the name and count. Tapping drills in (or navigates for Rainbow).
-function SbQuad({ id, color, icon, name, sub, onTap }) {
+// One destination as a full-width BAR. It was a 2-column grid of picture-tiles; the artwork was
+// decoration that cost height, and an odd number of destinations left a hole in the grid. A list
+// has no hole, reads in one vertical scan, and the rows flex with the viewport so five always fit.
+function SbQuad({ color, name, sub, onTap }) {
   return (
     <button className="tsbcell" style={{ "--tc": color }} onClick={onTap}>
-      <span className="tsbcellbg" aria-hidden="true">{SB_MOTIF[id]}</span>
-      <span className="tsbcellico">{icon}</span>
-      <span className="tsbcellnm">{name}</span>
-      <span className="tsbcellsub">{sub}</span>
+      <span className="tsbcelltx">
+        <span className="tsbcellnm">{name}</span>
+        <span className="tsbcellsub">{sub}</span>
+      </span>
       <span className="tsbcellarrow" aria-hidden="true">→</span>
     </button>
   );
@@ -371,12 +365,77 @@ function SbChartTile({ item, color, group, render, spark, onTap }) {
   );
 }
 
-function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField }) {
+// ── Discovery: search box, topic chips and the rails (Saved / Recent / New / Start here) ─────────
+// A 74-chart catalog is unusable on a phone by drill-down alone, so Explore opens with a search
+// field and plain-language chips, and offers what you saved, what you just looked at, and what is
+// genuinely new before any of the groups.
+
+function SbSearch({ q, setQ, onSubmit }) {
+  return (
+    <div className="tsbsearch">
+      <svg className="tsbsearchico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.6-3.6" /></svg>
+      <input type="search" inputMode="search" enterKeyHint="search" value={q} placeholder={`Search ${CHART_INDEX.length} charts…`}
+        aria-label="Search charts" className="tsbsearchin"
+        onChange={e => setQ(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { e.currentTarget.blur(); onSubmit(e.currentTarget.value); } }} />
+      {q && <button className="tsbsearchx" onClick={() => setQ("")} aria-label="Clear search">×</button>}
+    </div>
+  );
+}
+
+function SbChips({ topics, active, onPick }) {
+  return (
+    <div className="tsbchips" role="group" aria-label="Filter by topic">
+      {topics.map(t => (
+        <button key={t} className={"tsbchip" + (active === t ? " on" : "")} aria-pressed={active === t}
+          onClick={() => onPick(active === t ? null : t)}>{t}</button>
+      ))}
+    </div>
+  );
+}
+
+// A compact result / rail row: title, the group it belongs to, and a save star.
+function SbRow({ item, saved, onToggleSave, onTap, note }) {
+  return (
+    <div className="tsbrow" style={{ "--tc": item.color }}>
+      <button className="tsbrowmain" onClick={onTap}>
+        <span className="tsbrowedge" aria-hidden="true" />
+        <span className="tsbrowtx">
+          <span className="tsbrownm">{item.title}</span>
+          <span className="tsbrowsub">{note || item.group}</span>
+        </span>
+      </button>
+      <button className={"tsbstar" + (saved ? " on" : "")} onClick={onToggleSave}
+        aria-pressed={saved} aria-label={(saved ? "Unsave " : "Save ") + item.title}>{saved ? "★" : "☆"}</button>
+    </div>
+  );
+}
+
+function SbRail({ title, note, items, favs, toggleFav, goChart, close, noteOf }) {
+  if (!items.length) return null;
+  return (
+    <section className="tsbrail">
+      <h3 className="tsbrailh">{title}{note && <span className="tsbrailnote">{note}</span>}</h3>
+      {items.map(c => (
+        <SbRow key={c.id} item={c} saved={favs.has(c.href)} note={noteOf && noteOf(c)}
+          onToggleSave={() => toggleFav(c.href)} onTap={() => { close(); goChart(c.id); }} />
+      ))}
+    </section>
+  );
+}
+
+function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, openCity, goChart, renderPreview, me, onDeepField, onLogout }) {
   const [stack, setStack] = useState([{ t: "sections" }]);
+  const sheetRef = useRef(null);
+  const [q, setQ] = useState("");
+  const [topic, setTopic] = useState(null);
+  const [favs, toggleFav] = useFavs();
+  const { charts: recentIds, searches } = useRecents();
   const view = stack[stack.length - 1];
   const go = fn => { onClose(); fn && fn(); };
   const push = v => { setStack(s => [...s, v]); try { window.history.pushState({ tsb: true }, ""); } catch { /* */ } };
   useEffect(() => { if (open) setStack([{ t: "sections" }]); }, [open]);
+  useDialog(open, sheetRef, onClose);
   // hardware / swipe back walks up a level (or closes at the root)
   useEffect(() => {
     if (!open) return;
@@ -388,11 +447,16 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
   // jump straight to the four-section launcher from any depth
   const home = () => { if (stack.length > 1) setStack([{ t: "sections" }]); };
 
+  // FIVE destinations. The Manual used to sit here as a sixth, but the manual is the SPX CITY
+  // manual — how to read the city — so at top level it read as random, and it competed with the
+  // things people actually come for. It lives inside SPX City, which is the only place it makes
+  // sense, and is still on the desktop nav.
   const SECS = [
-    { id: "rainbow", name: "Rainbow", sub: "the foundation chart", color: "#a78bfa", onTap: () => go(openRainbow) },
-    { id: "charts", name: "Charts", groups: CHART_GROUPS, color: GCOL[1], onAll: () => go(openGallery) },
-    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, color: GCOL[2], onAll: () => go(openCity) },
-    { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, color: GCOL[3], onAll: () => go(openAeon) },
+    { id: "rainbow", name: "Rainbow", sub: "the main chart", color: "#a78bfa", onTap: () => go(openRainbow) },
+    { id: "charts", name: "Charts", groups: CHART_GROUPS, desc: n => `all ${n} charts`, color: GCOL[1], onAll: () => go(openGallery) },
+    { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, desc: () => "holders in 3D", color: "#38bdf8", onAll: () => go(openCity) },
+    { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, desc: n => `${n} NFT charts`, color: GCOL[3], onAll: () => go(openAeon) },
+    { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -402,8 +466,8 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
       const onTap = sec.onTap ? sec.onTap
         : sec.single ? () => push({ t: "charts", secId: sec.id })
           : () => push({ t: "groups", secId: sec.id });
-      const sub = sec.sub || (sec.single ? `${sbCount(sec.groups)} charts` : `${sec.groups.length} groups · ${sbCount(sec.groups)} charts`);
-      return <SbQuad key={sec.id} id={sec.id} icon={SB_ICON[sec.id]} color={sec.color} name={sec.name} sub={sub} onTap={onTap} />;
+      const sub = sec.sub || sec.desc(sbCount(sec.groups));
+      return <SbQuad key={sec.id} id={sec.id} color={sec.color} name={sec.name} sub={sub} onTap={onTap} />;
     });
   } else if (view.t === "groups") {
     const sec = SECS.find(s => s.id === view.secId); title = sec.name; cmd = `ls ./${slug(sec.name)}`;
@@ -422,8 +486,18 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
     });
   }
 
+  // Search wins over a chip; a chip alone filters; neither shows the destinations + rails.
+  const query = q.trim();
+  const discovering = view.t === "sections" && (!!query || !!topic);
+  const base = topic ? chartsForTopic(topic) : CHART_INDEX;
+  const results = query ? searchCharts(query, base) : (topic ? base : []);
+  const byId = id => CHART_INDEX.find(c => c.id === id);
+  const savedItems = [...favs].map(h => CHART_INDEX.find(c => c.href === h)).filter(Boolean);
+  const recentItems = recentIds.map(byId).filter(Boolean).filter(c => !savedItems.includes(c)).slice(0, 5);
+  const newItems = newestCharts(5);
+
   return (
-    <div className={"tsb" + (open ? " open" : "")} aria-hidden={!open}>
+    <div ref={sheetRef} className={"tsb" + (open ? " open" : "")} aria-hidden={!open} role="dialog" aria-modal="true" aria-label="Explore charts">
       <div className="tsbtop">
         <button className="tsbbtn" onClick={back} style={{ visibility: stack.length > 1 ? "visible" : "hidden" }} aria-label="Back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" /></svg>
@@ -435,19 +509,73 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
         <button className="tsbbtn" onClick={onClose} aria-label="Close">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" /></svg>
         </button>
+        {/* The left side carries TWO buttons (back + all-sections) and the right only one, so the
+            title — a flex child, deliberately, so it can never overlap them — centred in the
+            leftover space and sat 27px right of the bar's true centre. This balances the sides. */}
+        <span className="tsbbtn tsbspacer" aria-hidden="true" />
       </div>
-      <div className={"tsbbody" + (grid === "quad" ? " tsbbody-fill" : "")}>
+      <div className="tsbbody">
+        {/* Search + chips sit at the TOP of Explore, above the destinations: on a 74-chart catalog
+            typing a word beats drilling three levels. Only on the root view — inside a section the
+            back/home buttons are the right affordance. */}
+        {view.t === "sections" && (<>
+          <SbSearch q={q} setQ={setQ} onSubmit={recordSearch} />
+          <SbChips topics={TOPICS} active={topic} onPick={setTopic} />
+        </>)}
+        {discovering ? (
+          <div className="tsbresults">
+            <div className="tsbresh">{results.length} {results.length === 1 ? "chart" : "charts"}{topic && !q.trim() ? ` · ${topic}` : ""}</div>
+            {results.map(c => (
+              <SbRow key={c.id} item={c} saved={favs.has(c.href)}
+                onToggleSave={() => toggleFav(c.href)}
+                onTap={() => { if (q.trim()) recordSearch(q); go(() => goChart(c.id)); }} />
+            ))}
+            {!results.length && (
+              <div className="tsbempty">
+                Nothing matches <b>{q.trim() || topic}</b>.
+                {searches.length > 0 && <> Recent: {searches.slice(0, 3).map((t, i) => (
+                  <button key={t} className="tsbrecentq" onClick={() => setQ(t)}>{t}{i < Math.min(searches.length, 3) - 1 ? "," : ""}</button>))}</>}
+              </div>
+            )}
+          </div>
+        ) : (<>
         <div className="tsbcmd"><span className="tsbprompt">spx6900 ~ %</span> {cmd}</div>
         <div className="tsbrule" />
         <div className={"tsbgrid tsbgrid-" + grid}>{tiles}</div>
-        {/* Deep Field — the members area, surfaced as a full-width strip under the launcher so it's
-            discoverable on phones too (logged in → member home; signed out → the X login). */}
-        {view.t === "sections" && (
-          <button className="tsbdf" onClick={() => go(onDeepField)}>
-            <span className="tsbdftx"><b>Deep Field</b><span>{me && me.loggedIn ? "members home · your charts" : "log in with X to enter"}</span></span>
-            <span className="tsbdfarrow" aria-hidden="true">→</span>
-          </button>
+        {/* Rails: what you saved, what you just read, what actually changed — before the catalog. */}
+        {view.t === "sections" && (<>
+          <SbRail title="Saved" items={savedItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+          <SbRail title="Recently viewed" items={recentItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+          <SbRail title="New" note="newest first, dated from the repo" items={newItems} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()}
+            noteOf={c => `${c.group} · added ${addedOn(c.id)}`} />
+          <SbRail title="Start here" note="a hand-picked shortlist, not a ranking" items={START_HERE} favs={favs} toggleFav={toggleFav} goChart={goChart} close={() => go()} />
+        </>)}
+        </>)}
+      </div>
+      {/* utility dock — the bar's icon group (login/avatar · X · Kraken) lives here on phones, so the
+          header keeps room for the ☰ toggle. Mirrors the landing's .sbdock. */}
+      <div className="tsbdock">
+        <ThemeToggle className="tsbdocki tsbtheme" />
+        {me && me.loggedIn ? (
+          <>
+            <button type="button" className="tsbdocki dfauth" onClick={() => go(onDeepField)} title={me.username ? `@${me.username} — Deep Field` : "Deep Field"} aria-label="Deep Field, members home">
+              {me.avatar
+                ? <img src={me.avatar} alt="" referrerPolicy="no-referrer" onError={e => { e.currentTarget.style.display = "none"; }} />
+                : <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2" /><path d="M5 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5" /></svg>}
+            </button>
+            <button type="button" className="tsbdockout" onClick={onLogout}>Log out</button>
+          </>
+        ) : (
+          <a className="tsbdocki dfauth" href="/api/auth?action=login" title="Log in with X — enter Deep Field" aria-label="Log in with X to enter Deep Field">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
+          </a>
         )}
+        <a className="tsbdocki" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="SPX6900Rainbow on X">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
+        </a>
+        <a className="tsbdocki krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" aria-label="Trade on Kraken (affiliate)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z" /></svg>
+        </a>
       </div>
     </div>
   );
@@ -553,14 +681,18 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
               </a>
             )}
+            {/* X + Kraken are secondary: on phones they live in the springboard dock (.tsocial-ext is
+                hidden ≤760px) so the bar keeps room for the brand, the account chip and ☰ Explore. */}
+            <span className="tsocial-ext">
             <a className="siclink" href={X_URL} target="_blank" rel="noopener noreferrer" title="@SPX6900Rainbow on X" aria-label="SPX6900Rainbow on X">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
             <a className="siclink krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" title="Trade on Kraken, affiliate" aria-label="Trade on Kraken (affiliate)">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12 A8.5 8.5 0 0 1 20.5 12 L20.5 19.4 A1.3 1.3 0 0 1 17.9 19.4 L17.9 14 A1.1 1.1 0 0 0 15.7 14 L15.7 19.4 A1.3 1.3 0 0 1 13.1 19.4 L13.1 14 A1.1 1.1 0 0 0 10.9 14 L10.9 19.4 A1.3 1.3 0 0 1 8.3 19.4 L8.3 14 A1.1 1.1 0 0 0 6.1 14 L6.1 19.4 A1.3 1.3 0 0 1 3.5 19.4 Z" /></svg>
             </a>
+            </span>
           </div>
-          <button className="tmobtog" onClick={() => setMobOpen(true)} aria-label="Open charts" aria-expanded={mobOpen}>
+          <button className="tmobtog" onClick={() => setMobOpen(true)} aria-label="Explore charts" title="Explore" aria-expanded={mobOpen}>
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
           </button>
         </div>
@@ -579,7 +711,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
-      <MobileSpringboard open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} />
+      <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />
     </div>
   );
 }

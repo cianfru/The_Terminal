@@ -1,3 +1,15 @@
+/* ── TYPE: ONE SYSTEM, SELF-HOSTED ───────────────────────────────────────────────────────────
+   The landing embedded its own Geist/Geist Mono as base64 while the app downloaded DIFFERENT
+   files from Google Fonts, so the page people actually land on from X rendered in one typeface
+   and every page after it in another. Both now read the same two variable files (100-900, 29KB
+   and 23KB), which also removes a render-blocking third-party request from every page.
+   Both spellings are declared: ~70 chart files say 'Geist Mono', the landing says 'GeistMono'. */
+@font-face{ font-family:'Geist'; src:url(/fonts/Geist.woff2) format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
+@font-face{ font-family:'Geist Mono'; src:url(/fonts/GeistMono.woff2) format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
+@font-face{ font-family:'GeistMono'; src:url(/fonts/GeistMono.woff2) format('woff2'); font-weight:100 900; font-style:normal; font-display:swap; }
+@font-face{ font-family:'Space Grotesk'; src:url(/fonts/SpaceGrotesk.woff2) format('woff2'); font-weight:300 700; font-style:normal; font-display:swap; }
+@font-face{ font-family:'SpaceGrotesk'; src:url(/fonts/SpaceGrotesk.woff2) format('woff2'); font-weight:300 700; font-style:normal; font-display:swap; }
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 /* 7-segment LED display face, used for the live price readout */
@@ -11,8 +23,8 @@
 }
 
 :root {
-  --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
-  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --sans: 'Geist', 'Space Grotesk', system-ui, sans-serif;
   --bg: #020208;
   --surface: rgba(255,255,255,0.02);
   --border: rgba(255,255,255,0.06);

@@ -75,7 +75,10 @@ function SettingRow({ label, hint, children }) {
 // It answers for ANY valid address, holder or not, because the neighbourhood is a property of the
 // address itself (a hash), not of the holdings. When the wallet isn't in the tracked set we say so
 // plainly rather than inventing a building for it — the address is play, the buildings are data.
+import { useQuality } from "./city-quality.js";
+
 export default function CityControls({ layout, onLayout, onFocus, has, accent = "#5eead4", isMobile, unit = "holder", time = "dusk", onTime, beamAll = false, onBeamAll }) {
+  const [quality, setQuality] = useQuality(isMobile);
   const [q, setQ] = useState("");
   const [msg, setMsg] = useState(null);
   const [open, setOpen] = useState(false);   // the settings popover
@@ -165,6 +168,13 @@ export default function CityControls({ layout, onLayout, onFocus, has, accent = 
                   <TimeToggle time={time} onTime={onTime} accent={accent} />
                 </SettingRow>
               )}
+              <SettingRow label="Detail" hint="Saver renders fewer pixels per frame — cooler phone, longer battery.">
+                <div style={{ display: "flex", gap: 4 }}>
+                  {[["Battery saver", "saver"], ["Full detail", "full"]].map(([lbl, v]) => (
+                    <button key={v} onClick={() => setQuality(v)} {...neon(quality === v, "#a78bfa")}>{lbl}</button>
+                  ))}
+                </div>
+              </SettingRow>
               {onBeamAll && (
                 <SettingRow label="Flow beams" hint="Which movers get a green/red beam.">
                   <div style={{ display: "flex", gap: 4 }}>

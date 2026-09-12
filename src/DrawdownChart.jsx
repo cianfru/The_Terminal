@@ -120,10 +120,10 @@ export default function DrawdownChart({ series, isMobile, initialView }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="dd" type="number" domain={uw.dDomain} allowDataOverflow
               tickFormatter={v => v + "%"} tick={{ fill: "#f87171", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52} />
             <YAxis yAxisId="price" orientation="right" type="number" scale="log" domain={uw.pDomain} ticks={pTicks} allowDataOverflow
               tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())} tick={{ fill: "#38bdf8", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <Tooltip content={<UnderwaterTip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Area yAxisId="dd" type="monotone" dataKey="dd" stroke="#ef4444" strokeWidth={1.4} fill="url(#uwFill)" isAnimationActive={false} name="drawdown from ATH" />
             <Line yAxisId="price" type="monotone" dataKey="price" stroke="#38bdf8" strokeWidth={1.5} dot={false} isAnimationActive={false} name="price" />
@@ -139,7 +139,7 @@ export default function DrawdownChart({ series, isMobile, initialView }) {
               label={{ value: "Days since ATH peak", position: "insideBottom", offset: -14, fill: "#64748b", fontSize: 12, fontFamily: SANS }} />
             <YAxis domain={[Math.floor(minPct / 10) * 10, 0]} tickFormatter={v => v + "%"}
               tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52} />
             <Tooltip content={<CycleTip />} />
             {cycles.map((c, i) => (
               <Line key={i} dataKey={"e" + i} name={fMon(c.startDate) + (c.ongoing ? " (now)" : "")}

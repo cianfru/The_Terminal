@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { SANS } from "./chart-ui.jsx";
+import { useCoarsePointer } from "./viewport.js";
 
 
 // A one-time animated demo that sits in front of a zoomable chart, looping a
@@ -12,6 +13,9 @@ export default function ChartZoomHint({ storageKey = "spx-zoom-hint-v2" }) {
   const [show, setShow] = useState(() => {
     try { return !localStorage.getItem(storageKey); } catch { return true; }
   });
+  // Touch devices: the animated MOUSE cursor is the wrong lesson and the 9s dimmer hides a
+  // phone-sized chart; the ZoomBar caption says "swipe" there instead.
+  const coarse = useCoarsePointer();
 
   useEffect(() => {
     if (!show) return;
@@ -21,7 +25,7 @@ export default function ChartZoomHint({ storageKey = "spx-zoom-hint-v2" }) {
     return () => { window.removeEventListener("pointerdown", dismiss); clearTimeout(t); };
   }, [show, storageKey]);
 
-  if (!show) return null;
+  if (!show || coarse) return null;
   return (
     <div style={{
       position: "absolute", inset: 0, zIndex: 6, pointerEvents: "none", borderRadius: 12,

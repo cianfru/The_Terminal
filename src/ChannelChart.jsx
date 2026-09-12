@@ -85,7 +85,7 @@ export default function ChannelChart({ series, m, isMobile }) {
             type="number" scale="log" domain={yDomain} ticks={DECADES.filter(v => v >= yDomain[0] && v <= yDomain[1])} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 60}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 60}
           />
           <ReferenceLine x={cur.day + m.t0} stroke="rgba(148,163,184,0.5)" strokeDasharray="4 6" />
           <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />

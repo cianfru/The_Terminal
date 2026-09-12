@@ -12,6 +12,7 @@ import { placeCity, cityScale, CITY_LENGTH, ISLAND_RING, PARK_RINGS, BACKDROP, I
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { chainOf } from "./city-messages.js";
 import { makeDrs } from "./city-drs.js";
+import { readQuality, qualityRatios } from "./city-quality.js";
 import { recordCanvas } from "./canvas-record.js";
 import { TIMES, FAMILIES, skyEnv, facadeTexture, facadeAlbedo, wallGeometry, roofGeometry, archetype, heightOf, waterMaterials,
          berthGeometry, bridgeGeometry, monumentGeometry } from "./city-render.js";
@@ -172,7 +173,7 @@ export default function Skyline3D({
     Object.assign(tip.style, {
       position: "absolute", pointerEvents: "none", padding: "0", borderRadius: "12px", display: "none",
       background: "rgba(8,11,20,0.97)", border: `1px solid ${accent}`, color: "#e2e8f0",
-      font: "500 12.5px 'Space Grotesk', system-ui, sans-serif", zIndex: "5", overflow: "hidden",
+      font: "500 12.5px 'Geist', system-ui, sans-serif", zIndex: "5", overflow: "hidden",
       boxShadow: "0 10px 34px rgba(0,0,0,0.6)", transform: "translate(-50%, -108%)", width: "268px",
     });
     el.appendChild(tip);
@@ -741,9 +742,9 @@ export default function Skyline3D({
         Object.assign(d.style, { textAlign: "center", pointerEvents: "none", whiteSpace: "nowrap",
           textShadow: "0 2px 10px rgba(0,0,0,0.95), 0 0 3px rgba(0,0,0,0.9)" });
         d.innerHTML =
-          `<div style="color:${colour};font:700 10.5px 'Space Grotesk',system-ui;letter-spacing:.2em">${title}</div>` +
-          `<div style="color:#f1f5f9;font:700 13px 'Space Grotesk',system-ui">${value}</div>` +
-          (sub ? `<div style="color:#94a3b8;font:500 10px 'Space Grotesk',system-ui">${sub}</div>` : "");
+          `<div style="color:${colour};font:700 10.5px 'Geist',system-ui;letter-spacing:.2em">${title}</div>` +
+          `<div style="color:#f1f5f9;font:700 13px 'Geist',system-ui">${value}</div>` +
+          (sub ? `<div style="color:#94a3b8;font:500 10px 'Geist',system-ui">${sub}</div>` : "");
         const o = new CSS2DObject(d);
         o.position.set(x, y, z);
         // The harbour carries the numbers no holder owns, so it outranks a district name.
@@ -814,7 +815,7 @@ export default function Skyline3D({
         const d = document.createElement("div");
         d.textContent = a.name;
         Object.assign(d.style, {
-          color: "rgba(226,232,240,0.72)", font: "600 12px 'Space Grotesk', system-ui, sans-serif",
+          color: "rgba(226,232,240,0.72)", font: "600 12px 'Geist', system-ui, sans-serif",
           letterSpacing: "0.22em", textTransform: "uppercase", whiteSpace: "nowrap",
           textShadow: "0 2px 10px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.8)", pointerEvents: "none",
         });
@@ -898,7 +899,7 @@ export default function Skyline3D({
         const d = document.createElement("div");
         d.textContent = `${a.eth} ETH${a.token != null ? ` · #${a.token}` : ""}`;
         Object.assign(d.style, {
-          color: "#c4b5fd", font: "700 11px 'Space Grotesk', system-ui, sans-serif",
+          color: "#c4b5fd", font: "700 11px 'Geist', system-ui, sans-serif",
           textShadow: "0 1px 4px #000", whiteSpace: "nowrap",
         });
         const o = new CSS2DObject(d); o.position.copy(a.mid);
@@ -910,7 +911,7 @@ export default function Skyline3D({
     if (champInfo) {
       const d = document.createElement("div");
       d.textContent = crownLabel;
-      Object.assign(d.style, { color: "#fde68a", font: "700 12px 'Space Grotesk', system-ui, sans-serif", textShadow: "0 1px 4px #000", whiteSpace: "nowrap" });
+      Object.assign(d.style, { color: "#fde68a", font: "700 12px 'Geist', system-ui, sans-serif", textShadow: "0 1px 4px #000", whiteSpace: "nowrap" });
       const o = new CSS2DObject(d); o.position.set(champInfo.x, champInfo.h + 3, champInfo.z);
       scene.add(o); labelBits.push({ obj: o, prio: 200 });   // the crown outranks everything
     }
@@ -1236,7 +1237,9 @@ export default function Skyline3D({
     // it cannot be exercised live in the dev sandbox (headless rAF ~0.7Hz, frames slower than the
     // tab-switch cutoff), which let two earlier in-page versions sit silently dead. CSS2D labels
     // are DOM and untouched — text stays sharp at any render scale.
-    const MAXR = Math.min(devicePixelRatio, 2), MINR = Math.max(0.55, MAXR * 0.4);
+    // Ceiling comes from the visitor's explicit Battery saver / Full detail choice; DRS still
+    // adapts within it (src/city-quality.js).
+    const { maxRatio: MAXR, minRatio: MINR } = qualityRatios(readQuality(isMobile), devicePixelRatio);
     const sizeNow = () => recordDims || [cine ? window.innerWidth : el.clientWidth,
       cine ? window.innerHeight : (viewHRef.current || VH)];
     const drs = makeDrs({
@@ -1359,7 +1362,7 @@ export default function Skyline3D({
         transformOrigin: "50% 100%",
         width: "170px", padding: "5px 9px 6px", borderRadius: "9px", textAlign: "center",
         background: "rgba(10,14,26,0.94)", border: `1px solid ${ch.colour}`,
-        color: "#e2e8f0", font: "600 11.5px 'Space Grotesk', system-ui, sans-serif",
+        color: "#e2e8f0", font: "600 11.5px 'Geist', system-ui, sans-serif",
         lineHeight: "1.45", whiteSpace: "pre-wrap", wordBreak: "break-word",
         boxShadow: `0 8px 24px rgba(0,0,0,0.55), 0 0 0 3px ${ch.tint}`,
         opacity: "0", visibility: "hidden",
@@ -1374,7 +1377,7 @@ export default function Skyline3D({
       // note on" is the whole question the colour is there to answer.
       const tag = document.createElement("div");
       Object.assign(tag.style, {
-        marginTop: "4px", font: "700 8.5px 'Space Grotesk', system-ui, sans-serif",
+        marginTop: "4px", font: "700 8.5px 'Geist', system-ui, sans-serif",
         letterSpacing: "0.09em", color: ch.colour, opacity: "0.95",
       });
       tag.textContent = m.pending ? `${ch.short} · CONFIRMING` : (isMobile && tower ? `${ch.short} · TAP TO VISIT` : ch.short);
@@ -1446,7 +1449,7 @@ export default function Skyline3D({
       position: "absolute", width: "216px", borderRadius: "12px", overflow: "hidden",
       background: "rgba(8,11,20,0.95)", border: `1px solid ${accent}`, zIndex: "6",
       boxShadow: "0 12px 34px rgba(0,0,0,0.65)", pointerEvents: "auto",
-      font: "500 12.5px 'Space Grotesk', system-ui, sans-serif", color: "#e2e8f0",
+      font: "500 12.5px 'Geist', system-ui, sans-serif", color: "#e2e8f0",
     });
     d.setAttribute("data-city-pin", "");     // so tests can assert on the card, not on any text
     d.innerHTML = pinRef.current(pinned) ?? "";

@@ -133,7 +133,7 @@ export default function RelativeChart({ series, isMobile, which, setWhich }) {
 
           <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
             <ComposedChart data={view?.vis ?? data} margin={{ top: 10, right: isMobile ? 14 : 30, bottom: 24, left: isMobile ? 0 : 12 }}
-              onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+              onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
               <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.07)" vertical={false} />
               <XAxis dataKey="ts" type="number" scale="time" domain={view?.xDomain ?? ["dataMin", "dataMax"]} ticks={view?.xTicks} allowDataOverflow
                 tickFormatter={view?.fmtX ?? fMon} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
@@ -141,7 +141,7 @@ export default function RelativeChart({ series, isMobile, which, setWhich }) {
               <YAxis domain={metric === "z" ? [-zExtent, zExtent] : [0, 100]}
                 tickFormatter={v => (metric === "z" ? v + "σ" : v + "%")}
                 tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 38 : 48} />
+                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 48} />
               <Tooltip content={<OscTip metric={metric} />} />
 
               {metric === "z" ? (
