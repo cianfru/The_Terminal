@@ -216,7 +216,7 @@ a.neon-pill:hover { text-decoration: none; }
   position:absolute; inset:0; display:flex;
   align-items:center; justify-content:center;
   pointer-events:none; user-select:none; z-index:0;
-  opacity:.12;
+  opacity:.19;
 }
 .chartwm-lockup{ position:relative; display:flex; align-items:center; justify-content:center; max-width:62%; }
 .chartwm-lockup img{ display:block; width:100%; height:auto; }
@@ -225,5 +225,5 @@ a.neon-pill:hover { text-decoration: none; }
   font-family:var(--mono); font-weight:700; letter-spacing:.14em;
   font-size:20px; color:var(--tx); white-space:nowrap;
 }
-html[data-theme="light"] .chartwm{ opacity:.16; }
+html[data-theme="light"] .chartwm{ opacity:.22; }
 @media (max-width:760px){ .chartwm-label{ font-size:13px; letter-spacing:.1em; } }
