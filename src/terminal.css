@@ -179,6 +179,11 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
   .tzone .tmobtog{ display:inline-flex; align-items:center; justify-content:center; width:44px; height:44px; flex:none; margin-left:8px;
     border:1px solid var(--line2); border-radius:0; background:var(--panel); color:var(--tx); cursor:pointer; }
   .tzone .tmobtog svg{ width:22px; height:22px; }
+  /* Every chart-page control (back / share / fullscreen / pager) shares .menubtn, whose desktop
+     padding yields 32–34px tall buttons — under the 44px floor the bar controls above already meet
+     (measured 2026-09-12 on an iPhone 13: Back 34×32, Share 99×34). Same rule, same floor. */
+  .tzone .menubtn{ min-height:44px; }
+  .tzone .menubtn.ic{ min-width:44px; justify-content:center; }
   /* NB: the sticky sub-page nav has backdrop-filter, which makes it the containing block for
      position:fixed descendants — so inset:0 would fill the 51px bar, not the screen. The nav is
      pinned at the top, so viewport units (top/left 0 + 100vw/100dvh) fill the real viewport. */

@@ -170,11 +170,15 @@ function SearchBar({ q, setQ, count, total, isMobile }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [setQ]);
   return (
-    <div style={{
+    // A <label>, not a <div>: the box is the visible control but the <input> inside is only 21px
+    // tall, so a thumb landing on the box's edge missed the field (measured on an iPhone 13). A
+    // label forwards the tap to its input, so the whole 44px box focuses it.
+    <label style={{
       display: "flex", alignItems: "center", gap: 10, maxWidth: 560, margin: "0 auto",
       border: `1px solid ${focus ? T.live : T.line2}`, borderRadius: 8,
       background: `linear-gradient(180deg, ${T.panelA}, ${T.panelB})`,
-      padding: "9px 13px", transition: "border-color .14s",
+      padding: "9px 13px", minHeight: isMobile ? 44 : undefined, boxSizing: "border-box",
+      transition: "border-color .14s", cursor: "text",
     }}>
       <span style={{ fontFamily: MONO, fontSize: 13, color: T.live, flexShrink: 0 }}>&gt;</span>
       <input
@@ -191,7 +195,7 @@ function SearchBar({ q, setQ, count, total, isMobile }) {
       <span style={{ fontFamily: MONO, fontSize: 11, color: T.faint, flexShrink: 0, whiteSpace: "nowrap", letterSpacing: ".08em" }}>
         {q ? `${count}/${total}` : (isMobile ? `${total}` : "⌘K")}
       </span>
-    </div>
+    </label>
   );
 }
 
