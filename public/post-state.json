@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-12",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-13",
+  "lastId": "bandchange",
   "recent": [
-    {
-      "date": "2026-07-26",
-      "id": "walletgrowth"
-    },
     {
       "date": "2026-07-27",
       "id": "goldencross"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-10",
       "id": "urpdage"
+    },
+    {
+      "date": "2026-09-13",
+      "id": "bandchange"
     }
   ],
   "lanes": {
@@ -88,5 +88,6 @@
     "firesale": "2026-08-19"
   },
   "lastEventId": "2098374263547863250",
-  "lastEventAt": "2026-09-11T11:33:05.265Z"
+  "lastEventAt": "2026-09-11T11:33:05.265Z",
+  "bandSoloDate": "2026-09-13"
 }
