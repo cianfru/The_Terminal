@@ -133,6 +133,11 @@ export const FEEDS = [
     require: ["week0", "n"], nonEmpty: ["rows", "labels"] },
   { file: "city-history.json", cadence: 3, by: "onchain-dune.yml", what: "city citizens + TVL by size cohort over time",
     require: ["week0", "n", "floor"], nonEmpty: ["rows", "labels"] },
+  // The land registry — which wallet holds which lot. Stale here is worse than stale elsewhere: a deed
+  // file that stops updating freezes the city's tiers, so promotions never land and a departed
+  // wallet's lot is never released to the next arrival.
+  { file: "city-deeds.json", cadence: 3, by: "onchain-dune.yml", what: "which wallet holds which lot, and the vacancy lifecycle",
+    require: ["v", "updated", "nextSerial"], nonEmpty: ["deeds"] },
   { file: "exit-flow.json", cadence: 3, by: "onchain-dune.yml", what: "daily departures split by profit/loss",
     require: ["overall", "res"], nonEmpty: ["days"] },
   { file: "smart-money.json", cadence: 3, by: "onchain-dune.yml", what: "live smart-money cohort holdings + net-flow",

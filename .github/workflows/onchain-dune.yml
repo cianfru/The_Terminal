@@ -226,6 +226,19 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=6144
         run: node scripts/build-city-history.mjs --transfers=transfers.csv --prices=public/price-history.json --out=public/city-history.json
+      - name: Reconcile the city land registry (deeds — which wallet holds which lot)
+        # ⭐ MUST RUN AFTER whales.json IS REBUILT. The registry reconciles against TODAY's residents:
+        # a wallet that fell below the bar goes vacant (its lot held 30 days), one that returns gets the
+        # same lot back, one that crossed a tier boundary is rehoused. Reading a stale whales.json would
+        # mark live residents as departed.
+        #
+        # Cheap and local — no archive, no network, ~1s on the committed JSON, so no heap bump needed.
+        # continue-on-error because a deed hiccup must never cost the day's on-chain commit + deploy:
+        # the registry is idempotent, so tomorrow's run reconciles from the same file and catches up.
+        # On the FIRST run public/city-deeds.json does not exist and the script SEEDS it from placeCity's
+        # own output, which freezes the layout the city already draws — nothing moves on the day it ships.
+        continue-on-error: true
+        run: node scripts/build-city-deeds.mjs
 
       - name: Sanity check (reconcile to the known extract)
         run: |
@@ -319,7 +332,7 @@ jobs:
           # entities.json is DELIBERATELY absent — it goes to KV (the data wall) only, not the public repo.
           # addr-types is derived from entities but carries no balances, so it stays. spx-timeline + whales
           # ARE committed (public — SPX City is a public showpiece).
-          ETH_FILES="public/onchain.json public/urpd.json public/urpd-history.json public/whales.json public/spx-timeline.json public/self-moves.json public/addr-types.json public/cohort-survival.json public/exit-flow.json public/smart-money.json public/city-recap.json public/whale-cohort-history.json public/city-history.json public/cex-sankey.json public/whale-thennow.json public/cohort-roi.json public/whale-entry.json public/whale-lots.json"
+          ETH_FILES="public/onchain.json public/urpd.json public/urpd-history.json public/whales.json public/spx-timeline.json public/self-moves.json public/addr-types.json public/cohort-survival.json public/exit-flow.json public/smart-money.json public/city-recap.json public/whale-cohort-history.json public/city-history.json public/cex-sankey.json public/whale-thennow.json public/cohort-roi.json public/whale-entry.json public/whale-lots.json public/city-deeds.json"
           CHAIN_FILES="public/solana-onchain.json dune/out/spx6900_solana_balances.csv public/base-onchain.json dune/out/spx6900_base_cohort.csv"
           # The control-panel/terminal digests: deploy-ignored (read via the raw proxy), so they commit
           # but never force a deploy — same as their 00:17 build.
