@@ -1180,17 +1180,24 @@ Conviction looks like silence.`,
     };
   },
 
-  // Whale mosaic — every ≥100k wallet as one square, green accumulating / red selling / dark flat,
+  // Whale mosaic — the ≥100k wallets that MOVED, one square each, green accumulating / red selling,
   // across all three chains. The glanceable "who's moving, which way" snapshot. Minimal by design.
+  // ⚠ The card draws ONLY the movers (the quiet majority would swamp the colour), so the copy has to
+  // say so: it names how many moved out of how many exist, and says the flat ones are off the board.
+  // Earlier copy claimed "every wallet, one square each" — true of the SITE mosaic (src/WhaleMosaic.jsx
+  // draws the full census) but NOT of this card, which read as a contradiction against whalebehaviour.
   () => {
     const m = whaleMosaicStats();
     if (!m) return null;
-    const lean = m.buy > m.sell ? "more are accumulating than selling" : m.sell > m.buy ? "more are selling than accumulating" : "buyers and sellers are even";
+    const moved = m.buy + m.sell;
+    // Kept short on purpose: this post runs close to the 290-char ceiling, and the wallet counts
+    // grow a digit (and a comma) as the cohort does.
+    const lean = m.buy > m.sell ? "buyers outnumber sellers" : m.sell > m.buy ? "sellers outnumber buyers" : "buyers and sellers are even";
     return {
       id: "whalemosaic",
-      text: ct`🐋 Every wallet holding over 100k SPX, one square each — ${m.total.toLocaleString()} whales across 3 chains.
-Right now ${m.buy} are accumulating and ${m.sell} are selling; the rest sit tight — ${lean}. Green is buying, red is selling.
-We watch every wallet, live. Real intel, real numbers.`,
+      text: ct`🐋 ${moved} of SPX6900's ${m.total.toLocaleString()} whales moved in 30 days — one square each, green buying, red selling.
+${m.buy} added and ${m.sell} sold — ${lean}. The other ${m.flat.toLocaleString()} didn't move a coin — not on the board.
+Every wallet over 100k SPX, 3 chains, checked daily.`,
       card: { type: "whalemosaic" },
     };
   },
