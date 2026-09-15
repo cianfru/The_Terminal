@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-14",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-15",
+  "lastId": "costbasis",
   "recent": [
-    {
-      "date": "2026-07-27",
-      "id": "goldencross"
-    },
     {
       "date": "2026-07-29",
       "id": "mvrvtrend"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-13",
       "id": "bandchange"
+    },
+    {
+      "date": "2026-09-15",
+      "id": "costbasis"
     }
   ],
   "lanes": {
