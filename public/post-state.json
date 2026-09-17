@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-16",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-17",
+  "lastId": "whales",
   "recent": [
-    {
-      "date": "2026-07-29",
-      "id": "mvrvtrend"
-    },
     {
       "date": "2026-07-30",
       "id": "survivorship"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-15",
       "id": "costbasis"
+    },
+    {
+      "date": "2026-09-17",
+      "id": "whales"
     }
   ],
   "lanes": {
