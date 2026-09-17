@@ -36,6 +36,7 @@ import { turnoverOf } from "../../src/turnover.js";
 import { whaleBehaviourStats } from "./whale-behaviour-card.mjs";
 import { whaleMosaicStats } from "./whale-mosaic-card.mjs";
 import { cexFlowStats } from "./cex-flow-card.mjs";
+import { bedrockStats } from "./bedrock-card.mjs";
 
 // --- owner-editable post copy ---------------------------------------------
 // EVERY card's tweet text is owner-editable from the control panel. Cards wrap
@@ -1199,6 +1200,24 @@ Conviction looks like silence.`,
 ${m.buy} added and ${m.sell} sold — ${lean}. The other ${m.flat.toLocaleString()} didn't move a coin — not on the board.
 Every wallet over 100k SPX, 3 chains, checked daily.`,
       card: { type: "whalemosaic" },
+    };
+  },
+
+  // ⚗️ A PUBLISHED NEGATIVE RESULT. We ported Bitview's Raw Bedrock floor model (floor.bitview.space)
+  // to SPX and it does not hold up on three years of history — so we say so, with the chart that
+  // shows why. Being seen to run experiments and report the ones that fail is the honesty moat doing
+  // its job; it is also the only way "we checked" means anything when an experiment DOES work.
+  // NO_ROTATE: a one-off, hand-posted. Numbers that carry the argument are computed, not typed.
+  () => {
+    const m = bedrockStats();
+    if (!m) return null;
+    const since = new Date(m.firstInPlay).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+    return {
+      id: "bedrock",
+      text: ct`⚗️ We ran a Bitcoin floor model on SPX6900. It doesn't work yet — and that's worth publishing.
+It ranks how much supply is underwater against its own history, then finds the price that would put the crowd back in that much pain. Bitcoin has 17 years to rank against. SPX has three: the model's line was within 25% of price on ${m.inPlay} of ${m.n} days, none of them before ${since}.
+Re-running it next year. The experiments that fail get published too.`,
+      card: { type: "bedrock" },
     };
   },
 
@@ -2519,7 +2538,7 @@ const weightOf = id => WEIGHT[id] ?? (BULLISH.has(id) ? 2 : 1);
 // marketcap ("real free-float cap / thin float") is RETIRED — its premise is false: SPX is a
 // fair launch with no lockup, so free float is ~88% (not thin). The honest story is
 // illiquid/liquid supply (the reframed freefloat card), so marketcap is out of the feed.
-const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
+const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "bedrock", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
 
 // LONG-FORM cards — the few methodology / teaching posts that genuinely run long. HISTORY: these
 // once opted past a 290 "instant-read" cap. That cap was REMOVED (owner, 2026-08) — the account is
@@ -2584,7 +2603,7 @@ const LOOK = {
   whatnext: "race",
   // — Tier B: flavourful / distinct looks (used to break up the green lines) —
   riskcolor: "colorline", risklevels: "colorline", rsidots: "colorline",
-  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
+  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", bedrock: "dual", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
   firesalerally: "fanlines",
   model: "scatter",
   monthlyreturns: "heatmap", monthlyreturnssp: "heatmap", monthlyreturnsbtc: "heatmap",

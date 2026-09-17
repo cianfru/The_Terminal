@@ -67,6 +67,7 @@ import { renderCitySkylineCard } from "./city-skyline-card.mjs";
 import { renderTurnoverCard } from "./turnover-card.mjs";
 import { renderWhaleBehaviourCard } from "./whale-behaviour-card.mjs";
 import { renderWhaleMosaicCard } from "./whale-mosaic-card.mjs";
+import { bedrockSpec, bedrockStats } from "./bedrock-card.mjs";
 import { renderCexFlowCard } from "./cex-flow-card.mjs";
 import { renderHodlCompareCard } from "./hodl-compare-card.mjs";
 import { renderUrpdCard } from "./urpd-card.mjs";
@@ -920,7 +921,7 @@ export const CARD_TYPES = new Set([
   "freefloat", "nupl", "concentration", "ginidust", "hodlwaves", "hodlcompare", "urpd", "bagsprofile", "urpdage",
   "lthsth", "sopr", "nrpl", "liveliness", "valband", "walletgrowth", "picycle", "spxbitcoin", "spxcohort", "costbasis",
   "cexsupply", "cexflow", "cexvenues", "cexvenflow", "cexsankey", "whalethennow", "whaleentry", "whales", "walletwaves", "wealthwaves", "survivorship", "supplyera", "exitmap", "smartmoney",
-  "cyclesync", "cycleclock", "rsidots", "monthcompare", "ethsol", "chainconc", "illiquid", "baltier", "dualholders", "basesurv", "supplycurve", "whalecensus", "whalebehaviour", "whalemosaic", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover",
+  "cyclesync", "cycleclock", "rsidots", "monthcompare", "ethsol", "chainconc", "illiquid", "baltier", "dualholders", "basesurv", "supplycurve", "whalecensus", "whalebehaviour", "whalemosaic", "bedrock", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover",
   // spec-driven generics
   "line", "bar", "mbars", "donut", "stack", "model", "cube", "scale", "gauge", "fngdial",
   "heatmap", "dca", "dcaladder", "statgrid", "kraken",
@@ -971,6 +972,7 @@ export function renderPostCard(post, stats, opts = {}) {
   if (type === "whalecensus") return renderWhaleCensusCard(stats, dims);
   if (type === "whalebehaviour") return renderWhaleBehaviourCard(stats, dims);
   if (type === "whalemosaic") return renderWhaleMosaicCard(stats, dims);
+  if (type === "bedrock") return renderLineCard(bedrockSpec(bedrockStats()), dims);
   if (type === "whales") return renderWhalesCard(stats, dims);
   if (type === "walletwaves") return renderWalletWavesCard(stats, dims);
   if (type === "wealthwaves") return renderWealthWavesCard(stats, dims);
