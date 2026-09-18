@@ -66,3 +66,39 @@ test("it renders at the square aspect too, without the numbers changing", () => 
     assert.ok(wide.includes(n) && square.includes(n), `${n} survives both aspects`);
   }
 });
+
+// ── the historical version ────────────────────────────────────────────────────────────────────
+import { diamondGapSeries, diamondGapSpec } from "../scripts/bot/supply-bridge-card.mjs";
+
+const g = diamondGapSeries();
+
+test("the gap series builds, and the two denominators can never cross", () => {
+  assert.ok(g && g.rows.length > 300, "a real daily series");
+  for (const r of g.rows) {
+    assert.ok(r.ofCirc <= r.ofHeld + 1e-9, `${r.d}: measuring against MORE supply can only give a smaller share`);
+    for (const v of [r.ofHeld, r.ofCirc, r.exch]) assert.ok(v >= 0 && v <= 100, `${r.d}: ${v} is a percentage`);
+  }
+});
+
+test("the gap is what the excluded supply does — zero when nothing is excluded", () => {
+  const early = g.rows.find(r => r.exch === 0 && r.ofHeld > 0);
+  const now = g.cur;
+  assert.ok(now.ofHeld - now.ofCirc > 20, "today the two readings are tens of points apart");
+  if (early) assert.ok((early.ofHeld - early.ofCirc) < (now.ofHeld - now.ofCirc), "the gap widened as supply left self-custody");
+});
+
+test("the copy's reference point is matched by date, not by row count", () => {
+  assert.ok(g.then, "a ~16-month-back reading exists");
+  const days = (g.cur.ts - g.then.ts) / 86400000;
+  assert.ok(days >= 470 && days <= 500, `reference is ~480 days back, got ${Math.round(days)}`);
+});
+
+test("the spec labels a percentage axis as percent, and its title fits the fixed-size header", () => {
+  const spec = diamondGapSpec(g);
+  assert.equal(spec.yFmt(60), "60%", "the builder defaults to dollars — this axis is not dollars");
+  assert.equal(spec.yMin, 0); assert.equal(spec.yMax, 100);
+  // the chrome's title is a fixed 38px and does NOT auto-fit; only the headline shrinks
+  assert.ok(spec.title.length <= 38, `title "${spec.title}" must clear a 1200px card unaided`);
+  assert.equal(spec.series.length, 3);
+  assert.equal(spec.legend.length, 3);
+});

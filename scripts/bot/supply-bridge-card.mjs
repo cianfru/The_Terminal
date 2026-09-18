@@ -134,3 +134,71 @@ ${top}${bar}${ticks}${bot}${legend}
 }
 
 export const renderSupplyBridgeCard = (stats, dims = {}) => png(supplyBridgeSvg(stats ?? supplyBridgeStats(), dims), dims.W ?? 1200);
+
+// ── THE SAME ARGUMENT, OVER TIME ──────────────────────────────────────────────────────────────
+// The bar above answers "90% of WHAT, today". This answers "and when did the two numbers stop
+// agreeing" — which is the more useful question, because the gap did not exist at launch. Every
+// series is on ONE axis (% of the relevant supply), so there is no second scale to misread:
+//
+//   • diamond as % of HELD supply     — the figure everyone quotes. Climbs relentlessly.
+//   • diamond as % of ALL circulating — the same coins, measured against everything that can trade.
+//   • supply on exchanges, % of circulating — the thing that opened the gap.
+//
+// ⭐ THE FINDING: since mid-2025 the honest line has been FLAT around 55-59% while the quoted one
+// climbed from 76% to 90%. That improvement is almost entirely the denominator shrinking as coins
+// moved to exchanges — not conviction rising. Diamond TOKENS went 484M → 546M over two years while
+// held supply fell 812M → 606M. Both series come from the same engine rows, so this is checkable.
+
+/** [{d, ofHeld, ofCirc, exch}] in percent, plus the latest reading. */
+export function diamondGapSeries() {
+  let rows;
+  try { rows = JSON.parse(readFileSync(new URL("../../public/onchain.json", import.meta.url), "utf8")); }
+  catch { return null; }
+  if (!Array.isArray(rows)) return null;
+  const out = [];
+  for (const r of rows) {
+    if (!Array.isArray(r.age) || !(r.heldTokens > 0)) continue;
+    const circ = 1e9 - (r.burnBal || 0);
+    const diamond = ((r.age[2] + r.age[3] + r.age[4]) / 100) * r.heldTokens;
+    if (!(circ > 0)) continue;
+    out.push({
+      ts: Date.parse(r.d), d: r.d,
+      ofHeld: (diamond / r.heldTokens) * 100,
+      ofCirc: (diamond / circ) * 100,
+      exch: ((r.cexBal || 0) / circ) * 100,
+    });
+  }
+  if (out.length < 60) return null;
+  const cur = out.at(-1);
+  // A reference point far enough back that the two lines had already separated — the comparison the
+  // copy leads with. Matched by DATE, so a gap in the daily rows can't silently shift the window.
+  const backTo = new Date(cur.ts - 480 * 86400000).toISOString().slice(0, 10);
+  const then = out.find(r => r.d >= backTo) || out[0];
+  return { rows: out, cur, then, gap: cur.ofHeld - cur.ofCirc };
+}
+
+const HELD_C = "#22d3ee", CIRC_C = "#f1f5f9", EXCH_C = "#fb7185";
+
+export function diamondGapSpec(g) {
+  const { rows, cur } = g;
+  return {
+    // the chrome's title is a fixed 38px with no auto-fit (only the headline shrinks), so this has
+    // to stay short enough to clear the card on its own — ~34 characters
+    title: "DIAMOND HANDS: THE DENOMINATOR GAP",
+    headline: `${cur.ofHeld.toFixed(0)}% of held supply — ${cur.ofCirc.toFixed(0)}% of all of it`,
+    accent: HELD_C,
+    yMin: 0, yMax: 100,
+    yFmt: v => `${v}%`,                       // these are percentages; the builder defaults to dollars
+    series: [
+      { pts: rows.map(r => [r.ts, r.exch]), color: EXCH_C, width: 2.2, fill: 0.16 },
+      { pts: rows.map(r => [r.ts, r.ofCirc]), color: CIRC_C, width: 3.4 },
+      { pts: rows.map(r => [r.ts, r.ofHeld]), color: HELD_C, width: 3.4 },
+    ],
+    legend: [
+      { label: "diamond · % of held supply (the quoted number)", color: HELD_C },
+      { label: "diamond · % of ALL circulating supply", color: CIRC_C },
+      { label: "sitting on exchanges, % of circulating", color: EXCH_C },
+    ],
+    footer: "spx6900rainbow.xyz · held 90 days+, ETH-native, FIFO-reconstructed · not financial advice",
+  };
+}

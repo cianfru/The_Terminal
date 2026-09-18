@@ -37,7 +37,7 @@ import { whaleBehaviourStats } from "./whale-behaviour-card.mjs";
 import { whaleMosaicStats } from "./whale-mosaic-card.mjs";
 import { cexFlowStats } from "./cex-flow-card.mjs";
 import { bedrockStats } from "./bedrock-card.mjs";
-import { supplyBridgeStats } from "./supply-bridge-card.mjs";
+import { supplyBridgeStats, diamondGapSeries } from "./supply-bridge-card.mjs";
 
 // --- owner-editable post copy ---------------------------------------------
 // EVERY card's tweet text is owner-editable from the control panel. Cards wrap
@@ -1240,6 +1240,25 @@ Re-running it next year. The experiments that fail get published too.`,
 It is 90% of the ${M(b.held)} held in self-custody. Exchanges, pools and the bridge are not in that denominator at all: ${M(b.excluded)}, of which ${M(b.cex)} sits on exchanges. Measured against every coin that can trade, diamond hands are ${b.diamondOfAll.toFixed(0)}% — and ${M(b.sellReady)}, ${(b.sellReady / b.circulating * 100).toFixed(0)}% of supply, is on a venue, in a pool, or was bought inside 90 days. Most of that exchange balance arrived as listing inventory rather than holders queuing to sell, but it is still supply sitting where selling happens.
 Conviction is real. It is not the same as an empty order book.`,
       card: { type: "supplybridge" },
+    };
+  },
+
+  // 💎 THE SAME POINT, OVER TIME — and the sharper version of it. The quoted diamond figure and the
+  // honest one were the same number at launch; they separated exactly as coins moved to exchanges.
+  // The copy leads with the comparison that settles it: over the last ~16 months the quoted number
+  // gained ~14 points while the one measured against ALL supply went nowhere. NO_ROTATE, hand-fired.
+  () => {
+    const g = diamondGapSeries();
+    if (!g?.then) return null;
+    const { cur, then } = g;
+    const mon = ts => new Date(ts).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+    const pp = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(0);
+    return {
+      id: "diamondgap",
+      text: ct`💎 Since ${mon(then.ts)}, SPX6900's "90% diamond hands" went from ${then.ofHeld.toFixed(0)}% to ${cur.ofHeld.toFixed(0)}%. Measured against every coin that can trade, the same cohort went ${then.ofCirc.toFixed(0)}% to ${cur.ofCirc.toFixed(0)}%.
+Same coins, two denominators — ${pp(cur.ofHeld - then.ofHeld)} points against one, ${pp(cur.ofCirc - then.ofCirc)} against the other. The quoted figure counts self-custody only, and over that stretch supply on exchanges grew to ${cur.exch.toFixed(0)}% of everything circulating. It was never inside the number.
+A rising percentage is not the same as vanishing supply.`,
+      card: { type: "diamondgap" },
     };
   },
 
@@ -2560,7 +2579,7 @@ const weightOf = id => WEIGHT[id] ?? (BULLISH.has(id) ? 2 : 1);
 // marketcap ("real free-float cap / thin float") is RETIRED — its premise is false: SPX is a
 // fair launch with no lockup, so free float is ~88% (not thin). The honest story is
 // illiquid/liquid supply (the reframed freefloat card), so marketcap is out of the feed.
-const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "bedrock", "supplybridge", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
+const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "bedrock", "supplybridge", "diamondgap", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
 
 // LONG-FORM cards — the few methodology / teaching posts that genuinely run long. HISTORY: these
 // once opted past a 290 "instant-read" cap. That cap was REMOVED (owner, 2026-08) — the account is
@@ -2625,7 +2644,7 @@ const LOOK = {
   whatnext: "race",
   // — Tier B: flavourful / distinct looks (used to break up the green lines) —
   riskcolor: "colorline", risklevels: "colorline", rsidots: "colorline",
-  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", bedrock: "dual", supplybridge: "bars", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
+  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", bedrock: "dual", supplybridge: "bars", diamondgap: "dual", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
   firesalerally: "fanlines",
   model: "scatter",
   monthlyreturns: "heatmap", monthlyreturnssp: "heatmap", monthlyreturnsbtc: "heatmap",
