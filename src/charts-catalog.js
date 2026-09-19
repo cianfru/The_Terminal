@@ -176,6 +176,7 @@ export const CITY_GROUPS = [
     color: "#7dd3fc",
     desc: "The city of SPX6900 holders: the 3D city and how it grew over time.",
     charts: [
+      { id: "cityintel", title: "City Intel", desc: "The whole dossier on one page: who lives in SPX City, what it's worth, who's arriving and leaving, and which size tiers are moving." },
       { id: "citygrowth", title: "City Growth", post: "citygrowth", desc: "How SPX City grew: citizens (≥5k held 90d) and its total value climbing through the drawdown." },
       { id: "cityflow", title: "City Flow", post: "citychurn", desc: "The churn under the count: arrivals vs departures, cohort survivorship, and average holding." },
     ],

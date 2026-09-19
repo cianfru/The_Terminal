@@ -185,6 +185,7 @@ const SoprChart = lazy(() => import("./SoprChart.jsx"));
 const NrplChart = lazy(() => import("./NrplChart.jsx"));
 const LivelinessChart = lazy(() => import("./LivelinessChart.jsx"));
 const SpxCity = lazy(() => import("./SpxCity.jsx"));
+const CityIntel = lazy(() => import("./CityIntel.jsx"));
 const CityLab = lazy(() => import("./CityLab.jsx"));
 const WhalesWatching = lazy(() => import("./WhalesWatching.jsx"));
 const WhaleCohortsChart = lazy(() => import("./WhaleCohortsChart.jsx"));
@@ -320,6 +321,7 @@ function TabIcon({ name }) {
     case "aeonleadlag": return (<svg {...p}><path d="M3 16c2 0 3-8 6-8s3 4 3 4" /><line x1="12" y1="4" x2="12" y2="20" strokeDasharray="3 2" strokeOpacity="0.7" /><path d="M12 12c2 0 3 1 3 1s2 0 3 0" /></svg>);
     case "aeonvalue": return (<svg {...p}><circle cx="6" cy="16" r="1.6" /><circle cx="10" cy="12" r="1.6" /><circle cx="15" cy="14" r="1.6" /><circle cx="19" cy="7" r="1.6" /><path d="M3 18 21 6" strokeDasharray="3 3" strokeOpacity="0.7" /></svg>);
     case "aeonrarity": return (<svg {...p}><polygon points="12 3 14.5 9 21 9.5 16 14 17.5 20.5 12 17 6.5 20.5 8 14 3 9.5 9.5 9" /></svg>);
+    case "cityintel": return (<svg {...p}><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M7 9h10M7 13h6M7 17h8" /></svg>);
     case "spxcity": return (<svg {...p}><rect x="4" y="10" width="3" height="10" /><rect x="9" y="5" width="3" height="15" /><rect x="14" y="12" width="3" height="8" /><rect x="19" y="8" width="2.5" height="12" strokeOpacity="0.7" /></svg>);
     case "aeonfloor": return (<svg {...p}><path d="M3 15l4-5 4 3 6-8" /><path d="M3 20h18" strokeOpacity="0.4" /><rect x="4" y="17" width="2" height="3" strokeOpacity="0.5" /><rect x="11" y="16" width="2" height="4" strokeOpacity="0.5" /><rect x="18" y="18" width="2" height="2" strokeOpacity="0.5" /></svg>);
     case "aeonhodl": return (<svg {...p}><path d="M3 18h18" /><path d="M3 13h18" strokeOpacity="0.7" /><path d="M3 8h18" strokeOpacity="0.4" /></svg>);
@@ -927,6 +929,7 @@ export default function App() {
       case "sopr": return <SoprChart isMobile={mob} preview={preview} />;
       case "nrpl": return <NrplChart isMobile={mob} preview={preview} />;
       case "liveliness": return <LivelinessChart isMobile={mob} preview={preview} />;
+      case "cityintel": return <CityIntel isMobile={mob} preview={preview} />;
       case "spxcity": return <SpxCity isMobile={mob} preview={preview} initialMode="spx" />;
       case "citylab": return <CityLab isMobile={mob} />;
       case "whaleswatching": return <ReleaseGate id="whaleswatching" preview={preview}><WhalesWatching isMobile={mob} /></ReleaseGate>;
