@@ -455,7 +455,11 @@ function pickSite(s){ SITE=s; try{ sessionStorage.setItem('intelsite',s); }catch
 function siteBar(d){ const bar=$('#sitebar'); if(!bar) return;
   const list=(d&&d.sites)||[['rainbow','spx6900rainbow.xyz']];
   bar.hidden=false;
-  bar.innerHTML=list.map(function(x){ return '<button class="'+(x[0]===(d.site||SITE)?'on':'')+'" onclick="pickSite(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join('');
+  /* data-attribute + ONE delegated listener, never an inline onclick. PAGE is a template literal, so
+     a quote escaped for the browser (\\') collapses to a bare quote here and closes the string early —
+     which is a PARSE error, and a parse error blanks the whole dashboard. Keep quotes out of it. */
+  bar.innerHTML=list.map(function(x){ const on=x[0]===(d.site||SITE)?'on':''; return '<button class="'+on+'" data-site="'+esc(x[0])+'">'+esc(x[1])+'</button>'; }).join('');
+  bar.onclick=function(e){ const t=e.target.closest('button[data-site]'); if(t) pickSite(t.getAttribute('data-site')); };
 }
 async function load(){ const pw=$('#pw')?$('#pw').value:''; $('#out').innerHTML='<p class="muted">loading…</p>';
   let r;
