@@ -73,6 +73,8 @@ test("vitals are bucketed and split by device, and the endpoint accepts them", (
   assert.match(v, /visibilitychange/, "iOS never fires unload; visibilitychange is the reliable flush");
   const api = read("api/intel.js");
   assert.match(api, /"vitals"/, "the endpoint allows the event type");
-  assert.match(api, /intel:vitals/, "and tallies it");
+  // keys go through the per-site namespacer now (K("vitals") → "intel:vitals" for the main site,
+  // "intel:spxcity:vitals" for the city), so assert the TALLY, not the spelling of the key
+  assert.match(api, /K\("vitals"\)/, "and tallies it, through the site namespacer");
   assert.match(api, /\$\{k\}:\$\{dev\}:\$\{r\}/, "keyed per metric PER DEVICE");
 });
