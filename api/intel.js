@@ -16,6 +16,22 @@ const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const SALT = process.env.INTEL_SALT || "spx6900-intel";
 const TYPES = new Set(["pageview", "wallet_search", "city_open", "chart_open", "click", "vitals"]);
+
+// ── MULTI-SITE ────────────────────────────────────────────────────────────────────────────────
+// spxcity.com is its own deployment with its own audience, and it beacons HERE rather than running
+// a second store, password and dashboard of its own. Events carry {site}; keys are namespaced per
+// site EXCEPT the main site, which keeps the bare "intel:*" keys it has always written — so there
+// is no migration and nothing already collected moves. `site` is attacker-controlled, so it is
+// checked against this allowlist before it can touch a key: an unknown value falls back to the main
+// site rather than minting a fresh namespace on demand (the free-form hashes are capped for the
+// same reason). Adding a site = one entry here + the beacon on that site.
+const SITES = new Set(["rainbow", "spxcity"]);
+const SITE_LABEL = { rainbow: "spx6900rainbow.xyz", spxcity: "spxcity.com" };
+const siteOf = v => (SITES.has(v) ? v : "rainbow");
+// key builder for a site: rainbow keeps "intel:<name>", everyone else gets "intel:<site>:<name>"
+const keyFor = site => name => (site === "rainbow" ? `intel:${name}` : `intel:${site}:${name}`);
+// Only these origins may beacon cross-site. The main site is same-origin and needs no entry.
+const CORS_OK = /^https:\/\/(www\.)?spxcity\.com$/;
 const CAP = 50000, WCAP = 20000;
 // DoS guards on the UNAUTHENTICATED ingest beacon: a per-source rate cap (bounds how fast any one
 // IP can write) + a cardinality cap on the free-form hashes (path/ref/chart are attacker-controlled,
@@ -65,6 +81,8 @@ async function readBody(req) {
 // POST {t} — ingest one analytics event.
 async function ingest(req, res, body) {
   const t = body.t;
+  const site = siteOf(body.site);
+  const K = keyFor(site);
   if (!TYPES.has(t)) { res.status(204).end(); return; }
   if (!KV_URL || !KV_TOKEN) { res.status(204).end(); return; } // store not connected yet → no-op
   // Don't record the owner's own traffic (Qatar) — keeps the analytics clean at the source.
@@ -80,10 +98,10 @@ async function ingest(req, res, body) {
     const rk = "intel:rate:" + (iphash || "anon");
     const first = [
       ["INCR", rk], ["EXPIRE", rk, String(RATE_WIN)],
-      ["HLEN", "intel:pages"], ["HLEN", "intel:refs"], ["HLEN", "intel:charts"],
+      ["HLEN", K("pages")], ["HLEN", K("refs")], ["HLEN", K("charts")],
     ];
     // all-time set of visitor hashes: SADD returns 1 the FIRST time a hash is seen → drives new-vs-returning.
-    const saddIdx = iphash ? first.push(["SADD", "intel:seen", iphash]) - 1 : -1;
+    const saddIdx = iphash ? first.push(["SADD", K("seen"), iphash]) - 1 : -1;
     const r = await kvPipeline(first);
     if ((Number(r[0]) || 0) > RATE_MAX) { res.status(204).end(); return; }
     hpages = Number(r[2]) || 0; hrefs = Number(r[3]) || 0; hcharts = Number(r[4]) || 0;
@@ -105,35 +123,35 @@ async function ingest(req, res, body) {
   // geo/daily are bounded key-spaces (country codes, UTC dates); the free-form hashes (pages/refs/
   // charts) stop growing once past FIELD_CAP so a flood of distinct keys can't exhaust the store.
   const cmds = [
-    ["LPUSH", "intel:events", json], ["LTRIM", "intel:events", "0", String(CAP - 1)],
-    ["HINCRBY", "intel:geo", ev.country || "??", "1"],
-    ["HINCRBY", "intel:types", t, "1"],          // per-type totals → the view→chart→wallet funnel
+    ["LPUSH", K("events"), json], ["LTRIM", K("events"), "0", String(CAP - 1)],
+    ["HINCRBY", K("geo"), ev.country || "??", "1"],
+    ["HINCRBY", K("types"), t, "1"],          // per-type totals → the view→chart→wallet funnel
   ];
-  if (hpages < FIELD_CAP) cmds.push(["HINCRBY", "intel:pages", ev.path || "/", "1"]);
-  if (ev.ref && hrefs < FIELD_CAP) cmds.push(["HINCRBY", "intel:refs", ev.ref, "1"]);
+  if (hpages < FIELD_CAP) cmds.push(["HINCRBY", K("pages"), ev.path || "/", "1"]);
+  if (ev.ref && hrefs < FIELD_CAP) cmds.push(["HINCRBY", K("refs"), ev.ref, "1"]);
   // visits-per-day series (UTC date bucket) — one increment per pageview, so the dashboard can plot the trend
   if (t === "pageview") {
     const dt = new Date(ev.ts), day = dt.toISOString().slice(0, 10);
-    cmds.push(["HINCRBY", "intel:daily", day, "1"]);
+    cmds.push(["HINCRBY", K("daily"), day, "1"]);
     // when-they-visit heatmap: a 7×24 grid keyed "<utcDay>:<utcHour>" (UTC — labelled as such in the UI)
-    cmds.push(["HINCRBY", "intel:hod", dt.getUTCDay() + ":" + dt.getUTCHours(), "1"]);
+    cmds.push(["HINCRBY", K("hod"), dt.getUTCDay() + ":" + dt.getUTCHours(), "1"]);
     // device split (mobile vs desktop) + new-vs-returning per UTC day
-    if (ev.device) cmds.push(["HINCRBY", "intel:device", ev.device, "1"]);
-    cmds.push(["HINCRBY", isNewVisitor ? "intel:new" : "intel:ret", day, "1"]);
+    if (ev.device) cmds.push(["HINCRBY", K("device"), ev.device, "1"]);
+    cmds.push(["HINCRBY", isNewVisitor ? K("new") : K("ret"), day, "1"]);
     // landing/entry pages = the FIRST pageview of a browser session (client-flagged), capped like pages
-    if (body.entry && hpages < FIELD_CAP) cmds.push(["HINCRBY", "intel:landing", ev.path || "/", "1"]);
+    if (body.entry && hpages < FIELD_CAP) cmds.push(["HINCRBY", K("landing"), ev.path || "/", "1"]);
     // unique visitors per day = a set of salted IP hashes for that UTC day (SCARD = the count). 120-day
     // expiry bounds storage. Vercel Analytics caps at 30 days; this is our own, kept as long as we like.
-    if (iphash) cmds.push(["SADD", "intel:uniq:" + day, iphash], ["EXPIRE", "intel:uniq:" + day, "10368000"]);
+    if (iphash) cmds.push(["SADD", K("uniq:" + day), iphash], ["EXPIRE", K("uniq:" + day), "10368000"]);
   }
-  if (t === "wallet_search" && ev.wallet) { cmds.push(["LPUSH", "intel:wallets", json], ["LTRIM", "intel:wallets", "0", String(WCAP - 1)]); }
-  if (t === "chart_open" && ev.chart && hcharts < FIELD_CAP) cmds.push(["HINCRBY", "intel:charts", ev.chart, "1"]);
+  if (t === "wallet_search" && ev.wallet) { cmds.push(["LPUSH", K("wallets"), json], ["LTRIM", K("wallets"), "0", String(WCAP - 1)]); }
+  if (t === "chart_open" && ev.chart && hcharts < FIELD_CAP) cmds.push(["HINCRBY", K("charts"), ev.chart, "1"]);
   // Core Web Vitals, counted per metric PER DEVICE ("lcp:m:good"), so mobile and desktop are read
   // separately — a combined p75 hides the phone problem behind desktop's numbers.
   if (t === "vitals") {
     const dev = ev.device || "?";
     for (const [k, r] of [["lcp", body.lcpb], ["cls", body.clsb], ["inp", body.inpb]]) {
-      if (r === "good" || r === "ni" || r === "poor") cmds.push(["HINCRBY", "intel:vitals", `${k}:${dev}:${r}`, "1"]);
+      if (r === "good" || r === "ni" || r === "poor") cmds.push(["HINCRBY", K("vitals"), `${k}:${dev}:${r}`, "1"]);
     }
   }
 
@@ -164,6 +182,8 @@ async function dashboard(req, res, body) {
     tokenVar: process.env.KV_REST_API_TOKEN ? "KV_REST_API_TOKEN" : (process.env.UPSTASH_REDIS_REST_TOKEN ? "UPSTASH_REDIS_REST_TOKEN" : null),
   };
   if (!KV_URL || !KV_TOKEN) { res.status(200).json({ configured: false, diag }); return; }
+  const site = siteOf(body.site);          // which deployment's audience to read
+  const K = keyFor(site);
   try {
     // The last 90 UTC dates, so we can SCARD each day's unique-visitor set in one pipeline. Unique
     // tracking only started when the SADD ingest landed, so earlier days simply have no set (SCARD 0);
@@ -171,12 +191,12 @@ async function dashboard(req, res, body) {
     const uniqDays = [];
     for (let i = 89; i >= 0; i--) uniqDays.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10));
     const [events, wallets, geo, pages, refs, charts, daily, types, hod, device, newh, reth, landing, ...uniqCounts] = await kvPipeline([
-      ["LRANGE", "intel:events", "0", "499"],
-      ["LRANGE", "intel:wallets", "0", "199"],
-      ["HGETALL", "intel:geo"], ["HGETALL", "intel:pages"], ["HGETALL", "intel:refs"], ["HGETALL", "intel:charts"],
-      ["HGETALL", "intel:daily"], ["HGETALL", "intel:types"], ["HGETALL", "intel:hod"], ["HGETALL", "intel:device"],
-      ["HGETALL", "intel:new"], ["HGETALL", "intel:ret"], ["HGETALL", "intel:landing"],
-      ...uniqDays.map(d => ["SCARD", "intel:uniq:" + d]),
+      ["LRANGE", K("events"), "0", "499"],
+      ["LRANGE", K("wallets"), "0", "199"],
+      ["HGETALL", K("geo")], ["HGETALL", K("pages")], ["HGETALL", K("refs")], ["HGETALL", K("charts")],
+      ["HGETALL", K("daily")], ["HGETALL", K("types")], ["HGETALL", K("hod")], ["HGETALL", K("device")],
+      ["HGETALL", K("new")], ["HGETALL", K("ret")], ["HGETALL", K("landing")],
+      ...uniqDays.map(d => ["SCARD", K("uniq:" + d)]),
     ]);
     const uniq = {}; uniqDays.forEach((d, i) => { const n = Number(uniqCounts[i]) || 0; if (n) uniq[d] = n; });
     // Filter the owner's own country out of the display too, so pre-existing rows drop out (the
@@ -184,7 +204,7 @@ async function dashboard(req, res, body) {
     const notExcluded = x => !EXCLUDE_COUNTRIES.has(String(x && x.country || "").toUpperCase());
     const geoObj = hash2obj(geo); for (const c of EXCLUDE_COUNTRIES) delete geoObj[c];
     res.status(200).json({
-      configured: true, diag,
+      configured: true, diag, site, sites: [...SITES].map(k => [k, SITE_LABEL[k]]),
       events: parseList(events).filter(notExcluded), wallets: parseList(wallets).filter(notExcluded),
       geo: geoObj, pages: hash2obj(pages), refs: hash2obj(refs), charts: hash2obj(charts), daily: hash2obj(daily), uniq,
       types: hash2obj(types), hod: hash2obj(hod), device: hash2obj(device), newv: hash2obj(newh), retv: hash2obj(reth), landing: hash2obj(landing),
@@ -192,13 +212,27 @@ async function dashboard(req, res, body) {
   } catch (e) {
     // Don't 500 into a blank page — return the KV error so the page can show it (e.g. "kv 401" =
     // the token is wrong/read-only for writes; a network host error = the URL is off).
-    res.status(200).json({ configured: true, kvError: String(e.message || e), diag, events: [], wallets: [], geo: {}, pages: {}, refs: {}, charts: {}, daily: {}, uniq: {}, types: {}, hod: {}, device: {}, newv: {}, retv: {}, landing: {} });
+    res.status(200).json({ configured: true, kvError: String(e.message || e), diag, site, sites: [...SITES].map(k => [k, SITE_LABEL[k]]), events: [], wallets: [], geo: {}, pages: {}, refs: {}, charts: {}, daily: {}, uniq: {}, types: {}, hod: {}, device: {}, newv: {}, retv: {}, landing: {} });
   }
 }
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
+  // spxcity.com beacons cross-origin. Its events are sent as text/plain (a CORS-safelisted type, so
+  // no preflight — sendBeacon cannot answer one), but the OPTIONS branch is here anyway so a plain
+  // fetch() from that origin works too. Only the allowlisted origin is ever echoed back.
+  const origin = String(req.headers.origin || "");
+  if (CORS_OK.test(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+  }
   try {
+    if (req.method === "OPTIONS") {
+      res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "content-type");
+      res.setHeader("Access-Control-Max-Age", "86400");
+      res.status(204).end(); return;
+    }
     if (req.method === "GET") { res.setHeader("Content-Type", "text/html; charset=utf-8"); res.status(200).send(PAGE); return; }
     if (req.method !== "POST") { res.status(405).json({ error: "method not allowed" }); return; }
 
@@ -221,6 +255,9 @@ h1{font-size:15px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)
 .login{display:flex;gap:8px;align-items:center}input{background:var(--panel);border:1px solid var(--line);color:var(--tx);padding:9px 12px;border-radius:8px;font:inherit}
 button{background:var(--panel);border:1px solid var(--line);color:var(--tx);padding:9px 14px;border-radius:8px;cursor:pointer;font:inherit}
 button:hover{border-color:var(--live);color:var(--live)}
+.sitebar{display:flex;gap:8px;margin:14px 0 0;flex-wrap:wrap}
+.sitebar button{padding:7px 14px;font-size:12px;letter-spacing:.04em}
+.sitebar button.on{border-color:var(--live);color:var(--live);background:rgba(78,231,154,.1)}
 .stats{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0 4px}
 .stat{flex:1;min-width:128px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
 .stat .n{font-size:26px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;color:var(--tx)}
@@ -272,6 +309,7 @@ details.cty{border-bottom:1px solid var(--sep)}details.cty[open]{background:rgba
 </style></head><body><div class="wrap">
 <h1>Page Intel</h1>
 <div class="login" id="login"><input id="pw" type="password" placeholder="control password" autofocus onkeydown="if(event.key==='Enter')load()"><button onclick="load()">view</button><span id="msg" class="muted"></span></div>
+<div class="sitebar" id="sitebar" hidden></div>
 <div id="out"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -411,9 +449,17 @@ function wireDailyTip(){
     svg.addEventListener('mouseleave',hide);
   });
 }
+var SITE='rainbow';
+try{ SITE=sessionStorage.getItem('intelsite')||'rainbow'; }catch(e){}
+function pickSite(s){ SITE=s; try{ sessionStorage.setItem('intelsite',s); }catch(e){} load(); }
+function siteBar(d){ const bar=$('#sitebar'); if(!bar) return;
+  const list=(d&&d.sites)||[['rainbow','spx6900rainbow.xyz']];
+  bar.hidden=false;
+  bar.innerHTML=list.map(function(x){ return '<button class="'+(x[0]===(d.site||SITE)?'on':'')+'" onclick="pickSite(\''+x[0]+'\')">'+esc(x[1])+'</button>'; }).join('');
+}
 async function load(){ const pw=$('#pw')?$('#pw').value:''; $('#out').innerHTML='<p class="muted">loading…</p>';
   let r;
-  try{ r=await fetch('/api/intel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw})}); }
+  try{ r=await fetch('/api/intel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pw,site:SITE})}); }
   catch(e){ $('#out').innerHTML='<p class="note">Network error reaching /api/intel: '+esc(String(e))+'</p>'; return; }
   if(!r.ok){ const j=await r.json().catch(()=>({})); $('#out').innerHTML='<p class="note">'+(r.status===401?'wrong password':(esc(j.error||'')||('error '+r.status)))+'</p>'; return; }
   const d=await r.json().catch(()=>null);
@@ -424,6 +470,7 @@ async function load(){ const pw=$('#pw')?$('#pw').value:''; $('#out').innerHTML=
   if(!d.configured){ $('#out').innerHTML='<p class="note">Reached the dashboard, but the function does not see the KV vars at runtime.</p>'+diagLine; return; }
   if(d.kvError){ $('#out').innerHTML='<p class="note">The function sees the KV vars but the store rejected the request — likely a wrong or read-only token, or a URL mismatch.</p>'+diagLine; return; }
   try{ sessionStorage.setItem('intelpw',pw); }catch(e){} /* password worked → remember it for this session */
+  siteBar(d);   /* both deployments read from one store — switch which audience is on screen */
   const nEvents=(d.events||[]).length, nWallets=(d.wallets||[]).length;
   const emptyNote=(nEvents+nWallets===0)?'<p class="note">Store is connected and reachable, but empty so far (0 events). Once the live site gets traffic, events will appear here. '+diagInner+'</p>':'';
   const rows=(o,n=10)=>topN(o,n).map(([k,v])=>'<div class="row"><span class="k">'+esc(k)+'</span><span class="v">'+v+'</span></div>').join('')||'<div class="muted">—</div>';
