@@ -206,7 +206,12 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
   // "holds 0 SPX" for a wallet that holds plenty, which is worse than the bar it replaced.
   // A service can be a gas DESTINATION, which made it a member on the first pass — one of
   // them funds 42 unrelated wallets. It is never part of anyone's household.
-  const kept = uniq.filter(l => !services.has(l.from) && !services.has(l.to));
+  //
+  // ⚠ The service flag kills GAS links ONLY. It is derived from gas fan-out, so it says
+  // nothing about SPX flow — and a vault operator trips it BY DEFINITION, because funding
+  // ten vaults is what makes him one. Filtering all his links discarded every structural
+  // vault link case #3062 had, leaving a household of eight at one wallet.
+  const kept = uniq.filter(l => l.rule !== "GAS" || (!services.has(l.from) && !services.has(l.to)));
 
   // TWO TIERS, NEVER SUMMED. A VAULT/DRAIN link is structural: it is SPX flow into a wallet
   // that provably never spent, or a wallet emptying itself. A GAS link is circumstantial —

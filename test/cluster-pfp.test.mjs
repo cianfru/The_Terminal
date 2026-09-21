@@ -150,3 +150,12 @@ test("core and gas tiers are disjoint and never merged into one number", async (
   assert.match(src, /core = \[\.\.\.new Set\(\[seed, \.\.\.kept\.filter\(l => l\.rule !== "GAS"\)/,
     "the core is the seed plus vault/drain links only");
 });
+
+test("the service flag kills GAS links only, never vault or drain links", async () => {
+  // It is derived from gas fan-out, so it says nothing about SPX flow. A vault operator
+  // trips it by definition — funding ten vaults is what makes him one. Filtering all his
+  // links left case #3062's eight-wallet household reporting one wallet.
+  const src = await import("node:fs").then(m => m.readFileSync("scripts/cluster-pfp.mjs", "utf8"));
+  assert.match(src, /l\.rule !== "GAS" \|\| \(!services\.has\(l\.from\) && !services\.has\(l\.to\)\)/,
+    "vault/drain links must survive the service flag");
+});
