@@ -17,8 +17,8 @@
       "nftHolder": "0x655048fd3301fb9d767071772ddc055ae30a94da",
       "nftHolderRole": "shelf wallet, nonce 0",
       "trader": "0x9c968da4e5fd7b6a4709b993cc21c8ef0eb26f6e",
-      "clusterWallets": 3,
-      "clusterNote": "trader + vault 0x210ccbd5 (401,900 untouched since Nov-2024) + PFP shelf",
+      "clusterWallets": 6,
+      "clusterNote": "6 wallets by scripts/cluster-pfp.mjs (core tier: vault/drain links only) — trader 0x9c968da4 (8,001) + vault 0x210ccbd5 (401,900, received it in Nov-2024 and has never moved a token) + PFP shelf 0x655048fd (690) + three dust vaults holding 32 between them. Reproduces the hand-built cluster exactly; the 32 SPX is the only difference. A further 20 wallets holding 2,670 SPX are gas-linked only — circumstantial, NOT added to the headline, and that tier includes a 42-wallet service hub and bridges into case #14.",
       "buys": {
         "n": 23,
         "qty": 1092436,
@@ -38,7 +38,7 @@
         "price": 0.02659,
         "band": "Max Bubble"
       },
-      "holdsNow": 410591,
+      "holdsNow": 410623,
       "archetype": "sold into strength",
       "verdict": "Recovered 3.9x cost by selling 80% of dollars into 'Bubble?' or hotter, including $109,304 at Max Bubble. Also bought $33,110 at Max Bubble. Still holds 410,591 SPX, most of it vaulted. The best-timed of the four, and still not a DCA holder.",
       "charts": [
@@ -46,7 +46,8 @@
         "2451-buys-and-sells.png",
         "2451-rainbow.png",
         "2451-cluster.png"
-      ]
+      ],
+      "holdsNowNote": "410,623 across the core tier; 8,001 in the trader wallet itself. The vault is 98% of the household and is invisible to any rule with a size floor or a drain requirement — it was funded by a partial send and has never transacted."
     },
     {
       "token": 3062,
@@ -55,7 +56,7 @@
       "nftHolderRole": "the trader holds it directly",
       "trader": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
       "clusterWallets": 8,
-      "clusterNote": "trader + 7 vaults that never send back; 4 opened outright (gas AND tokens), 2 of those nonce-0 holding exactly what he sent",
+      "clusterNote": "trader + 7 vaults that never send back; 4 opened outright (gas AND tokens), 2 of those nonce-0 holding exactly what he sent ⚠ PENDING RE-VERIFICATION: the first tooled re-runs returned 1 wallet because the service and distributor guards fired on a vault operator, who funds many wallets by definition. Numbers here are the hand read until a vault-rule run confirms them.",
       "buys": {
         "n": 13,
         "qty": 22982,

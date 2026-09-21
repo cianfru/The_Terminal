@@ -207,8 +207,18 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
   // A service can be a gas DESTINATION, which made it a member on the first pass — one of
   // them funds 42 unrelated wallets. It is never part of anyone's household.
   const kept = uniq.filter(l => !services.has(l.from) && !services.has(l.to));
-  const members = [...new Set([seed, ...kept.flatMap(l => [l.from, l.to])])];
-  return { seed, members, links: kept, depth, services: [...services] };
+
+  // TWO TIERS, NEVER SUMMED. A VAULT/DRAIN link is structural: it is SPX flow into a wallet
+  // that provably never spent, or a wallet emptying itself. A GAS link is circumstantial —
+  // someone paid someone's fee. On case #2451 the vault tier reproduced the hand-built
+  // cluster exactly (410,623 vs 410,591, the difference three dust vaults) while the gas
+  // tier dragged in a 42-wallet service and bridged into an unrelated case. Both are worth
+  // reporting — gas was the ONLY evidence on case #14 — but the headline is the core.
+  const core = [...new Set([seed, ...kept.filter(l => l.rule !== "GAS").flatMap(l => [l.from, l.to])])];
+  const coreSet = new Set(core);
+  const gasLinked = [...new Set(kept.filter(l => l.rule === "GAS").flatMap(l => [l.from, l.to]))]
+    .filter(a => !coreSet.has(a));
+  return { seed, core, gasLinked, members: [...core, ...gasLinked], links: kept, depth, services: [...services] };
 }
 
 /** Current SPX balance — small is a finding here, never a reason to drop a wallet. */
@@ -229,13 +239,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const res = await clusterPfp(seed);
   const bal = await balances(res.members);
   const f = n => Math.round(n).toLocaleString();
-  console.log(`\nCLUSTER of ${seed}\n  ${res.members.length} wallets, ${res.links.length} links\n`);
-  for (const l of res.links)
-    console.log(`  ${l.ts}  ${l.rule.padEnd(5)} ${l.rule === "GAS" ? `${l.eth.toFixed(5)} ETH` : `${f(l.qty)} SPX`}   ${l.from} -> ${l.to}`);
-  console.log(`\n  SPX held today:`);
-  let tot = 0;
-  for (const a of res.members) { tot += bal[a]; console.log(`    ${a}  ${f(bal[a]).padStart(12)}`); }
-  console.log(`    ${"TOTAL".padEnd(42)} ${f(tot).padStart(12)} SPX`);
+  const sum = list => list.reduce((s, a) => s + (bal[a] || 0), 0);
+  console.log(`\nCLUSTER of ${seed}`);
+  console.log(`\n  CORE — vault / drain links (structural). ${res.core.length} wallets, ${f(sum(res.core))} SPX`);
+  for (const l of res.links.filter(l => l.rule !== "GAS"))
+    console.log(`    ${l.ts.slice(0, 10)}  ${l.rule.padEnd(5)} ${f(l.qty).padStart(9)} SPX   ${l.from} -> ${l.to}`);
+  for (const a of res.core) console.log(`    ${a}  ${f(bal[a]).padStart(12)}`);
+  console.log(`\n  SUPPORTING — gas-funding only (circumstantial, do NOT add to the headline).`);
+  console.log(`  ${res.gasLinked.length} wallets, ${f(sum(res.gasLinked))} SPX`);
+  for (const a of res.gasLinked) console.log(`    ${a}  ${f(bal[a]).padStart(12)}`);
+  const tot = sum(res.members);
   const out = arg("json");
   if (out) { writeFileSync(out, JSON.stringify({ ...res, balances: bal, total: tot }, null, 1)); console.log(`\n-> ${out}`); }
 }

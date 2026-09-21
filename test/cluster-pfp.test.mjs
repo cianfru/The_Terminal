@@ -143,3 +143,10 @@ test("vault links are size-free — a 138-SPX vault counts", async () => {
   const rows = withBalances([{ ts: "2024-11-01", dir: "IN", qty: 138 }]);
   assert.equal(isVault(rows[0], rows), true);
 });
+
+test("core and gas tiers are disjoint and never merged into one number", async () => {
+  const src = await import("node:fs").then(m => m.readFileSync("scripts/cluster-pfp.mjs", "utf8"));
+  assert.match(src, /const gasLinked = .*\.filter\(a => !coreSet\.has\(a\)\)/s, "gas tier must exclude core");
+  assert.match(src, /core = \[\.\.\.new Set\(\[seed, \.\.\.kept\.filter\(l => l\.rule !== "GAS"\)/,
+    "the core is the seed plus vault/drain links only");
+});

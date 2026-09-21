@@ -8,7 +8,7 @@ case yet of someone accumulating steadily and sitting on it — the thing the pi
 
 | token | archetype | buy $ in "Bubble?"+ | sell $ in "Bubble?"+ | holds today |
 |---|---|---|---|---|
-| **#2451** | sold into strength | 57% | **80%** | 410,591 |
+| **#2451** | sold into strength | 57% | **80%** | 410,623 *(6 wallets; 98% of it in one vault)* |
 | **#3062** | bought the top, sold the dip | **83%** | 0% | 58,918 |
 | **#2559** | FOMO, then diamond hands | **100%** | — never sold | 8,558 *(38,618 across 5 wallets)* |
 | **#14** | distributor, exited | 0% | 43% | **0** |
@@ -69,11 +69,27 @@ No value bar on self-moves. Structure over size:
   that never touched SPX is invisible to it. On case #14 this found four links SPX flow could not,
   including the wallet that funded the shelf holding the NFT four minutes after moving it.
   ⚠ Guard hard: one funder in that case fed **42 distinct wallets** — a service, worth nothing.
+- **Vault** — a wallet that was empty, received a chunk, **has never sent SPX**, and still holds
+  ≥90% of it. Not the "partial send between two live wallets" the production engine refuses:
+  that refusal exists because a payment recipient is a counterparty, and a vault never spends —
+  it is storage. **This is the rule that matters most here.** Without it the tool missed case
+  #2451's `0x210ccbd5`, which holds **401,900 SPX — 98% of that household** — because it was
+  funded by a partial send (no drain) and has never transacted (no gas). Vaults are the most
+  common structure in this work.
 - **Drain into empty** — a wallet empties ≥90% into a wallet that held nothing before. Both
   conditions. At **any** size, because a 500-SPX self-move is still a self-move.
   ⚠ Guarded the same way: a wallet that repeatedly empties itself into *different* fresh wallets
   is distributing, not migrating. A drain empties the sender, so a person can only do it once per
   refill — the bound is tighter than the gas one.
+
+### Two tiers, never summed
+
+A **vault/drain** link is structural — SPX flow into a wallet that provably never spent, or a
+wallet emptying itself. A **gas** link is circumstantial: someone paid someone's fee. On #2451 the
+core tier reproduced the hand-built cluster exactly (410,623 vs 410,591 — the difference is three
+dust vaults holding 32 SPX between them), while the gas tier dragged in a 42-wallet service hub and
+bridged into an unrelated case. Both are reported; only the core is the headline. Gas was the *only*
+evidence on case #14, so it is not discarded — it is labelled.
 
 **Proof the bar mattered.** Run on #2559, these rules find **5 wallets holding 38,618 SPX**, linked by
 drains of **876 and 98 SPX**. The production engine reported one wallet with 8,558, because every one
