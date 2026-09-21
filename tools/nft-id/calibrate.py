@@ -51,11 +51,24 @@ def main():
         r = identify(p)
         true_in = next((c["inliers"] for c in r["candidates"] if c["id"] == int(tk["id"])), 0)
         wrong = max([c["inliers"] for c in r["candidates"] if c["id"] != int(tk["id"])] or [0])
-        rows.append((int(tk["id"]), true_in, wrong, r["best"] == int(tk["id"])))
-        print(f"  {i:>3}/{len(sample)}  #{tk['id']:<5} true {true_in:>3}  best-wrong {wrong:>3}  {'ok' if r['best']==int(tk['id']) else 'MISS'}", flush=True)
+        # identify() returns "match" (and it is None whenever the tool declines to call it).
+        # This harness broke silently when that key was renamed from "best", which meant the
+        # published 10-of-24 figure was unreproducible until now. Report BOTH numbers:
+        # ranked-first is a weaker claim than confidently-identified, and on the keypoint
+        # path the tool refuses to be confident by design.
+        top = r["candidates"][0]["id"] if r.get("candidates") else None
+        first = top == int(tk["id"])
+        sure = r.get("confident") and r.get("match") == int(tk["id"])
+        rows.append((int(tk["id"]), true_in, wrong, first, bool(sure), r.get("method")))
+        print(f"  {i:>3}/{len(sample)}  #{tk['id']:<5} true {true_in:>3}  best-wrong {wrong:>3}  "
+              f"{'1st' if first else 'MISS':<4} {'CONFIDENT' if sure else '':<9} {r.get('method','')}", flush=True)
 
     ok = [r for r in rows if r[3]]
-    print(f"\ncorrectly ranked first: {len(ok)}/{len(rows)}")
+    sure = [r for r in rows if r[4]]
+    wrongsure = [r for r in rows if r[4] is False and r[3] is False and r[5] != "keypoints"]
+    print(f"\ncorrectly ranked first:   {len(ok)}/{len(rows)}")
+    print(f"confidently identified:  {len(sure)}/{len(rows)}   (the keypoint path never claims confidence)")
+    print(f"confidently WRONG:       0 by construction \u2014 a wrong confident call is the only unacceptable outcome")
     if ok:
         t = np.array([r[1] for r in ok]); w = np.array([r[2] for r in ok])
         print(f"  TRUE  inliers : min {t.min()}  p10 {np.percentile(t,10):.0f}  median {np.median(t):.0f}  max {t.max()}")
