@@ -244,6 +244,18 @@
           "pctUsdBubblePlus": 33
         },
         "recomputed": "2026-09-21"
+      },
+      "secondHop": {
+        "ran": "2026-09-21",
+        "recipients": 35,
+        "soldIntoPool": 28,
+        "openedLp": 0,
+        "sentToTaggedExchange": 1,
+        "exchangeNote": "the single hit is an MEV bot, not an exchange",
+        "passedOnward": 22,
+        "stillHoldAny": 2,
+        "finding": "They sold it, on-chain, into Uniswap. No exchange deposits and not one V3 liquidity position. The timeline forces it: this cluster emptied by 2024-07-08 and tagged exchanges held ZERO SPX until 2024-09-29, so a CEX deposit was impossible and the DEX was the only liquid venue.",
+        "caveat": "COUNTS, NEVER SUMS. A fungible token cannot be tainted — once SPX lands in a wallet holding its own, no on-chain fact says which coins later left. A first pass that summed each recipient's whole history reported 68.9M of 'fate' against 4.96M actually sent, because one recipient is the Wormhole BRIDGE and another is case #1's trader. Tagged infrastructure is excluded and each row carries what share of that address's total inflow came from this cluster; several read 0%."
       }
     }
   ],
