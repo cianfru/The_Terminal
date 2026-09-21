@@ -110,10 +110,10 @@ export const FEEDS = [
     // that would train us to ignore this row.
     window: 6, fields: ["owners", "dist", "age"], nonEmpty: ["holders"] },
   { file: "aeon-clusters.json", cadence: 3, by: "aeon.yml", what: "AEON owner clusters, holding vs selling",
-    // `owners` is the count of entities holding at least one token today, so it moves whenever the
-    // collection trades — liveness without a standing warn. Not `multiWallet`: linkage is historical
-    // and legitimately sits still for weeks.
-    window: 6, fields: ["owners"], nonEmpty: ["clusters"] },
+    // A current-state document, not a time series, so it is checked the way aeon-market.json is:
+    // top-level counts must be present and the cluster list must not be empty. `owners` going
+    // missing would mean the engine ran but linked nothing, which is the failure worth catching.
+    require: ["owners", "wallets"], nonEmpty: ["clusters"] },
   { file: "aeon-market.json", cadence: 3, by: "aeon.yml", what: "AEON MVRV, URPD, fair value, deals",
     require: ["floor", "levelNow"], nonEmpty: ["urpd", "salesScatter", "biggest", "traitPremiums"] },
   { file: "aeon-sales.json", cadence: 3, by: "aeon.yml", what: "AEON marketplace trades",
