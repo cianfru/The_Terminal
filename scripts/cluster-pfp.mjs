@@ -171,15 +171,25 @@ async function ledger(a) {
   return led[a];
 }
 
-/** Distinct PLAIN WALLETS A has ever sent SPX to. Many = a distributor, so its drains prove
- *  nothing. Infrastructure must not count: an active trader selling into Uniswap racks up
- *  "recipients" that are pools, and reads as a distributor when it is just someone trading.
- *  That mistake silenced case #2451 entirely — 15 counted recipients, mostly pools. */
+/** How many distinct wallets A has DRAINED ITSELF INTO. Not how many it has ever paid.
+ *
+ *  ⚠ Counting every recipient was wrong twice. It silenced case #2451, whose "recipients"
+ *  were mostly Uniswap pools (fixed by excluding infrastructure). Then it silenced case
+ *  #14's funding chain: 0x9f7e2f5e drained 100% of its balance — 2,142,133 of 2,142,133 —
+ *  into an empty wallet, a textbook migration, but it had earlier made partial payments to
+ *  12 addresses and so read as a distributor.
+ *
+ *  Those are different behaviours. A distributor makes many PARTIAL payments. A migrator
+ *  drains itself, and can only do that once per refill. So count the drains, not the
+ *  payments: paying twelve people does not make a single complete self-drain a payout. */
 export async function drainFanOut(a, rows, skip = async () => false) {
-  const cps = new Set((rows ?? await ledger(a)).filter(r => r.dir === "OUT" && r.cp).map(r => r.cp));
-  let n = 0;
-  for (const cp of cps) if (!await skip(cp)) n++;
-  return n;
+  const r = rows ?? await ledger(a);
+  const targets = new Set();
+  for (const x of r) {
+    if (x.dir !== "OUT" || !x.cp || await skip(x.cp)) continue;
+    if (x.balBefore > 0 && x.qty >= x.balBefore * DRAIN_FRAC) targets.add(x.cp);
+  }
+  return targets.size;
 }
 
 /** Every PLAIN WALLET A ever paid gas to. Few = evidence; many = a service. ETH sent to a

@@ -218,3 +218,25 @@ test("a transfer that satisfies two rules is emitted once", async () => {
   assert.match(src, /\$\{l\.tx\}\|\$\{l\.from\}\|\$\{l\.to\}/, "dedupe must key on the transfer, not the rule");
   assert.match(src, /RANK = \{ CONSOLIDATION: 0/, "and prefer the rule that explains the most");
 });
+
+test("fan-out counts DRAINS, not payments — a migrator who also paid people still links", async () => {
+  const { drainFanOut, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  // Case #14's 0x9f7e2f5e: twelve partial payments, then ONE complete self-drain.
+  // Counting recipients made it look like a payout service and killed a 100% drain.
+  const rows = withBalances([
+    { ts: "2023-09-20", dir: "IN",  qty: 2795456, cp: "0xsrc" },
+    ...Array.from({ length: 12 }, (_, i) => ({ ts: `2023-09-2${i % 10}`, dir: "OUT", qty: 50000, cp: `0xp${i}` })),
+    { ts: "2023-10-07", dir: "OUT", qty: 2195456, cp: "0xnew" },   // the rest, in one go
+  ]);
+  assert.equal(await drainFanOut("0xme", rows), 1, "twelve payments plus one drain is ONE drain target");
+});
+
+test("a genuine payout wallet still trips the guard", async () => {
+  const { drainFanOut, withBalances, MAX_DRAINED } = await import("../scripts/cluster-pfp.mjs");
+  // repeatedly refilled and repeatedly emptied into different fresh wallets
+  const rows = withBalances(Array.from({ length: 6 }, (_, i) => [
+    { ts: `2024-0${i + 1}-01`, dir: "IN",  qty: 1000, cp: "0xsrc" },
+    { ts: `2024-0${i + 1}-02`, dir: "OUT", qty: 1000, cp: `0xd${i}` },
+  ]).flat());
+  assert.ok(await drainFanOut("0xme", rows) > MAX_DRAINED, "six separate self-drains is a distributor");
+});
