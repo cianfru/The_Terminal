@@ -210,3 +210,11 @@ test("the target must have been empty before the group started", async () => {
   // the only empty-target anchor is 0x0, six months earlier, so the July pair is outside it
   assert.equal(consolidationOf("0x2", rows, () => true), null);
 });
+
+test("a transfer that satisfies two rules is emitted once", async () => {
+  // Case #14's 1,630,000 arrived first, so it BOTH drained into an empty wallet and
+  // anchored the consolidation. Keying the dedupe on the rule emitted it twice.
+  const src = await import("node:fs").then(m => m.readFileSync("scripts/cluster-pfp.mjs", "utf8"));
+  assert.match(src, /\$\{l\.tx\}\|\$\{l\.from\}\|\$\{l\.to\}/, "dedupe must key on the transfer, not the rule");
+  assert.match(src, /RANK = \{ CONSOLIDATION: 0/, "and prefer the rule that explains the most");
+});

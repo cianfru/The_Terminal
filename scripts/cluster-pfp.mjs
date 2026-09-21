@@ -267,7 +267,20 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
     }
   }
 
-  const uniq = [...new Map(links.map(l => [l.rule + l.tx + l.to, l])).values()].sort((x, y) => x.ts.localeCompare(y.ts));
+  // One transfer, one link. A transfer can satisfy two rules at once — case #14's
+  // 1,630,000 arrived first, so it drained into an empty wallet AND anchored the
+  // consolidation — and keying the dedupe on the RULE emitted it twice. Membership and
+  // balances were unaffected, but duplicated evidence rows read as carelessness and a
+  // card counting links would double-count. Key on the transfer; prefer the rule that
+  // explains the most.
+  const RANK = { CONSOLIDATION: 0, DRAIN: 1, VAULT: 2, GAS: 3 };
+  const best = new Map();
+  for (const l of links) {
+    const k = `${l.tx}|${l.from}|${l.to}`;
+    const cur = best.get(k);
+    if (!cur || RANK[l.rule] < RANK[cur.rule]) best.set(k, l);
+  }
+  const uniq = [...best.values()].sort((x, y) => x.ts.localeCompare(y.ts));
   // The SEED is always a member, links or not. A case with no qualifying links is a real
   // answer ("this wallet stands alone"); reporting an EMPTY cluster instead prints
   // "holds 0 SPX" for a wallet that holds plenty, which is worse than the bar it replaced.
