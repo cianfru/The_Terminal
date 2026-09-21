@@ -1,11 +1,7 @@
 {
-  "lastPostedDate": "2026-09-20",
-  "lastId": "manual-skip",
+  "lastPostedDate": "2026-09-21",
+  "lastId": "ethage",
   "recent": [
-    {
-      "date": "2026-07-31",
-      "id": "whales"
-    },
     {
       "date": "2026-08-03",
       "id": "walletwaves"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-18",
       "id": "whalemosaic"
+    },
+    {
+      "date": "2026-09-21",
+      "id": "ethage"
     }
   ],
   "lanes": {
