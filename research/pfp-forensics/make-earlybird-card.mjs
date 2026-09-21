@@ -7,11 +7,13 @@
 // an average of $0.0046. It sold under a third on the market, moved the rest out, and
 // holds nothing. Its last market trade was June 2024.
 //
-// ⚠ WHAT THIS CARD MUST NOT SAY. The 5.1M that left the cluster did NOT necessarily go
-// unrealised — it went to 23 addresses we cannot link back, and the trail stops there.
-// "They left $3.8M on the table" would be a claim about money we cannot follow. The card
-// states what it bought, what it sold ON THE MARKET, what it moved, and what it holds —
-// and says plainly that the rest is unknown.
+// ⚠ WHAT THIS CARD MUST NOT SAY. "They left $3.8M on the table" would be a claim about
+// money we cannot follow. It states what was bought, what was sold ON THE MARKET, what
+// was moved, and what is held.
+//
+// The closing line is the SECOND-HOP result, and it is a COUNT of wallets, never a sum of
+// tokens — a fungible token cannot be tainted, so no amount downstream is attributable
+// here. See trace-second-hop.mjs and cases.json secondHop.
 //
 // Every figure is derived at render time. Art is fetched to /tmp by the caller.
 // ============================================================================
@@ -39,6 +41,7 @@ const priceOn = d => P.get(d) ?? P.get(dl.filter(x => x <= d).pop());
 const spot = px.at(-1).price;
 const m = buildModel(DEFAULT_RAW), NB = m.bands.length;
 
+const kase = JSON.parse(readFileSync(R("./cases.json"), "utf8")).cases.find(c => c.token === TOKEN);
 const cl = clusterOf(TOKEN);
 const rows = (await tradeHistory(cl.wallets)).map(r => ({ ...r, price: priceOn(r.ts.slice(0, 10)) })).filter(r => r.price);
 const B = rows.filter(r => r.kind === "buy"), S = rows.filter(r => r.kind === "sell");
@@ -46,6 +49,8 @@ const q = a => a.reduce((x, t) => x + t.qty, 0), u = a => a.reduce((x, t) => x +
 const boughtQ = q(B), boughtU = u(B), soldQ = q(S), soldU = u(S);
 const movedOut = boughtQ - soldQ - cl.holdsNow;   // what left the cluster, neither sold nor held
 const firstBuy = B.slice().sort((a, b) => a.ts.localeCompare(b.ts))[0];
+const hop = kase.secondHop;
+if (!hop) throw new Error("no secondHop block in the registry — run trace-second-hop.mjs first");
 const lastTrade = [...B, ...S].sort((a, b) => a.ts.localeCompare(b.ts)).at(-1);
 
 const W = 1200, H = 1200, mL = 100, mR = 196, mT = 268, mB = 372;
@@ -97,8 +102,8 @@ s += `<defs><clipPath id="pf"><circle cx="${ax}" cy="${ay}" r="${AR}"/></clipPat
 // where it all went — stated only as far as the chain proves
 let y = mT + PH + 96;
 s += `<line x1="${mL}" y1="${y - 40}" x2="${W - mL}" y2="${y - 40}" stroke="#ffffff" stroke-opacity="0.10"/>`;
-const cells = [["SOLD ON THE MARKET", `${f(soldQ)}`, `for $${f(soldU)} · ${Math.round(soldQ / boughtQ * 100)}% of what it bought`, RO2],
-               ["TRANSFERRED AWAY", `${f(movedOut)}`, "to 23 addresses, unlinkable", VI],
+const cells = [["SOLD ON THE MARKET", `${f(soldQ)}`, `for $${f(soldU)} \u00b7 ${Math.round(soldQ / boughtQ * 100)}% of it`, RO2],
+               ["TRANSFERRED AWAY", `${f(movedOut)}`, `to ${hop.recipients} wallets \u00b7 ${hop.soldIntoPool} of them sold it`, VI],
                ["HOLDS TODAY", "0", "nothing, since July 2024", "#94a3b8"]];
 const cw = (W - mL * 2) / 3;
 cells.forEach(([k, v, sub, c], i) => {
@@ -107,9 +112,10 @@ cells.forEach(([k, v, sub, c], i) => {
      + `<text x="${x}" y="${y + 48}" font-family="sans-serif" font-size="38" font-weight="800" fill="${c}">${esc(v)}</text>`
      + `<text x="${x}" y="${y + 80}" font-family="sans-serif" font-size="18" fill="#64748b">${esc(sub)}</text>`;
 });
-y += 132;
+y += 128;
 s += `<text x="${mL}" y="${y}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">What it bought would be worth $${f(boughtQ * spot)} today.</text>`
-   + `<text x="${mL}" y="${y + 36}" font-family="sans-serif" font-size="21" fill="#94a3b8">It realised $${f(soldU)} of that on the market. Where the rest went after it left, the chain does not say.</text>`;
+   + `<text x="${mL}" y="${y + 36}" font-family="sans-serif" font-size="21" fill="#94a3b8">It realised $${f(soldU)} on the market. Of the ${hop.recipients} wallets it sent the rest to, ${hop.soldIntoPool} sold into Uniswap.</text>`
+   + `<text x="${mL}" y="${y + 66}" font-family="sans-serif" font-size="21" fill="#94a3b8">No exchange existed to take it then, and not one opened a liquidity position.</text>`;
 s += `<text x="${mL}" y="${H - 40}" font-family="sans-serif" font-size="19" fill="#64748b">A profile picture never proves who owns a wallet — it is a lead, not an identity.</text>
 <text x="${W - 54}" y="${H - 40}" text-anchor="end" font-family="sans-serif" font-size="19" fill="#64748b">spx6900rainbow.xyz</text></svg>`;
 writeFileSync("/tmp/earlybird-card.png", new Resvg(s, { fitTo: { mode: "width", value: W }, font: FONT }).render().asPng());
