@@ -194,8 +194,8 @@
       "nftHolder": "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
       "nftHolderRole": "cold shelf: holds the NFT, 0.0003 ETH, and has never touched SPX",
       "trader": "0xce9a173965d13dbf7b509c94f314695363acada7",
-      "clusterWallets": 3,
-      "clusterNote": "0x5b403e9a -> 0x9f7e2f5e -> 0xce9a1739, linked by value-denominated drain-into-empty. Plus the NFT custody chain and 0x3542f155, linked by ETH gas only.",
+      "clusterWallets": 5,
+      "clusterNote": "5 wallets by scripts/cluster-pfp.mjs. A chain of complete self-drains ending in a two-wallet gather: 0x5b403e9a drains 2,795,456 into 0x9f7e2f5e, which drains 2,142,133 into 0xce9a1739; then on 2024-07-08, 0x98e97737 empties 1,630,000 into a fresh 0xc41e7f22 at 23:03:35 and 0xce9a1739 empties 2,000,000 into the same address 72 SECONDS later.",
       "buys": {
         "n": 2,
         "qty": 2843333,
@@ -215,35 +215,41 @@
         "price": 0.00609,
         "band": "Still Cheap"
       },
-      "holdsNow": 0,
-      "archetype": "distributor, exited",
-      "verdict": "Cluster bought 7.2M on the open market in Sep-Oct 2023, sold only 30% of it, moved the other 70% out, and holds nothing. Sold two ETH near the October 2023 top (its best trade), capitulated 40,000 into Fire Sale for $82, then bought the bottom in 'Still Cheap'. The 2,000,000 final drain went to a wallet gas-funded by ChangeNow, so the trail stops there.",
+      "holdsNow": 384955,
+      "archetype": "early, sold big, still holding",
+      "verdict": "Bought 10,256,465 SPX for $51,278 starting two weeks after launch, not one dollar of it in a bubble band. Sold 6,010,588 for $1,559,436. Consolidated the remainder into a fresh wallet and still holds 384,955, still selling into Uniswap in 2026.",
       "evidence": "case-14-evidence.md",
       "charts": [
         "14-rainbow.png",
         "14-outflow.png"
       ],
       "wallets": [
-        "0xce9a173965d13dbf7b509c94f314695363acada7",
         "0x5b403e9a31edbc845473e1fcfafb2ba0feb9ead6",
         "0x9f7e2f5e0266e5d69189a570a129a07e044b28c1",
-        "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
-        "0x640bfef7bcdd64675f9ebc98b157f5386424dac5",
-        "0x3542f155502840cc20b1255ad76054546717e89c"
+        "0xce9a173965d13dbf7b509c94f314695363acada7",
+        "0x98e97737b5c4f48893c41e715c910eb2db3f34eb",
+        "0xc41e7f2230200c7d1bb96a70343e3e0461714464"
       ],
       "clusterTrades": {
         "scope": "cluster",
+        "recomputed": "2026-09-21",
         "buys": {
-          "n": 17,
-          "usd": 33430,
+          "n": 24,
+          "qty": 10256465,
+          "usd": 51278,
+          "avgPrice": 0.005,
           "pctUsdBubblePlus": 0
         },
         "sells": {
-          "n": 11,
-          "usd": 12758,
-          "pctUsdBubblePlus": 33
+          "n": 25,
+          "qty": 6010588,
+          "usd": 1559436,
+          "avgPrice": 0.25945
         },
-        "recomputed": "2026-09-21"
+        "movedOut": 3860923,
+        "firstBuy": "2023-09-02",
+        "lastMarketTrade": "2026-05-05",
+        "note": "SUPERSEDES the earlier 7,206,588 bought / 2,249,039 sold / $12,758. Those were the pre-consolidation cluster, which could not see 0x98e97737 — a wallet that bought its own SPX on the open market and sold 3.7M into the 2024-25 highs."
       },
       "secondHop": {
         "ran": "2026-09-21",
@@ -256,7 +262,14 @@
         "stillHoldAny": 2,
         "finding": "They sold it, on-chain, into Uniswap. No exchange deposits and not one V3 liquidity position. The timeline forces it: this cluster emptied by 2024-07-08 and tagged exchanges held ZERO SPX until 2024-09-29, so a CEX deposit was impossible and the DEX was the only liquid venue.",
         "caveat": "COUNTS, NEVER SUMS. A fungible token cannot be tainted — once SPX lands in a wallet holding its own, no on-chain fact says which coins later left. A first pass that summed each recipient's whole history reported 68.9M of 'fate' against 4.96M actually sent, because one recipient is the Wormhole BRIDGE and another is case #1's trader. Tagged infrastructure is excluded and each row carries what share of that address's total inflow came from this cluster; several read 0%."
-      }
+      },
+      "nftCustody": [
+        "0x640bfef7bcdd64675f9ebc98b157f5386424dac5",
+        "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
+        "0x3542f155502840cc20b1255ad76054546717e89c"
+      ],
+      "nftCustodyNote": "These hold the NFT, not SPX — none has ever moved a single token, so SPX-flow clustering cannot see them. They are linked by the token's custody chain and by ETH gas, and they contribute nothing to any trading figure.",
+      "holdsNowNote": "384,955 SPX (~$204,232), all in 0xc41e7f22, still being sold into Uniswap as recently as 2026. CORRECTS an earlier reading of 0 — the consolidation was invisible to a 1-to-1 drain rule, which rejected the second gather because by then the target was no longer empty. ⚠ 0xc41e7f22 also received 2,000,000 in July 2025 from a Banana Gun-style router, so part of this balance may be trade proceeds rather than the original stack."
     }
   ],
   "sharedCharts": [

@@ -1,11 +1,17 @@
 // ============================================================================
-// EARLY-BIRD CARD — case #14: the best entry of the four, and none of it survived.
+// EARLY-BIRD CARD — case #14: bought early, sold big, still holding.
 // ============================================================================
 //   node research/pfp-forensics/make-earlybird-card.mjs   -> /tmp/earlybird-card.png
 //
-// This household bought 7.2M SPX for about $33,000 starting two weeks after launch, at
-// an average of $0.0046. It sold under a third on the market, moved the rest out, and
-// holds nothing. Its last market trade was June 2024.
+// Bought 10.3M SPX for $51,278 starting two weeks after launch at an average of $0.005,
+// with not one dollar of it in a bubble band. Sold 6.0M for $1,559,436. Consolidated the
+// remainder into a fresh wallet and still holds 384,955, still selling into Uniswap.
+//
+// ⚠ An earlier version of this card said "holds today: 0" and "then nothing for over two
+// years". Both were false. The cluster then was missing 0x98e97737 — a wallet that bought
+// its own SPX and sold 3.7M into the 2024-25 highs — because the consolidation that links
+// it was invisible to a 1-to-1 drain rule. Numbers here come from the registry's
+// clusterTrades block, recomputed after that fix.
 //
 // ⚠ WHAT THIS CARD MUST NOT SAY. "They left $3.8M on the table" would be a claim about
 // money we cannot follow. It states what was bought, what was sold ON THE MARKET, what
@@ -65,10 +71,10 @@ let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" view
 <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0b0b16"/><stop offset="100%" stop-color="#05050e"/></linearGradient></defs>
 <rect width="${W}" height="${H}" fill="url(#bg)"/>
 ${auraBg(GRN, W, H, { opacity: 0.24, accent2: VI })}${cardDepth(W, H)}${brandStripe(H)}
-<text x="${mL}" y="80" font-family="sans-serif" font-size="41" font-weight="800" fill="#f1f5f9">They bought 7.2 million SPX for $33,430</text>
-<text x="${mL}" y="130" font-family="sans-serif" font-size="41" font-weight="800" fill="${GRN2}">two weeks after launch</text>
-<text x="${mL}" y="176" font-family="sans-serif" font-size="23" fill="#94a3b8">Seventeen market buys averaging $0.0046 \u2014 the best entry of any wallet we have traced.</text>
-<text x="${mL}" y="212" font-family="sans-serif" font-size="21" fill="#64748b">AEON #${TOKEN} — identified from the profile picture. Last market trade: ${esc(lastTrade.ts.slice(0, 10))}.</text>
+<text x="${mL}" y="80" font-family="sans-serif" font-size="41" font-weight="800" fill="#f1f5f9">They bought 10.3 million SPX for $51,278</text>
+<text x="${mL}" y="130" font-family="sans-serif" font-size="41" font-weight="800" fill="${GRN2}">and have taken $1.56 million out</text>
+<text x="${mL}" y="176" font-family="sans-serif" font-size="23" fill="#94a3b8">Buying started two weeks after launch, averaging $0.005. Not one dollar in a bubble band.</text>
+<text x="${mL}" y="212" font-family="sans-serif" font-size="21" fill="#64748b">AEON #${TOKEN} \u2014 identified from the profile picture. Five wallets, linked by complete self-drains.</text>
 ${plotPanel(mL - 24, mT - 24, PW + 48, PH + 48)}`;
 
 const step = 7, ds = []; for (let d = t0; d <= t1; d += step) ds.push(d);
@@ -87,7 +93,7 @@ s += `</g>`;
 // the moment it stopped
 const lx = X(dayN(lastTrade.ts.slice(0, 10)));
 s += `<line x1="${r2(lx)}" y1="${mT}" x2="${r2(lx)}" y2="${mT + PH}" stroke="${VI}" stroke-width="2.4" stroke-dasharray="9 7" opacity="0.85"/>
-<text x="${r2(lx + 14)}" y="${mT + 32}" font-family="sans-serif" font-size="21" font-weight="700" fill="${VI}">then nothing — for over two years</text>`;
+<text x="${r2(lx - 14)}" y="${mT + 32}" text-anchor="end" font-family="sans-serif" font-size="21" font-weight="700" fill="${VI}">last market trade</text>`;
 for (const p of [0.01, 0.1, 1]) s += `<text x="${mL - 14}" y="${r2(Y(p) + 7)}" text-anchor="end" font-family="sans-serif" font-size="21" fill="#94a3b8">$${p < 1 ? p.toFixed(2) : p.toFixed(0)}</text>`;
 for (let yy = 2024; yy <= 2026; yy++) { const x = X(dayN(`${yy}-01-01`));
   s += `<text x="${r2(x)}" y="${mT + PH + 38}" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#94a3b8">${yy}</text>`; }
@@ -102,9 +108,9 @@ s += `<defs><clipPath id="pf"><circle cx="${ax}" cy="${ay}" r="${AR}"/></clipPat
 // where it all went — stated only as far as the chain proves
 let y = mT + PH + 96;
 s += `<line x1="${mL}" y1="${y - 40}" x2="${W - mL}" y2="${y - 40}" stroke="#ffffff" stroke-opacity="0.10"/>`;
-const cells = [["SOLD ON THE MARKET", `${f(soldQ)}`, `for $${f(soldU)} \u00b7 ${Math.round(soldQ / boughtQ * 100)}% of it`, RO2],
-               ["TRANSFERRED AWAY", `${f(movedOut)}`, `to ${hop.recipients} wallets \u00b7 ${hop.soldIntoPool} of them sold it`, VI],
-               ["HOLDS TODAY", "0", "nothing, since July 2024", "#94a3b8"]];
+const cells = [["SOLD ON THE MARKET", `$${f(soldU)}`, `${f(soldQ)} SPX \u00b7 ${Math.round(soldQ / boughtQ * 100)}% of it`, RO2],
+               ["MOVED ON", `${f(movedOut)}`, `SPX, to ${hop.recipients} addresses`, VI],
+               ["STILL HOLDS", `${f(cl.holdsNow)}`, `SPX \u00b7 still selling in 2026`, "#67e8f9"]];
 const cw = (W - mL * 2) / 3;
 cells.forEach(([k, v, sub, c], i) => {
   const x = mL + i * cw;
@@ -113,9 +119,9 @@ cells.forEach(([k, v, sub, c], i) => {
      + `<text x="${x}" y="${y + 80}" font-family="sans-serif" font-size="18" fill="#64748b">${esc(sub)}</text>`;
 });
 y += 128;
-s += `<text x="${mL}" y="${y}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">What it bought would be worth $${f(boughtQ * spot)} today.</text>`
-   + `<text x="${mL}" y="${y + 36}" font-family="sans-serif" font-size="21" fill="#94a3b8">It realised $${f(soldU)} on the market. Of the ${hop.recipients} wallets it sent the rest to, ${hop.soldIntoPool} sold into Uniswap.</text>`
-   + `<text x="${mL}" y="${y + 66}" font-family="sans-serif" font-size="21" fill="#94a3b8">No exchange existed to take it then, and not one opened a liquidity position.</text>`;
+s += `<text x="${mL}" y="${y}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">Two of these wallets emptied into one fresh address, 72 seconds apart.</text>`
+   + `<text x="${mL}" y="${y + 36}" font-family="sans-serif" font-size="21" fill="#94a3b8">That address still holds ${f(cl.holdsNow)} SPX and is still selling. It is why this household is still here.</text>`
+   + `<text x="${mL}" y="${y + 66}" font-family="sans-serif" font-size="21" fill="#94a3b8">Part of its balance arrived later from a router, so not all of it traces to those 2023 buys.</text>`;
 s += `<text x="${mL}" y="${H - 40}" font-family="sans-serif" font-size="19" fill="#64748b">A profile picture never proves who owns a wallet — it is a lead, not an identity.</text>
 <text x="${W - 54}" y="${H - 40}" text-anchor="end" font-family="sans-serif" font-size="19" fill="#64748b">spx6900rainbow.xyz</text></svg>`;
 writeFileSync("/tmp/earlybird-card.png", new Resvg(s, { fitTo: { mode: "width", value: W }, font: FONT }).render().asPng());
