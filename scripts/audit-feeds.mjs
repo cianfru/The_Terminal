@@ -109,6 +109,10 @@ export const FEEDS = [
     // traded). `owners` moves every week, so it proves liveness without a standing warn
     // that would train us to ignore this row.
     window: 6, fields: ["owners", "dist", "age"], nonEmpty: ["holders"] },
+  { file: "wallet-archetypes.json", cadence: 3, by: "onchain-dune.yml", what: "what active wallets DO: router, accumulator, drainer",
+    // Derived from cex-sankey.json's 90-day profiles, so it is only as fresh as that. A document,
+    // not a series: `counts` present and the wallet list non-empty is what proves it ran.
+    require: ["counts", "n"], nonEmpty: ["wallets"] },
   { file: "aeon-clusters.json", cadence: 3, by: "aeon.yml", what: "AEON owner clusters, holding vs selling",
     // A current-state document, not a time series, so it is checked the way aeon-market.json is:
     // top-level counts must be present and the cluster list must not be empty. `owners` going
