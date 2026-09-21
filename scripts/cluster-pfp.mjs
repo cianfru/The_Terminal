@@ -30,6 +30,12 @@ const RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org", "ht
 // A gas funder is only evidence if it funds a HANDFUL of wallets. One funder on case #14 fed
 // 42 distinct addresses — a service, worth nothing. The production engine's hub guard is 8.
 export const MAX_FUNDED = 8;
+
+// The same guard has to apply to DRAINS, or the tool over-merges on a payout wallet. A drain
+// EMPTIES the sender, so a person migrating can only do it once per refill; a wallet that
+// repeatedly empties itself into different fresh wallets is distributing, not migrating.
+// Tighter than MAX_FUNDED because drain-into-empty is otherwise the stronger claim of the two.
+export const MAX_DRAINED = 4;
 export const DRAIN_FRAC = 0.90;
 export const MAX_DEPTH = 3;
 
@@ -103,6 +109,11 @@ async function ledger(a) {
   return led[a];
 }
 
+/** Distinct wallets A has ever sent SPX to. Many = a distributor, so its drains prove nothing. */
+export async function drainFanOut(a, rows) {
+  return new Set((rows ?? await ledger(a)).filter(r => r.dir === "OUT" && r.cp).map(r => r.cp)).size;
+}
+
 /** Everyone A ever paid gas to. Few recipients = evidence; many = a service. */
 async function gasOut(a) {
   const txs = await pages(`/addresses/${a}/transactions`, 4);
@@ -131,9 +142,15 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
       if (!(b in depth)) { depth[b] = depth[a] + 1; queue.push(b); }
     }
 
-    for (const r of await ledger(a)) {
+    const rows = await ledger(a);
+    const myFanOut = await drainFanOut(a, rows);
+    if (myFanOut > MAX_DRAINED) process.stderr.write(`  ${a}: sends SPX to ${myFanOut} wallets — distributor, outbound drains dropped\n`);
+
+    for (const r of rows) {
       if (!r.cp || await skip(r.cp)) continue;
       const other = r.dir === "OUT" ? r.cp : a, from = r.dir === "OUT" ? a : r.cp;
+      // guard the SENDER of this particular link, whichever side it is
+      if (await drainFanOut(from) > MAX_DRAINED) continue;
       const sOut = (await ledger(from)).find(x => x.tx === r.tx && x.dir === "OUT");
       const rIn  = (await ledger(r.dir === "OUT" ? r.cp : a)).find(x => x.tx === r.tx && x.dir === "IN");
       if (!isDrainIntoEmpty(sOut, rIn)) continue;

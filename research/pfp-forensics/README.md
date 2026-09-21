@@ -10,7 +10,7 @@ case yet of someone accumulating steadily and sitting on it — the thing the pi
 |---|---|---|---|---|
 | **#2451** | sold into strength | 57% | **80%** | 410,591 |
 | **#3062** | bought the top, sold the dip | **83%** | 0% | 58,918 |
-| **#2559** | FOMO, then diamond hands | **100%** | — never sold | 8,558 |
+| **#2559** | FOMO, then diamond hands | **100%** | — never sold | 8,558 *(38,618 across 5 wallets)* |
 | **#14** | distributor, exited | 0% | 43% | **0** |
 
 Four cases is four cases — it is a pattern, not a proven population claim. The honest framing is
@@ -71,6 +71,14 @@ No value bar on self-moves. Structure over size:
   ⚠ Guard hard: one funder in that case fed **42 distinct wallets** — a service, worth nothing.
 - **Drain into empty** — a wallet empties ≥90% into a wallet that held nothing before. Both
   conditions. At **any** size, because a 500-SPX self-move is still a self-move.
+  ⚠ Guarded the same way: a wallet that repeatedly empties itself into *different* fresh wallets
+  is distributing, not migrating. A drain empties the sender, so a person can only do it once per
+  refill — the bound is tighter than the gas one.
+
+**Proof the bar mattered.** Run on #2559, these rules find **5 wallets holding 38,618 SPX**, linked by
+drains of **876 and 98 SPX**. The production engine reported one wallet with 8,558, because every one
+of those links is three orders of magnitude below its 50,000 floor. One of the wallets it missed,
+`0xf87fb68d`, holds **28,921 SPX — more than the wallet wearing the picture**.
 - **Never** through a tagged CEX / LP / contract, and never a partial send between two live wallets.
 
 Also: **an EIP-7702 delegated EOA is not a contract.** Code beginning `0xef0100` is a delegation

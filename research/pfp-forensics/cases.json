@@ -5,7 +5,10 @@
   "spxContract": "0xE0f63A424a4439cBE457d80e4f4b51ad25b2c56C",
   "updated": "2026-09-21",
   "bandMeasure": "share of USD traded in band index >= 5 ('Bubble?' or hotter) on the frozen rainbow; model never re-fitted",
-  "priceAsOf": { "date": "2026-09-21", "spot": 0.4834 },
+  "priceAsOf": {
+    "date": "2026-09-21",
+    "spot": 0.4834
+  },
   "handlesPolicy": "X handles are deliberately NOT stored. A profile picture does not prove wallet ownership, and the repo is public. Cases are keyed by token id and address, both public chain data.",
   "cases": [
     {
@@ -16,13 +19,34 @@
       "trader": "0x9c968da4e5fd7b6a4709b993cc21c8ef0eb26f6e",
       "clusterWallets": 3,
       "clusterNote": "trader + vault 0x210ccbd5 (401,900 untouched since Nov-2024) + PFP shelf",
-      "buys":  { "n": 23, "qty": 1092436, "usd": 64095, "avgPrice": 0.0587, "pctUsdBubblePlus": 57 },
-      "sells": { "n": 23, "qty": 836673,  "usd": 247593, "avgPrice": 0.2959, "pctUsdBubblePlus": 80 },
-      "firstBuy": { "date": "2023-10-25", "price": 0.02659, "band": "Max Bubble" },
+      "buys": {
+        "n": 23,
+        "qty": 1092436,
+        "usd": 64095,
+        "avgPrice": 0.0587,
+        "pctUsdBubblePlus": 57
+      },
+      "sells": {
+        "n": 23,
+        "qty": 836673,
+        "usd": 247593,
+        "avgPrice": 0.2959,
+        "pctUsdBubblePlus": 80
+      },
+      "firstBuy": {
+        "date": "2023-10-25",
+        "price": 0.02659,
+        "band": "Max Bubble"
+      },
       "holdsNow": 410591,
       "archetype": "sold into strength",
       "verdict": "Recovered 3.9x cost by selling 80% of dollars into 'Bubble?' or hotter, including $109,304 at Max Bubble. Also bought $33,110 at Max Bubble. Still holds 410,591 SPX, most of it vaulted. The best-timed of the four, and still not a DCA holder.",
-      "charts": ["2451-nft-timeline.png", "2451-buys-and-sells.png", "2451-rainbow.png", "2451-cluster.png"]
+      "charts": [
+        "2451-nft-timeline.png",
+        "2451-buys-and-sells.png",
+        "2451-rainbow.png",
+        "2451-cluster.png"
+      ]
     },
     {
       "token": 3062,
@@ -32,13 +56,34 @@
       "trader": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
       "clusterWallets": 8,
       "clusterNote": "trader + 7 vaults that never send back; 4 opened outright (gas AND tokens), 2 of those nonce-0 holding exactly what he sent",
-      "buys":  { "n": 13, "qty": 22982, "usd": 18048, "avgPrice": 0.7853, "pctUsdBubblePlus": 83 },
-      "sells": { "n": 1,  "qty": 3333,  "usd": 2026,  "avgPrice": 0.6080, "pctUsdBubblePlus": 0 },
-      "firstBuy": { "date": "2025-01-06", "price": 1.5515, "band": "Max Bubble" },
+      "buys": {
+        "n": 13,
+        "qty": 22982,
+        "usd": 18048,
+        "avgPrice": 0.7853,
+        "pctUsdBubblePlus": 83
+      },
+      "sells": {
+        "n": 1,
+        "qty": 3333,
+        "usd": 2026,
+        "avgPrice": 0.608,
+        "pctUsdBubblePlus": 0
+      },
+      "firstBuy": {
+        "date": "2025-01-06",
+        "price": 1.5515,
+        "band": "Max Bubble"
+      },
       "holdsNow": 58918,
       "archetype": "bought the top, sold the dip",
       "verdict": "The mirror image of #2451. 83% of dollars spent went in at 'Bubble?' or hotter, $9,483 of it at Max Bubble; the single sale was into weakness. The trader wallet itself keeps 138 SPX — everything else sits in vaults that have never traded.",
-      "charts": ["3062-custody-chain.png", "3062-rainbow.png", "3062-flow.png", "3062-cluster.png"]
+      "charts": [
+        "3062-custody-chain.png",
+        "3062-rainbow.png",
+        "3062-flow.png",
+        "3062-cluster.png"
+      ]
     },
     {
       "token": 2559,
@@ -46,15 +91,34 @@
       "nftHolder": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
       "nftHolderRole": "holds it directly",
       "trader": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
-      "clusterWallets": 1,
-      "clusterNote": "no linked wallets found",
-      "buys":  { "n": 10, "qty": 2617, "usd": 4936, "avgPrice": 1.8861, "pctUsdBubblePlus": 100 },
-      "sells": { "n": 0,  "qty": 0,    "usd": 0,    "avgPrice": null,   "pctUsdBubblePlus": 0 },
-      "firstBuy": { "date": "2025-07-07", "price": 1.2613, "band": "Bubble?" },
-      "holdsNow": 8558,
+      "clusterWallets": 5,
+      "clusterNote": "5 wallets, found by scripts/cluster-pfp.mjs: the holder 0x3de73aec, 0xf87fb68d (28,921 SPX — more than the NFT holder itself), 0x7e4d2336 (1,139), 0x619a6035 and 0x8114c302 (both empty). Linked by two drain-into-empty moves of 876 and 98 SPX, plus gas. Every one of those links is far below the production engine's 50,000 floor, which is why it reported a single wallet.",
+      "buys": {
+        "n": 10,
+        "qty": 2617,
+        "usd": 4936,
+        "avgPrice": 1.8861,
+        "pctUsdBubblePlus": 100
+      },
+      "sells": {
+        "n": 0,
+        "qty": 0,
+        "usd": 0,
+        "avgPrice": null,
+        "pctUsdBubblePlus": 0
+      },
+      "firstBuy": {
+        "date": "2025-07-07",
+        "price": 1.2613,
+        "band": "Bubble?"
+      },
+      "holdsNow": 38618,
       "archetype": "FOMO, then diamond hands",
       "verdict": "Every dollar went in at 'Bubble?' or hotter, the largest buy three days before the all-time high. Has never sold. Down about 74%. The only genuine holder of the four, and he bought exactly wrong.",
-      "charts": ["2559-rainbow.png"]
+      "charts": [
+        "2559-rainbow.png"
+      ],
+      "holdsNowNote": "38,618 across the cluster; 8,558 in the wallet that holds the NFT. The registry first recorded 8,558 — the single-wallet read, corrected once the no-minimum rules ran."
     },
     {
       "token": 14,
@@ -64,20 +128,51 @@
       "trader": "0xce9a173965d13dbf7b509c94f314695363acada7",
       "clusterWallets": 3,
       "clusterNote": "0x5b403e9a -> 0x9f7e2f5e -> 0xce9a1739, linked by value-denominated drain-into-empty. Plus the NFT custody chain and 0x3542f155, linked by ETH gas only.",
-      "buys":  { "n": 2, "qty": 2843333, "usd": 17864, "avgPrice": 0.00628, "pctUsdBubblePlus": 0 },
-      "sells": { "n": 7, "qty": 839674,  "usd": 7299,  "avgPrice": 0.00869, "pctUsdBubblePlus": 43 },
-      "firstBuy": { "date": "2024-03-02", "price": 0.00609, "band": "Still Cheap" },
+      "buys": {
+        "n": 2,
+        "qty": 2843333,
+        "usd": 17864,
+        "avgPrice": 0.00628,
+        "pctUsdBubblePlus": 0
+      },
+      "sells": {
+        "n": 7,
+        "qty": 839674,
+        "usd": 7299,
+        "avgPrice": 0.00869,
+        "pctUsdBubblePlus": 43
+      },
+      "firstBuy": {
+        "date": "2024-03-02",
+        "price": 0.00609,
+        "band": "Still Cheap"
+      },
       "holdsNow": 0,
       "archetype": "distributor, exited",
       "verdict": "Cluster bought 7.2M on the open market in Sep-Oct 2023, sold only 30% of it, moved the other 70% out, and holds nothing. Sold two ETH near the October 2023 top (its best trade), capitulated 40,000 into Fire Sale for $82, then bought the bottom in 'Still Cheap'. The 2,000,000 final drain went to a wallet gas-funded by ChangeNow, so the trail stops there.",
       "evidence": "case-14-evidence.md",
-      "charts": ["14-rainbow.png", "14-outflow.png"]
+      "charts": [
+        "14-rainbow.png",
+        "14-outflow.png"
+      ]
     }
   ],
   "sharedCharts": [
-    { "file": "method-identification.png", "what": "from a fragment of a picture to a named token" },
-    { "file": "method-structure.png",      "what": "from a picture to the structure behind it" },
-    { "file": "aeon-ownership.png",        "what": "who actually owns Project AEON: 1,173 wallets, 1,158 owners" },
-    { "file": "wallet-archetypes.png",     "what": "of 400 wallets with genuine two-way SPX activity, twelve are net accumulating" }
+    {
+      "file": "method-identification.png",
+      "what": "from a fragment of a picture to a named token"
+    },
+    {
+      "file": "method-structure.png",
+      "what": "from a picture to the structure behind it"
+    },
+    {
+      "file": "aeon-ownership.png",
+      "what": "who actually owns Project AEON: 1,173 wallets, 1,158 owners"
+    },
+    {
+      "file": "wallet-archetypes.png",
+      "what": "of 400 wallets with genuine two-way SPX activity, twelve are net accumulating"
+    }
   ]
 }

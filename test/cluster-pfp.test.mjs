@@ -73,3 +73,24 @@ test("the gas-funder guard is tight enough to reject a service", () => {
   // One funder on case #14 fed 42 distinct wallets. Whatever the number, it must reject that.
   assert.ok(MAX_FUNDED < 42);
 });
+
+test("drainFanOut counts distinct SPX recipients, not transfers", async () => {
+  const { drainFanOut } = await import("../scripts/cluster-pfp.mjs");
+  const rows = [
+    { dir: "OUT", cp: "0xaaa" }, { dir: "OUT", cp: "0xaaa" },  // same wallet twice = one recipient
+    { dir: "OUT", cp: "0xbbb" },
+    { dir: "IN",  cp: "0xccc" },                                // inbound never counts
+    { dir: "OUT", cp: null },                                   // malformed rows are skipped
+  ];
+  assert.equal(await drainFanOut("0xme", rows), 2);
+});
+
+test("the distributor guard is tighter than the gas guard", async () => {
+  const { MAX_DRAINED, MAX_FUNDED } = await import("../scripts/cluster-pfp.mjs");
+  // A drain EMPTIES the sender, so migrating can only happen once per refill. Repeatedly
+  // emptying into different fresh wallets is a payout pattern, and it is the stronger
+  // claim of the two rules — so it gets the tighter bound.
+  assert.ok(MAX_DRAINED < MAX_FUNDED);
+  // Case #2559's drain source sends to 2 wallets and must survive the guard.
+  assert.ok(2 <= MAX_DRAINED, "a genuine two-wallet self-move must not be dropped");
+});
