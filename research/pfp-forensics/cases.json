@@ -55,8 +55,8 @@
       "nftHolder": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
       "nftHolderRole": "the trader holds it directly",
       "trader": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
-      "clusterWallets": 8,
-      "clusterNote": "trader + 7 vaults that never send back; 4 opened outright (gas AND tokens), 2 of those nonce-0 holding exactly what he sent ⚠ PENDING RE-VERIFICATION: the first tooled re-runs returned 1 wallet because the service and distributor guards fired on a vault operator, who funds many wallets by definition. Numbers here are the hand read until a vault-rule run confirms them.",
+      "clusterWallets": 5,
+      "clusterNote": "5 wallets by scripts/cluster-pfp.mjs (core tier) — the trader 0xa76e3bec, which keeps only 138 SPX, plus four vaults holding 11,018 / 10,100 / 9,509 / 5,877. All four have ZERO outbound transfers in their full history; the trader funded them and they have never moved a token.",
       "buys": {
         "n": 13,
         "qty": 22982,
@@ -76,15 +76,16 @@
         "price": 1.5515,
         "band": "Max Bubble"
       },
-      "holdsNow": 58918,
+      "holdsNow": 36642,
       "archetype": "bought the top, sold the dip",
-      "verdict": "The mirror image of #2451. 83% of dollars spent went in at 'Bubble?' or hotter, $9,483 of it at Max Bubble; the single sale was into weakness. The trader wallet itself keeps 138 SPX — everything else sits in vaults that have never traded.",
+      "verdict": "The mirror image of #2451. 83% of dollars spent went in at 'Bubble?' or hotter, $9,483 of it at Max Bubble; the single sale was into weakness. The trader wallet itself keeps 138 SPX — everything else sits in four vaults that have never traded.",
       "charts": [
         "3062-custody-chain.png",
         "3062-rainbow.png",
         "3062-flow.png",
         "3062-cluster.png"
-      ]
+      ],
+      "holdsNowNote": "36,642 across the core tier; 138 in the wallet that holds the NFT. CORRECTS an earlier hand read of 8 wallets / 58,918, which was too permissive: it counted 'never sends back to the trader' as a vault, but 0xe4f350fc (4,392) has spent twice and 0x01b1fd71 (3,200) once, so both are ordinary wallets. The third excluded, 0x083cc187 (14,684), IS inert — zero outbound ever — but the only link to the trader is a 1-SPX dust send made while it already held 2,683, which is not evidence of common ownership. It stays out; if it belongs, the proof has to come from somewhere else."
     },
     {
       "token": 2559,

@@ -9,7 +9,7 @@ case yet of someone accumulating steadily and sitting on it — the thing the pi
 | token | archetype | buy $ in "Bubble?"+ | sell $ in "Bubble?"+ | holds today |
 |---|---|---|---|---|
 | **#2451** | sold into strength | 57% | **80%** | 410,623 *(6 wallets; 98% of it in one vault)* |
-| **#3062** | bought the top, sold the dip | **83%** | 0% | 58,918 |
+| **#3062** | bought the top, sold the dip | **83%** | 0% | 36,642 *(5 wallets; the trader keeps 138)* |
 | **#2559** | FOMO, then diamond hands | **100%** | — never sold | 8,558 *(38,618 across 5 wallets)* |
 | **#14** | distributor, exited | 0% | 43% | **0** |
 
@@ -81,6 +81,15 @@ No value bar on self-moves. Structure over size:
   ⚠ Guarded the same way: a wallet that repeatedly empties itself into *different* fresh wallets
   is distributing, not migrating. A drain empties the sender, so a person can only do it once per
   refill — the bound is tighter than the gas one.
+
+### The tool corrected a hand read, not just the other way round
+
+On #3062 the hand read said 8 wallets / 58,918 by counting "never sends back to the trader" as a
+vault. Two of those have spent (4,392 and 3,200), so they are ordinary wallets. A third,
+`0x083cc187` holding 14,684, genuinely is inert — zero outbound ever — but the only link to the
+trader is a **1-SPX dust send** made while it already held 2,683. That is not evidence of common
+ownership, so it stays out. Strict definition, stated: **a vault has never sent SPX anywhere, and
+held nothing before the send that linked it.**
 
 ### Two tiers, never summed
 
