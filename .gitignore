@@ -65,3 +65,6 @@ tools/incident/
 tools/nft-id/out/
 __pycache__/
 *.pyc
+
+# Watcher preview cards, rendered on every dry run. Scratch, never served.
+kol-sale-preview.png

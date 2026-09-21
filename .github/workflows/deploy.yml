@@ -30,6 +30,7 @@ on:
       - "public/notable.json"
       - "public/daily-snapshot.json"
       - "public/aeon-sale-state.json"
+      - "public/kol-watch-state.json"
       - "public/aeon-listing-alert-state.json"
       - "public/whale-signals.json"
       - "public/whale-state.json"

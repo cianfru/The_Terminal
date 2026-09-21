@@ -1,0 +1,57 @@
+# ============================================================================
+# KOL WATCH — post when a tracked PFP household sells.
+# ============================================================================
+# Cluster #2451 is the first tracked case: the wallet behind AEON #2451 (rank 2 of
+# 3,333), which has sold 77% of everything it bought and still holds 410,623 SPX.
+#
+# Measured cadence: ~1-2 external moves a month recently. No size floor by owner's
+# call — the LANE caps this at one post per day, and every fired sale is remembered
+# so the same one can never post twice.
+#
+# KILL SWITCH: set repo variable KOL_WATCH_DRY_RUN=1 to silence it instantly. Dry
+# runs still detect and render, they just post nothing.
+name: KOL watch
+
+on:
+  schedule:
+    - cron: "37 */4 * * *"      # every 4h, off the hour so it does not pile onto the other crons
+  workflow_dispatch:
+    inputs:
+      token:
+        description: "AEON token id to watch"
+        default: "2451"
+      dry_run:
+        description: "1 = detect and render only"
+        default: ""
+
+concurrency:
+  group: kol-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - run: npm ci --no-audit --no-fund
+
+      - name: Watch the tracked cluster for a sell
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
+          KOL_WATCH_DRY_RUN: ${{ github.event.inputs.dry_run || vars.KOL_WATCH_DRY_RUN }}
+        run: node scripts/bot/kol-watch.mjs --token=${{ github.event.inputs.token || '2451' }}
+
+      - name: Remember what was posted
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/kol-watch-state.json public/post-state.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -m "chore: kol-watch state [skip deploy]"
+          git push || true

@@ -47,7 +47,15 @@
         "2451-rainbow.png",
         "2451-cluster.png"
       ],
-      "holdsNowNote": "410,623 across the core tier; 8,001 in the trader wallet itself. The vault is 98% of the household and is invisible to any rule with a size floor or a drain requirement — it was funded by a partial send and has never transacted."
+      "holdsNowNote": "410,623 across the core tier; 8,001 in the trader wallet itself. The vault is 98% of the household and is invisible to any rule with a size floor or a drain requirement — it was funded by a partial send and has never transacted.",
+      "wallets": [
+        "0x9c968da4e5fd7b6a4709b993cc21c8ef0eb26f6e",
+        "0x210ccbd54e277267123e3c173f8626feefa2fb5b",
+        "0x655048fd3301fb9d767071772ddc055ae30a94da",
+        "0xd0eb20581641e421e750947e71c6b32411bbb094",
+        "0x47a0e728cdc6b0da7bb69fb365dbdb77aada6677",
+        "0x2719d392e418f2e93d8ebd2b830a8bf5e30f7d69"
+      ]
     },
     {
       "token": 3062,
@@ -85,7 +93,14 @@
         "3062-flow.png",
         "3062-cluster.png"
       ],
-      "holdsNowNote": "36,642 across the core tier; 138 in the wallet that holds the NFT. CORRECTS an earlier hand read of 8 wallets / 58,918, which was too permissive: it counted 'never sends back to the trader' as a vault, but 0xe4f350fc (4,392) has spent twice and 0x01b1fd71 (3,200) once, so both are ordinary wallets. The third excluded, 0x083cc187 (14,684), IS inert — zero outbound ever — but the only link to the trader is a 1-SPX dust send made while it already held 2,683, which is not evidence of common ownership. It stays out; if it belongs, the proof has to come from somewhere else."
+      "holdsNowNote": "36,642 across the core tier; 138 in the wallet that holds the NFT. CORRECTS an earlier hand read of 8 wallets / 58,918, which was too permissive: it counted 'never sends back to the trader' as a vault, but 0xe4f350fc (4,392) has spent twice and 0x01b1fd71 (3,200) once, so both are ordinary wallets. The third excluded, 0x083cc187 (14,684), IS inert — zero outbound ever — but the only link to the trader is a 1-SPX dust send made while it already held 2,683, which is not evidence of common ownership. It stays out; if it belongs, the proof has to come from somewhere else.",
+      "wallets": [
+        "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
+        "0x7dd7c1936db6b71650befa12f1d97e17ccbc407f",
+        "0x2520343cc425f5c4c88324eaf5f6b0d639db9487",
+        "0xea95f1e4799dc01313bb358fecd10f24760c1b61",
+        "0x8b84931a7e78b539071b8ae4e4a2bf2e7b124ad7"
+      ]
     },
     {
       "token": 2559,
@@ -120,7 +135,14 @@
       "charts": [
         "2559-rainbow.png"
       ],
-      "holdsNowNote": "38,618 across the cluster; 8,558 in the wallet that holds the NFT. The registry first recorded 8,558 — the single-wallet read, corrected once the no-minimum rules ran."
+      "holdsNowNote": "38,618 across the cluster; 8,558 in the wallet that holds the NFT. The registry first recorded 8,558 — the single-wallet read, corrected once the no-minimum rules ran.",
+      "wallets": [
+        "0x3de73aec76602bab50fe9499d6f230b653e9d619",
+        "0xf87fb68dabc9b552f6245fa6b8d17e9fdabd15de",
+        "0x7e4d233667a97f998c78f4f97076a1da50820d35",
+        "0x619a60351d23c9ad08e3a3b8fdf9a714a22490f3",
+        "0x8114c302232c8db065a8e1be1594253c388c0c1d"
+      ]
     },
     {
       "token": 14,
@@ -156,6 +178,14 @@
       "charts": [
         "14-rainbow.png",
         "14-outflow.png"
+      ],
+      "wallets": [
+        "0xce9a173965d13dbf7b509c94f314695363acada7",
+        "0x5b403e9a31edbc845473e1fcfafb2ba0feb9ead6",
+        "0x9f7e2f5e0266e5d69189a570a129a07e044b28c1",
+        "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
+        "0x640bfef7bcdd64675f9ebc98b157f5386424dac5",
+        "0x3542f155502840cc20b1255ad76054546717e89c"
       ]
     }
   ],
@@ -176,5 +206,6 @@
       "file": "wallet-archetypes.png",
       "what": "of 400 wallets with genuine two-way SPX activity, twelve are net accumulating"
     }
-  ]
+  ],
+  "walletsNote": "Full member addresses, machine-readable. The bot reads THIS, not the prose note — clusterNote writes addresses short for readability and a regex over it found 2 of 6 wallets."
 }
