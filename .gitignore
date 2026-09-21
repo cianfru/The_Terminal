@@ -54,3 +54,14 @@ aeon-sweep-preview.png
 # (api/auth?action=data), never committed to the public repo. (whales.json + spx-timeline.json are
 # PUBLIC — SPX City is a public showpiece — so they are NOT ignored.)
 public/entities.json
+
+# ── INCIDENT RECORD — NEVER COMMITTED ──
+# tools/incident/ holds the working file for a platform appeal: third-party handles,
+# screenshots and timestamps. This repo is PUBLIC. Nothing in it may be published.
+tools/incident/
+
+# NFT identification index: a ~395 MB npz of ORB descriptors rebuilt from public
+# metadata in seconds, plus Python bytecode. Regenerate, never commit.
+tools/nft-id/out/
+__pycache__/
+*.pyc
