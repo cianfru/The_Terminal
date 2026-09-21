@@ -61,3 +61,9 @@ public/entities.json
 # be published by accident, so the whole directory is ignored — the generator in
 # scripts/incident-report.mjs reads and writes only in there.
 tools/incident/
+
+# The AEON visual index (tools/nft-id/out/aeon-index.npz) is ~100 MB of ORB descriptors rebuilt
+# from the collection's public images by tools/nft-id/build_index.py — derived data, never committed.
+tools/nft-id/out/
+__pycache__/
+*.pyc
