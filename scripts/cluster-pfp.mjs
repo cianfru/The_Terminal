@@ -109,16 +109,30 @@ async function ledger(a) {
   return led[a];
 }
 
-/** Distinct wallets A has ever sent SPX to. Many = a distributor, so its drains prove nothing. */
-export async function drainFanOut(a, rows) {
-  return new Set((rows ?? await ledger(a)).filter(r => r.dir === "OUT" && r.cp).map(r => r.cp)).size;
+/** Distinct PLAIN WALLETS A has ever sent SPX to. Many = a distributor, so its drains prove
+ *  nothing. Infrastructure must not count: an active trader selling into Uniswap racks up
+ *  "recipients" that are pools, and reads as a distributor when it is just someone trading.
+ *  That mistake silenced case #2451 entirely — 15 counted recipients, mostly pools. */
+export async function drainFanOut(a, rows, skip = async () => false) {
+  const cps = new Set((rows ?? await ledger(a)).filter(r => r.dir === "OUT" && r.cp).map(r => r.cp));
+  let n = 0;
+  for (const cp of cps) if (!await skip(cp)) n++;
+  return n;
 }
 
-/** Everyone A ever paid gas to. Few recipients = evidence; many = a service. */
-async function gasOut(a) {
+/** Every PLAIN WALLET A ever paid gas to. Few = evidence; many = a service. ETH sent to a
+ *  contract is a transaction fee or a swap, never "funding someone's wallet", so it is not
+ *  counted and its link is not offered. */
+async function gasOut(a, skip = async () => false) {
   const txs = await pages(`/addresses/${a}/transactions`, 4);
-  const sends = txs.filter(t => t.from?.hash?.toLowerCase() === a && Number(t.value || 0) > 0);
-  const dests = new Set(sends.map(t => t.to?.hash?.toLowerCase()).filter(Boolean));
+  const sends = [];
+  for (const t of txs) {
+    if (t.from?.hash?.toLowerCase() !== a || !(Number(t.value || 0) > 0)) continue;
+    const to = t.to?.hash?.toLowerCase();
+    if (!to || await skip(to)) continue;
+    sends.push(t);
+  }
+  const dests = new Set(sends.map(t => t.to.hash.toLowerCase()));
   return { dests, service: dests.size > MAX_FUNDED, sends };
 }
 
@@ -133,7 +147,7 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
     seen.add(a);
     if (await skip(a) || depth[a] >= maxDepth) continue;
 
-    const { dests, service, sends } = await gasOut(a);
+    const { dests, service, sends } = await gasOut(a, skip);
     if (service) process.stderr.write(`  ${a}: funds ${dests.size} wallets — service, gas links dropped\n`);
     else for (const t of sends) {
       const b = t.to?.hash?.toLowerCase();
@@ -143,14 +157,14 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
     }
 
     const rows = await ledger(a);
-    const myFanOut = await drainFanOut(a, rows);
+    const myFanOut = await drainFanOut(a, rows, skip);
     if (myFanOut > MAX_DRAINED) process.stderr.write(`  ${a}: sends SPX to ${myFanOut} wallets — distributor, outbound drains dropped\n`);
 
     for (const r of rows) {
       if (!r.cp || await skip(r.cp)) continue;
       const other = r.dir === "OUT" ? r.cp : a, from = r.dir === "OUT" ? a : r.cp;
       // guard the SENDER of this particular link, whichever side it is
-      if (await drainFanOut(from) > MAX_DRAINED) continue;
+      if (await drainFanOut(from, null, skip) > MAX_DRAINED) continue;
       const sOut = (await ledger(from)).find(x => x.tx === r.tx && x.dir === "OUT");
       const rIn  = (await ledger(r.dir === "OUT" ? r.cp : a)).find(x => x.tx === r.tx && x.dir === "IN");
       if (!isDrainIntoEmpty(sOut, rIn)) continue;
@@ -161,7 +175,10 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
   }
 
   const uniq = [...new Map(links.map(l => [l.rule + l.tx + l.to, l])).values()].sort((x, y) => x.ts.localeCompare(y.ts));
-  const members = [...new Set(uniq.flatMap(l => [l.from, l.to]))];
+  // The SEED is always a member, links or not. A case with no qualifying links is a real
+  // answer ("this wallet stands alone"); reporting an EMPTY cluster instead prints
+  // "holds 0 SPX" for a wallet that holds plenty, which is worse than the bar it replaced.
+  const members = [...new Set([seed, ...uniq.flatMap(l => [l.from, l.to])])];
   return { seed, members, links: uniq, depth };
 }
 

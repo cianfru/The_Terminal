@@ -94,3 +94,24 @@ test("the distributor guard is tighter than the gas guard", async () => {
   // Case #2559's drain source sends to 2 wallets and must survive the guard.
   assert.ok(2 <= MAX_DRAINED, "a genuine two-wallet self-move must not be dropped");
 });
+
+test("drainFanOut ignores infrastructure — a trader selling into pools is not a distributor", async () => {
+  const { drainFanOut } = await import("../scripts/cluster-pfp.mjs");
+  const POOL = "0x52c77b0cb827afbad022e6d6caf2c44452edbc39"; // Uniswap V2: SPX
+  const rows = [
+    { dir: "OUT", cp: POOL }, { dir: "OUT", cp: "0xpool2" }, { dir: "OUT", cp: "0xpool3" },
+    { dir: "OUT", cp: "0xvault" },
+  ];
+  const skip = async a => a === POOL || a.startsWith("0xpool");
+  assert.equal(await drainFanOut("0xme", rows, skip), 1, "only the plain wallet counts");
+  assert.equal(await drainFanOut("0xme", rows), 4, "without the filter it looks like a distributor");
+});
+
+test("a case with no qualifying links still reports the seed, not an empty cluster", async () => {
+  // Reporting zero members prints "holds 0 SPX" for a wallet that holds plenty — worse than
+  // the 50,000 floor this tool replaced. Case #2451 hit exactly this.
+  const { clusterPfp } = await import("../scripts/cluster-pfp.mjs");
+  assert.equal(typeof clusterPfp, "function");
+  const src = await import("node:fs").then(m => m.readFileSync("scripts/cluster-pfp.mjs", "utf8"));
+  assert.match(src, /new Set\(\[seed, \.\.\.uniq/, "seed must be seeded into members");
+});
