@@ -278,5 +278,24 @@
     }
   ],
   "walletsNote": "Full member addresses, machine-readable. The bot reads THIS, not the prose note — clusterNote writes addresses short for readability and a regex over it found 2 of 6 wallets.",
-  "scopeNote": "TWO SCOPES, both true of different things. buys/sells below are TRADER-scope, from the original hand-built datasets. clusterTrades is CLUSTER-scope, recomputed with the validated classifier in scripts/bot/kol-cluster.mjs — the one that reproduces #2451's case study exactly. Cards and the watcher use CLUSTER scope and compute their captions from the trades they draw; never quote one scope over a picture of the other."
+  "scopeNote": "TWO SCOPES, both true of different things. buys/sells below are TRADER-scope, from the original hand-built datasets. clusterTrades is CLUSTER-scope, recomputed with the validated classifier in scripts/bot/kol-cluster.mjs — the one that reproduces #2451's case study exactly. Cards and the watcher use CLUSTER scope and compute their captions from the trades they draw; never quote one scope over a picture of the other.",
+  "detectorBenchmark": {
+    "ran": "2026-09-21",
+    "harness": "tools/nft-id/calibrate.py --n=25 (seed 69, deterministic)",
+    "fragmentRankedFirst": "11/25",
+    "fragmentConfidentlyIdentified": "0/25",
+    "confidentlyWrong": "0/25",
+    "trueInliers": {
+      "min": 57,
+      "p10": 65,
+      "median": 149,
+      "max": 447
+    },
+    "wrongInliers": {
+      "median": 83,
+      "p90": 136,
+      "max": 139
+    },
+    "note": "A previously recorded '10 of 24' was WRONG and had been unreproducible since the trait filter renamed identify()'s return key and silently broke the harness. Reproduced figure is 11/25. Ranked-first is NOT the same as identified: on the fragment path the tool never claims confidence, by design, because in a trait-generated collection a crop genuinely belongs to many tokens. The number worth publishing is confidently-wrong = 0, not an accuracy percentage."
+  }
 }
