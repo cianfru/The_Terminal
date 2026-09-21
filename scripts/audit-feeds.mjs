@@ -109,6 +109,11 @@ export const FEEDS = [
     // traded). `owners` moves every week, so it proves liveness without a standing warn
     // that would train us to ignore this row.
     window: 6, fields: ["owners", "dist", "age"], nonEmpty: ["holders"] },
+  { file: "aeon-clusters.json", cadence: 3, by: "aeon.yml", what: "AEON owner clusters, holding vs selling",
+    // `owners` is the count of entities holding at least one token today, so it moves whenever the
+    // collection trades — liveness without a standing warn. Not `multiWallet`: linkage is historical
+    // and legitimately sits still for weeks.
+    window: 6, fields: ["owners"], nonEmpty: ["clusters"] },
   { file: "aeon-market.json", cadence: 3, by: "aeon.yml", what: "AEON MVRV, URPD, fair value, deals",
     require: ["floor", "levelNow"], nonEmpty: ["urpd", "salesScatter", "biggest", "traitPremiums"] },
   { file: "aeon-sales.json", cadence: 3, by: "aeon.yml", what: "AEON marketplace trades",
@@ -179,6 +184,9 @@ export const STATE = new Set([
   // Monotonic is-contract cache (entity-graph foundation): only grows when a NEW self-move address
   // appears, so it legitimately sits unchanged for long stretches — freshness-auditing it would false-alarm.
   "addr-types.json",
+  // Same shape for the AEON clustering: whether an address holds code is immutable, so this cache
+  // only grows when a new endpoint appears in the free-transfer graph. Nothing to keep fresh.
+  "aeon-addr-code.json",
   // THE DATA WALL: entities.json is built locally by onchain-dune.yml but pushed to the private store
   // (KV) and served to members only via /api/auth?action=data — NOT committed to the public repo. Listed
   // here so the audit tolerates the local build artifact without demanding a committed public feed.
