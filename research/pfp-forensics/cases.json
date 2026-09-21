@@ -55,7 +55,22 @@
         "0xd0eb20581641e421e750947e71c6b32411bbb094",
         "0x47a0e728cdc6b0da7bb69fb365dbdb77aada6677",
         "0x2719d392e418f2e93d8ebd2b830a8bf5e30f7d69"
-      ]
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 34,
+          "usd": 64179,
+          "pctUsdBubblePlus": 57
+        },
+        "sells": {
+          "n": 23,
+          "usd": 247636,
+          "pctUsdBubblePlus": 80
+        },
+        "recomputed": "2026-09-21",
+        "note": "Reconciles with the trader-scope figures to within rounding on DOLLARS ($64,179 vs $64,095 bought, $247,636 vs $247,593 sold) and identically on the percentages. The extra 11 buys at cluster scope are dust from the smaller members. The 80% sell figure already published holds."
+      }
     },
     {
       "token": 3062,
@@ -100,7 +115,22 @@
         "0x2520343cc425f5c4c88324eaf5f6b0d639db9487",
         "0xea95f1e4799dc01313bb358fecd10f24760c1b61",
         "0x8b84931a7e78b539071b8ae4e4a2bf2e7b124ad7"
-      ]
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 12,
+          "usd": 14952,
+          "pctUsdBubblePlus": 100
+        },
+        "sells": {
+          "n": 5,
+          "usd": 7629,
+          "pctUsdBubblePlus": 44
+        },
+        "recomputed": "2026-09-21",
+        "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade."
+      }
     },
     {
       "token": 2559,
@@ -142,7 +172,21 @@
         "0x7e4d233667a97f998c78f4f97076a1da50820d35",
         "0x619a60351d23c9ad08e3a3b8fdf9a714a22490f3",
         "0x8114c302232c8db065a8e1be1594253c388c0c1d"
-      ]
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 14,
+          "usd": 5662,
+          "pctUsdBubblePlus": 100
+        },
+        "sells": {
+          "n": 0,
+          "usd": 0,
+          "pctUsdBubblePlus": 0
+        },
+        "recomputed": "2026-09-21"
+      }
     },
     {
       "token": 14,
@@ -186,7 +230,21 @@
         "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
         "0x640bfef7bcdd64675f9ebc98b157f5386424dac5",
         "0x3542f155502840cc20b1255ad76054546717e89c"
-      ]
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 17,
+          "usd": 33430,
+          "pctUsdBubblePlus": 0
+        },
+        "sells": {
+          "n": 11,
+          "usd": 12758,
+          "pctUsdBubblePlus": 33
+        },
+        "recomputed": "2026-09-21"
+      }
     }
   ],
   "sharedCharts": [
@@ -207,5 +265,6 @@
       "what": "of 400 wallets with genuine two-way SPX activity, twelve are net accumulating"
     }
   ],
-  "walletsNote": "Full member addresses, machine-readable. The bot reads THIS, not the prose note — clusterNote writes addresses short for readability and a regex over it found 2 of 6 wallets."
+  "walletsNote": "Full member addresses, machine-readable. The bot reads THIS, not the prose note — clusterNote writes addresses short for readability and a regex over it found 2 of 6 wallets.",
+  "scopeNote": "TWO SCOPES, both true of different things. buys/sells below are TRADER-scope, from the original hand-built datasets. clusterTrades is CLUSTER-scope, recomputed with the validated classifier in scripts/bot/kol-cluster.mjs — the one that reproduces #2451's case study exactly. Cards and the watcher use CLUSTER scope and compute their captions from the trades they draw; never quote one scope over a picture of the other."
 }

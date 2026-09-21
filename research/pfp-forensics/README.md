@@ -9,9 +9,13 @@ case yet of someone accumulating steadily and sitting on it — the thing the pi
 | token | archetype | buy $ in "Bubble?"+ | sell $ in "Bubble?"+ | holds today |
 |---|---|---|---|---|
 | **#2451** | sold into strength | 57% | **80%** | 410,623 *(6 wallets; 98% of it in one vault)* |
-| **#3062** | bought the top, sold the dip | **83%** | 0% | 36,642 *(5 wallets; the trader keeps 138)* |
+| **#3062** | bought the top, sold the dip | **100%** | 44% | 36,642 *(5 wallets; the trader keeps 138)* |
 | **#2559** | FOMO, then diamond hands | **100%** | — never sold | 8,558 *(38,618 across 5 wallets)* |
-| **#14** | distributor, exited | 0% | 43% | **0** |
+| **#14** | distributor, exited | 0% | 33% | **0** |
+
+Figures are CLUSTER scope, recomputed 2026-09-21 with the validated classifier. The stored
+trader-scope numbers for #3062 were stale (83% / 13 buys / 1 sell) — built before the CoW
+counterparty fix, which was losing aggregator sells. Never quote one scope over a chart of the other.
 
 Four cases is four cases — it is a pattern, not a proven population claim. The honest framing is
 "every profile we have opened so far," and the count belongs in any post.
