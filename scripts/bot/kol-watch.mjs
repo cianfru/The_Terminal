@@ -55,11 +55,15 @@ export function pickSale(rows, state, { now = Date.now(), freshDays = FRESH_DAYS
 }
 
 /** Three lines: hero / what it means / the receipt. The hash is the point — check it yourself. */
-export function copyFor({ token, rank, qty, usd, soldPct, heldNow, tx }) {
+export function copyFor({ token, rank, qty, usd, tx }) {
   const f = n => Math.round(n).toLocaleString();
+  // ⚠ ONE number, and it is the event itself — a single transaction anyone can open.
+  // Aggregate totals are deliberately absent: "bought X, sold Y, holds Z" invites a
+  // subtraction that does not close without the transfer legs, and a reader who does that
+  // sum concludes the account cannot count. The chart shows the history; the hash proves it.
   return [
     `🔴 The wallet behind AEON #${token} just sold ${f(qty)} SPX${usd ? ` (~$${f(usd)})` : ""}.`,
-    `It has now sold ${soldPct}% of what it bought and still holds ${f(heldNow)} SPX. Rank ${rank} of 3,333.`,
+    `Same household we traced from the profile picture \u2014 AEON #${token}, rank ${rank} of 3,333. The chart is every buy and sell it has ever made.`,
     `Check it yourself: https://etherscan.io/tx/${tx}`,
   ].join("\n");
 }
@@ -83,20 +87,16 @@ async function main() {
   if (!force && lanePostedToday(LANE)) { console.log(`kol-watch: lane ${LANE} already posted today`); return; }
 
   const trades = rows.filter(r => r.kind === "buy" || r.kind === "sell");
-  const bought = buys(trades).reduce((a, t) => a + t.qty, 0);
-  const sold = sells(trades).reduce((a, t) => a + t.qty, 0);
-  const soldPct = Math.round(sold / bought * 100);
   const rarity = readJson(RARITY, { tokens: [] });
   const meta = (rarity.tokens || []).find(t => t.id === token) || {};
 
   const png = await renderKolSaleCard({
     token, rank: meta.rank ?? "?", artUrl: meta.img,
     prices: px.filter(r => r.date >= "2023-10-01"), trades, event: sale,
-    spot: px.at(-1)?.price, heldNow: cluster.holdsNow, soldPct,
+    spot: px.at(-1)?.price,
   });
   const text = withFooter(copyFor({
-    token, rank: meta.rank ?? "?", qty: sale.qty, usd: sale.price ? sale.qty * sale.price : null,
-    soldPct, heldNow: cluster.holdsNow, tx: sale.tx,
+    token, rank: meta.rank ?? "?", qty: sale.qty, usd: sale.price ? sale.qty * sale.price : null, tx: sale.tx,
   }));
 
   if (dryRun) {

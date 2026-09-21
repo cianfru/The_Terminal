@@ -80,11 +80,24 @@ test("state records the sale and caps its own growth", () => {
 
 test("the copy carries the transaction hash and stays inside the instant-read ceiling", () => {
   const tx = "0x" + "a".repeat(64);
-  const text = withFooter(copyFor({ token: 2451, rank: 2, qty: 401900, usd: 213000, soldPct: 100, heldNow: 410623, tx }));
+  const text = withFooter(copyFor({ token: 2451, rank: 2, qty: 401900, usd: 213000, tx }));
   assert.ok(text.includes(tx), "the receipt is the whole point");
   assert.ok(xLen(text) <= 290, `worst-case copy is ${xLen(text)}, ceiling is 290`);
-  assert.equal(copyFor({ token: 2451, rank: 2, qty: 1, soldPct: 1, heldNow: 1, tx }).split("\n").length, 3,
+  assert.equal(copyFor({ token: 2451, rank: 2, qty: 1, tx }).split("\n").length, 3,
     "house style is exactly three lines");
+});
+
+test("the copy states NO aggregate totals", () => {
+  // "bought X, sold Y, holds Z" invites a subtraction that does not close without the
+  // transfer legs: 1,092,500 - 836,673 = 255,827, but the household holds 410,623, because
+  // 421,602 arrived and 266,806 left by plain transfer. The arithmetic is right; a reader
+  // doing that sum still concludes the account cannot count. One number only — the event.
+  const text = copyFor({ token: 2451, rank: 2, qty: 1360, usd: 722, tx: "0xabc" });
+  const numbers = (text.replace(/0x[0-9a-f]+/gi, "").match(/[\d,]+/g) || [])
+    .map(n => n.replace(/^,|,$/g, ""));
+  assert.ok(!/% of what it bought|still holds/i.test(text), "no aggregate claims");
+  assert.ok(numbers.every(n => ["1,360", "722", "2451", "2", "3,333"].includes(n)),
+    `only the event, the token and its rank may appear — found ${numbers.join(" ")}`);
 });
 
 test("the registry hands the watcher every wallet, not the two named in prose", () => {

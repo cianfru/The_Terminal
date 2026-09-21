@@ -43,7 +43,7 @@ export function logTicks(lo, hi) {
 export async function renderKolSaleCard(opts) {
   const {
     token, rank, artUrl, prices, trades, event, spot,
-    heldNow, soldPct, W = 1200, H = 1200, fetchImpl = fetch,
+    W = 1200, H = 1200, fetchImpl = fetch,
   } = opts;
 
   const art = artUrl ? await fetchArtDataUri(artUrl, { fetchImpl }) : null;
@@ -56,8 +56,6 @@ export async function renderKolSaleCard(opts) {
   const lo = Math.min(...vals) * 0.85, hi = Math.max(...vals) * 1.15;
   const X = t => mL + (t - t0) / (t1 - t0) * PW;
   const Y = p => mT + PH - (Math.log10(Math.max(p, lo)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * PH;
-  const bought = trades.filter(t => t.kind === "buy").reduce((a, t) => a + t.qty, 0);
-  const sold = trades.filter(t => t.kind === "sell").reduce((a, t) => a + t.qty, 0);
 
   // House ground, then a two-hue wash: rose from the top (this is a SELL) and green from
   // the lower-right so the buy history reads as its own colour rather than dead green dots.
@@ -114,17 +112,23 @@ ${plotPanel(mL - 26, mT - 26, PW + 52, PH + 52)}`;
   s += `<circle cx="${r2(ax)}" cy="${r2(ay)}" r="${AR + 2}" fill="none" stroke="${ROSE2}" stroke-width="3.4"/>`
      + `<line x1="${r2(mL + PW)}" y1="${r2(ay)}" x2="${r2(ax - AR - 12)}" y2="${r2(ay)}" stroke="${ROSE2}" stroke-width="2.2" opacity="0.5"/>`;
 
-  // the whole record, in three numbers — the square's extra room, spent on the story
-  const sy = mT + PH + 148;
-  const stat = (x, label, value, colour) =>
-      `<text x="${x}" y="${sy}" font-family="sans-serif" font-size="21" fill="#94a3b8">${esc(label)}</text>`
-    + `<text x="${x}" y="${sy + 52}" font-family="sans-serif" font-size="44" font-weight="800" fill="${colour}">${esc(value)}</text>`;
-  const col = PW / 3;
-  s += `<line x1="${mL}" y1="${sy - 44}" x2="${mL + PW + 52}" y2="${sy - 44}" stroke="#ffffff" stroke-opacity="0.10"/>`
-     + stat(mL, "BOUGHT", `${fmt(bought)}`, GRN2)
-     + stat(mL + col, "SOLD", `${fmt(sold)}`, ROSE2)
-     + stat(mL + col * 2, "STILL HOLDS", `${fmt(heldNow)}`, "#67e8f9")
-     + `<text x="${mL}" y="${sy + 104}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">It has sold ${esc(String(soldPct))}% of everything it bought.</text>`
-     + `<text x="${W - 56}" y="${sy + 104}" text-anchor="end" font-family="sans-serif" font-size="21" fill="#64748b">spx6900rainbow.xyz</text></svg>`;
+  // ⚠ NO AGGREGATE TOTALS. A "bought / sold / holds" strip invited a subtraction that does
+  // not close — 1,092,500 bought minus 836,673 sold is 255,827, but the household holds
+  // 410,623, because 421,602 arrived and 266,806 left by plain TRANSFER. The arithmetic is
+  // right and the card still read as broken. A tweet card cannot carry six legs of a ledger,
+  // so it carries none: the event, the picture, and the hash that proves it.
+  const sy = mT + PH + 150;
+  const key = (x, colour, label) =>
+      `<circle cx="${x + 11}" cy="${sy - 9}" r="11" fill="${colour}" fill-opacity="0.28" stroke="${colour}" stroke-width="2.6"/>`
+    + `<text x="${x + 32}" y="${sy}" font-family="sans-serif" font-size="25" fill="#cbd5e1">${esc(label)}</text>`;
+  s += `<line x1="${mL}" y1="${sy - 52}" x2="${mL + PW + 52}" y2="${sy - 52}" stroke="#ffffff" stroke-opacity="0.10"/>`
+     + key(mL, GRN2, "every buy") + key(mL + 240, ROSE2, "every sell")
+     + `<text x="${mL + 520}" y="${sy}" font-family="sans-serif" font-size="25" fill="#94a3b8">since October 2023</text>`
+     + `<text x="${mL}" y="${sy + 60}" font-family="sans-serif" font-size="22" fill="#64748b">THIS SALE</text>`
+     + `<text x="${mL}" y="${sy + 100}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">${esc(event.ts.slice(0, 10))} \u00b7 ${esc(fmt(event.qty))} SPX</text>`
+     ;
+  // the receipt, on the card itself — the hash is the point, so it should not live only in the tweet
+  s += `<text x="${mL}" y="${sy + 140}" font-family="sans-serif" font-size="19" fill="#64748b">${esc(event.tx)}</text>`
+     + `<text x="${W - 56}" y="${sy + 140}" text-anchor="end" font-family="sans-serif" font-size="21" fill="#64748b">spx6900rainbow.xyz</text></svg>`;
   return new Resvg(s, { fitTo: { mode: "width", value: W }, font: FONT }).render().asPng();
 }
