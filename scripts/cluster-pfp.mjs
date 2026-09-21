@@ -36,6 +36,17 @@ export const MAX_FUNDED = 8;
 // repeatedly empties itself into different fresh wallets is distributing, not migrating.
 // Tighter than MAX_FUNDED because drain-into-empty is otherwise the stronger claim of the two.
 export const MAX_DRAINED = 4;
+
+// A VAULT: a wallet that was empty, received a chunk, still holds most of it, and has NEVER
+// sent SPX anywhere. This is NOT the "partial send between two live wallets" the production
+// engine rightly refuses — that refusal exists because a payment recipient is a counterparty.
+// A vault is not a counterparty: it never spends. It is storage.
+//
+// This rule is why the tool missed case #2451's 401,900-SPX vault on the first pass: the
+// trader funded it with a partial send (no drain) and it has never transacted (no gas link),
+// so it was invisible to both rules. Vaults are the single most common structure in this
+// work — #2451 has one, #3062 has seven — so missing them missed the point.
+export const VAULT_KEEP = 0.90;
 export const DRAIN_FRAC = 0.90;
 export const MAX_DEPTH = 3;
 
@@ -85,6 +96,15 @@ export function withBalances(rows) {
     const balBefore = bal; bal += r.dir === "IN" ? r.qty : -r.qty;
     return { ...r, balBefore, balAfter: bal };
   });
+}
+
+/** A vault link: B held nothing, received `qty` from A, never sent SPX, and still holds
+ *  at least VAULT_KEEP of what it got. Size-free, like every rule here. */
+export function isVault(recvIn, recvRows, keep = VAULT_KEEP) {
+  if (!recvIn || recvIn.balBefore >= 1) return false;
+  if (recvRows.some(r => r.dir === "OUT")) return false;   // it spends => not a vault
+  const held = recvRows.reduce((b, r) => b + (r.dir === "IN" ? r.qty : -r.qty), 0);
+  return held >= recvIn.qty * keep;
 }
 
 /** A drain-into-empty: A emptied itself into B, and B was empty. Both, at any size. */
@@ -138,7 +158,7 @@ async function gasOut(a, skip = async () => false) {
 
 export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags() } = {}) {
   seed = seed.toLowerCase();
-  const depth = { [seed]: 0 }, seen = new Set(), queue = [seed], links = [];
+  const depth = { [seed]: 0 }, seen = new Set(), queue = [seed], links = [], services = new Set();
   const skip = async a => !!tags[a] || await contract(a);
 
   while (queue.length) {
@@ -148,7 +168,7 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
     if (await skip(a) || depth[a] >= maxDepth) continue;
 
     const { dests, service, sends } = await gasOut(a, skip);
-    if (service) process.stderr.write(`  ${a}: funds ${dests.size} wallets — service, gas links dropped\n`);
+    if (service) { services.add(a); process.stderr.write(`  ${a}: funds ${dests.size} wallets — service, gas links dropped\n`); }
     else for (const t of sends) {
       const b = t.to?.hash?.toLowerCase();
       if (!b || await skip(b)) continue;
@@ -163,12 +183,18 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
     for (const r of rows) {
       if (!r.cp || await skip(r.cp)) continue;
       const other = r.dir === "OUT" ? r.cp : a, from = r.dir === "OUT" ? a : r.cp;
-      // guard the SENDER of this particular link, whichever side it is
-      if (await drainFanOut(from, null, skip) > MAX_DRAINED) continue;
+
       const sOut = (await ledger(from)).find(x => x.tx === r.tx && x.dir === "OUT");
       const rIn  = (await ledger(r.dir === "OUT" ? r.cp : a)).find(x => x.tx === r.tx && x.dir === "IN");
-      if (!isDrainIntoEmpty(sOut, rIn)) continue;
-      links.push({ rule: "DRAIN", from, to: r.dir === "OUT" ? r.cp : a, qty: r.qty, ts: r.ts.slice(0, 19), tx: r.tx });
+      const to = r.dir === "OUT" ? r.cp : a;
+      // The distributor guard applies to DRAIN only. A vault operator funds many vaults BY
+      // DEFINITION — case #3062 has seven — so fan-out cannot disqualify a vault. A vault
+      // link is self-validating anyway: the recipient has never spent, so it is not a
+      // customer being paid. Blocking it on fan-out is what left #3062 at one wallet.
+      const drains = isDrainIntoEmpty(sOut, rIn) && await drainFanOut(from, null, skip) <= MAX_DRAINED;
+      const rule = drains ? "DRAIN" : isVault(rIn, await ledger(to)) ? "VAULT" : null;
+      if (!rule) continue;
+      links.push({ rule, from, to, qty: r.qty, ts: r.ts.slice(0, 19), tx: r.tx });
       const nb = from === a ? other : from;
       if (!(nb in depth)) { depth[nb] = depth[a] + 1; queue.push(nb); }
     }
@@ -178,8 +204,11 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
   // The SEED is always a member, links or not. A case with no qualifying links is a real
   // answer ("this wallet stands alone"); reporting an EMPTY cluster instead prints
   // "holds 0 SPX" for a wallet that holds plenty, which is worse than the bar it replaced.
-  const members = [...new Set([seed, ...uniq.flatMap(l => [l.from, l.to])])];
-  return { seed, members, links: uniq, depth };
+  // A service can be a gas DESTINATION, which made it a member on the first pass — one of
+  // them funds 42 unrelated wallets. It is never part of anyone's household.
+  const kept = uniq.filter(l => !services.has(l.from) && !services.has(l.to));
+  const members = [...new Set([seed, ...kept.flatMap(l => [l.from, l.to])])];
+  return { seed, members, links: kept, depth, services: [...services] };
 }
 
 /** Current SPX balance — small is a finding here, never a reason to drop a wallet. */

@@ -113,5 +113,33 @@ test("a case with no qualifying links still reports the seed, not an empty clust
   const { clusterPfp } = await import("../scripts/cluster-pfp.mjs");
   assert.equal(typeof clusterPfp, "function");
   const src = await import("node:fs").then(m => m.readFileSync("scripts/cluster-pfp.mjs", "utf8"));
-  assert.match(src, /new Set\(\[seed, \.\.\.uniq/, "seed must be seeded into members");
+  assert.match(src, /new Set\(\[seed,/, "the seed must be seeded into members");
+});
+
+test("a vault links: empty before, never spends, still holds what it got", async () => {
+  const { isVault, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  // Case #2451's real vault: received 401,900 and has held exactly that ever since.
+  const rows = withBalances([{ ts: "2024-11-01", dir: "IN", qty: 401900 }]);
+  assert.equal(isVault(rows[0], rows), true);
+});
+
+test("a wallet that SPENDS is not a vault — that is a payment recipient", async () => {
+  const { isVault, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([
+    { ts: "2024-11-01", dir: "IN",  qty: 401900 },
+    { ts: "2024-12-01", dir: "OUT", qty: 100 },   // one spend is enough
+  ]);
+  assert.equal(isVault(rows[0], rows), false);
+});
+
+test("a wallet that already held something is not a fresh vault", async () => {
+  const { isVault, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([{ ts: "2024-10-01", dir: "IN", qty: 50 }, { ts: "2024-11-01", dir: "IN", qty: 401900 }]);
+  assert.equal(isVault(rows[1], rows), false, "balBefore was not empty");
+});
+
+test("vault links are size-free — a 138-SPX vault counts", async () => {
+  const { isVault, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([{ ts: "2024-11-01", dir: "IN", qty: 138 }]);
+  assert.equal(isVault(rows[0], rows), true);
 });
