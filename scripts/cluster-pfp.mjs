@@ -47,6 +47,21 @@ export const MAX_DRAINED = 4;
 // so it was invisible to both rules. Vaults are the single most common structure in this
 // work — #2451 has one, #3062 has seven — so missing them missed the point.
 export const VAULT_KEEP = 0.90;
+
+// A CONSOLIDATION: several wallets each emptying themselves into ONE address that held
+// nothing before, inside a short window. That is a person gathering their wallets into a
+// new one, and it is the pattern the 1-to-1 drain rule structurally cannot see.
+//
+// Case #14 is the reason this exists. 0x98E97737 drained 1,630,000 into 0xc41e7f22 at
+// 23:03:35; 0xCE9a1739 drained 2,000,000 into the same address 72 SECONDS later. The
+// target was empty before the first. The 1-to-1 rule rejected the second because by then
+// the target held 1.63M — so the link failed on the ORDER of two transactions a minute
+// apart. Had they arrived the other way round it would have matched.
+//
+// The production engine already knows this shape (scanSelfMoves detects "consolidations,
+// N emptying into 1 fresh"); this tool simply did not implement it.
+export const CONSOLIDATION_WINDOW_H = 24;
+export const CONSOLIDATION_MIN = 2;
 export const DRAIN_FRAC = 0.90;
 export const MAX_DEPTH = 3;
 
@@ -105,6 +120,33 @@ export function isVault(recvIn, recvRows, keep = VAULT_KEEP) {
   if (recvRows.some(r => r.dir === "OUT")) return false;   // it spends => not a vault
   const held = recvRows.reduce((b, r) => b + (r.dir === "IN" ? r.qty : -r.qty), 0);
   return held >= recvIn.qty * keep;
+}
+
+/** The consolidation event a given inbound transfer belongs to, or null.
+ *
+ *  `targetRows` is the TARGET's ledger (withBalances). `drained(sender, tx)` answers whether
+ *  that sender emptied >=frac of its own balance in that transaction. Pure; unit-tested.
+ *
+ *  Conditions, all required:
+ *    - the target held nothing before the FIRST transfer of the group
+ *    - at least CONSOLIDATION_MIN distinct senders
+ *    - every one of them emptied itself
+ *    - all inside CONSOLIDATION_WINDOW_H hours
+ *  Size-free, like every rule here. */
+export function consolidationOf(tx, targetRows, drained, {
+  windowH = CONSOLIDATION_WINDOW_H, min = CONSOLIDATION_MIN,
+} = {}) {
+  const ins = targetRows.filter(r => r.dir === "IN").sort((a, b) => a.ts.localeCompare(b.ts));
+  const seed = ins.find(r => r.tx === tx);
+  if (!seed) return null;
+  // the group is anchored on the first inbound that found the target empty
+  const start = [...ins].reverse().find(r => r.balBefore < 1 && r.ts <= seed.ts);
+  if (!start) return null;
+  const limit = Date.parse(start.ts) + windowH * 3600e3;
+  const group = ins.filter(r => r.ts >= start.ts && Date.parse(r.ts) <= limit && drained(r.cp, r.tx));
+  if (!group.some(r => r.tx === tx)) return null;
+  const senders = [...new Set(group.map(r => r.cp).filter(Boolean))];
+  return senders.length >= min ? { senders, group } : null;
 }
 
 /** A drain-into-empty: A emptied itself into B, and B was empty. Both, at any size. */
@@ -192,7 +234,32 @@ export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags()
       // link is self-validating anyway: the recipient has never spent, so it is not a
       // customer being paid. Blocking it on fan-out is what left #3062 at one wallet.
       const drains = isDrainIntoEmpty(sOut, rIn) && await drainFanOut(from, null, skip) <= MAX_DRAINED;
-      const rule = drains ? "DRAIN" : isVault(rIn, await ledger(to)) ? "VAULT" : null;
+      let rule = drains ? "DRAIN" : isVault(rIn, await ledger(to)) ? "VAULT" : null;
+
+      // N-to-1: several wallets emptying into one address that was empty first. The 1-to-1
+      // rule misses this whenever our transfer is not the one that arrived first.
+      if (!rule && r.dir === "OUT") {
+        const trows = await ledger(to);
+        const drainedBy = async (sender, tx) => {
+          if (!sender || await skip(sender)) return false;
+          const so = (await ledger(sender)).find(x => x.tx === tx && x.dir === "OUT");
+          return !!so && so.balBefore > 0 && so.qty >= so.balBefore * DRAIN_FRAC;
+        };
+        // resolve the async predicate up front so consolidationOf can stay pure
+        const ok = {};
+        for (const x of trows.filter(v => v.dir === "IN")) ok[x.tx + x.cp] = await drainedBy(x.cp, x.tx);
+        const con = consolidationOf(r.tx, trows, (sender, tx) => ok[tx + sender]);
+        if (con) {
+          rule = "CONSOLIDATION";
+          for (const sender of con.senders) {
+            if (sender === from || await skip(sender)) continue;
+            links.push({ rule: "CONSOLIDATION", from: sender, to, qty: con.group.find(g => g.cp === sender)?.qty ?? 0,
+              ts: con.group.find(g => g.cp === sender)?.ts.slice(0, 19) ?? r.ts.slice(0, 19),
+              tx: con.group.find(g => g.cp === sender)?.tx ?? r.tx });
+            if (!(sender in depth)) { depth[sender] = depth[a] + 1; queue.push(sender); }
+          }
+        }
+      }
       if (!rule) continue;
       links.push({ rule, from, to, qty: r.qty, ts: r.ts.slice(0, 19), tx: r.tx });
       const nb = from === a ? other : from;

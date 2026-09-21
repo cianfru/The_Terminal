@@ -159,3 +159,54 @@ test("the service flag kills GAS links only, never vault or drain links", async 
   assert.match(src, /l\.rule !== "GAS" \|\| \(!services\.has\(l\.from\) && !services\.has\(l\.to\)\)/,
     "vault/drain links must survive the service flag");
 });
+
+test("a consolidation links every sender, whichever one arrived first", async () => {
+  const { consolidationOf, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  // Case #14, to the second: two wallets emptying into one empty address 72s apart.
+  const rows = withBalances([
+    { ts: "2024-07-08T23:03:35", dir: "IN", qty: 1630000, cp: "0x98e97737", tx: "0xa" },
+    { ts: "2024-07-08T23:04:47", dir: "IN", qty: 2000000, cp: "0xce9a1739", tx: "0xb" },
+  ]);
+  const drained = () => true;
+  // the SECOND transfer is the one the 1-to-1 rule rejected, because by then the target
+  // held 1.63M. It must link here — the order of two transactions a minute apart cannot
+  // decide whether two wallets belong to one person.
+  assert.deepEqual(consolidationOf("0xb", rows, drained).senders.sort(), ["0x98e97737", "0xce9a1739"]);
+  assert.deepEqual(consolidationOf("0xa", rows, drained).senders.sort(), ["0x98e97737", "0xce9a1739"]);
+});
+
+test("one sender alone is not a consolidation", async () => {
+  const { consolidationOf, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([{ ts: "2024-07-08T23:03:35", dir: "IN", qty: 5, cp: "0xa", tx: "0x1" }]);
+  assert.equal(consolidationOf("0x1", rows, () => true), null);
+});
+
+test("a sender that did NOT empty itself is excluded", async () => {
+  const { consolidationOf, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([
+    { ts: "2024-07-08T23:03:35", dir: "IN", qty: 100, cp: "0xa", tx: "0x1" },
+    { ts: "2024-07-08T23:04:47", dir: "IN", qty: 100, cp: "0xb", tx: "0x2" },
+  ]);
+  // only 0xa emptied; 0xb made an ordinary payment, so there is no group of two
+  assert.equal(consolidationOf("0x1", rows, (s) => s === "0xa"), null);
+});
+
+test("arrivals outside the window are not one event", async () => {
+  const { consolidationOf, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([
+    { ts: "2024-07-08T23:03:35", dir: "IN", qty: 100, cp: "0xa", tx: "0x1" },
+    { ts: "2024-09-01T10:00:00", dir: "IN", qty: 100, cp: "0xb", tx: "0x2" },
+  ]);
+  assert.equal(consolidationOf("0x1", rows, () => true), null, "two months apart is not a gather");
+});
+
+test("the target must have been empty before the group started", async () => {
+  const { consolidationOf, withBalances } = await import("../scripts/cluster-pfp.mjs");
+  const rows = withBalances([
+    { ts: "2024-01-01T00:00:00", dir: "IN", qty: 500, cp: "0xz", tx: "0x0" },   // pre-existing balance
+    { ts: "2024-07-08T23:03:35", dir: "IN", qty: 100, cp: "0xa", tx: "0x1" },
+    { ts: "2024-07-08T23:04:47", dir: "IN", qty: 100, cp: "0xb", tx: "0x2" },
+  ]);
+  // the only empty-target anchor is 0x0, six months earlier, so the July pair is outside it
+  assert.equal(consolidationOf("0x2", rows, () => true), null);
+});
