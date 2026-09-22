@@ -74,7 +74,7 @@ ${auraBg(GRN, W, H, { opacity: 0.24, accent2: VI })}${cardDepth(W, H)}${brandStr
 <text x="${mL}" y="80" font-family="sans-serif" font-size="41" font-weight="800" fill="#f1f5f9">They bought 10.3 million SPX for $51,278</text>
 <text x="${mL}" y="130" font-family="sans-serif" font-size="41" font-weight="800" fill="${GRN2}">and have taken $1.56 million out</text>
 <text x="${mL}" y="176" font-family="sans-serif" font-size="23" fill="#94a3b8">Buying started two weeks after launch, averaging $0.005. Not one dollar in a bubble band.</text>
-<text x="${mL}" y="212" font-family="sans-serif" font-size="21" fill="#64748b">AEON #${TOKEN} \u2014 identified from the profile picture. Five wallets, linked by complete self-drains.</text>
+<text x="${mL}" y="212" font-family="sans-serif" font-size="21" fill="#64748b">Case study #3 \u2014 AEON #${TOKEN}. Five wallets, linked by complete self-drains.</text>
 ${plotPanel(mL - 24, mT - 24, PW + 48, PH + 48)}`;
 
 const step = 7, ds = []; for (let d = t0; d <= t1; d += step) ds.push(d);
