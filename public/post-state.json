@@ -1,11 +1,7 @@
 {
   "lastPostedDate": "2026-09-22",
-  "lastId": "manual-skip",
+  "lastId": "longshort",
   "recent": [
-    {
-      "date": "2026-08-03",
-      "id": "walletwaves"
-    },
     {
       "date": "2026-08-04",
       "id": "cexflow"
@@ -81,6 +77,10 @@
     {
       "date": "2026-09-21",
       "id": "ethage"
+    },
+    {
+      "date": "2026-09-22",
+      "id": "longshort"
     }
   ],
   "lanes": {
