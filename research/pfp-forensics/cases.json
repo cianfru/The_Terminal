@@ -359,14 +359,16 @@
       "counterfactual": {
         "computed": "2026-09-22",
         "spot": 0.5305,
-        "realisedPlusHeld": 1763668,
+        "soldQty": 6195542,
+        "soldUsd": 1617729,
+        "soldAtSpot": 3286951,
+        "leftOnTable": 1669222,
+        "cashOutPlusHeld": 1821961,
         "ifNeverSold": 5441413,
-        "soldPortionAtSpot": 3188827,
-        "leftOnTable": 1629391,
-        "multipleActual": 34.4,
+        "multipleActual": 35.5,
         "multipleIfHeld": 106.1,
-        "note": "Compares what the chain shows against simply never selling, at TODAY's price — never at the ATH, which would read $12.9m for the sold portion and is a cherry-picked peak. The 3,860,923 SPX that left these wallets is excluded from both sides: it cannot be followed, so no claim is made about it.",
-        "supersededBy": "Recompute 2026-09-22 after the shape upgrade: sold is now 6,195,542 for $1,617,729 and a separate 715,045 was rotated, so the earlier left-on-the-table arithmetic needs redoing before it is quoted."
+        "holdsPctOfBought": 3.8,
+        "note": "Measured at spot, never at the ATH, which would read $13.3m for the sold portion and is a cherry-picked peak. The 715,045 SPX ROTATED into other tokens is excluded from both sides: it was disposed at market but the proceeds never became money, so it can neither be counted as cash taken out nor valued at the SPX price. The 3,140,994 that left for other addresses is excluded too — a fungible token cannot be followed."
       }
     }
   ],
