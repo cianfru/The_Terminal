@@ -74,12 +74,20 @@ const X = d => mL + (d - t0) / (t1 - t0) * PW;
 const Y = p => mT + PH - (Math.log10(Math.max(p, lo)) - Math.log10(lo)) / (Math.log10(hi) - Math.log10(lo)) * PH;
 const GRN = "#22c55e", GRN2 = "#4ade80", RO = "#f43f5e", RO2 = "#fb7185";
 
+// ⚠ THE HERO HAS TO SUIT THE CASE. Hardcoding the bubble-buying share printed "0% of every
+// dollar spent went in hot" over case #14 — true, but it is the GOOD half of that wallet's
+// story and it reads as a non-sequitur in 40px type. Hot buying is the headline only when
+// there was some; otherwise the prices themselves are.
+const HERO = hotBuy >= 50
+  ? `${Math.round(hotBuy)}% of every dollar spent went in hot`
+  : `Bought at $${avgBuy.toFixed(4)}, sold at $${avgSell.toFixed(4)}`;
+
 let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
 <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0b0b16"/><stop offset="100%" stop-color="#05050e"/></linearGradient></defs>
 <rect width="${W}" height="${H}" fill="url(#bg)"/>
 ${auraBg(RO, W, H, { opacity: 0.26, accent2: GRN })}${cardDepth(W, H)}${brandStripe(H)}
 <text x="${mL}" y="78" font-family="sans-serif" font-size="40" font-weight="800" fill="#f1f5f9">Where it bought, and where it sold</text>
-<text x="${mL}" y="126" font-family="sans-serif" font-size="40" font-weight="800" fill="${RO2}">${esc(`${Math.round(hotBuy)}% of every dollar spent went in hot`)}</text>
+<text x="${mL}" y="126" font-family="sans-serif" font-size="40" font-weight="800" fill="${RO2}">${esc(HERO)}</text>
 <text x="${mL}" y="170" font-family="sans-serif" font-size="22" fill="#94a3b8">Every market trade this household ever made, on the frozen rainbow. Circle area = dollars.</text>
 <text x="${mL}" y="204" font-family="sans-serif" font-size="20" fill="#64748b">Case study #${cl.study ?? "—"} — AEON #${TOKEN}. The model is never re-fitted; the bands record where each decision landed.</text>
 ${plotPanel(mL - 22, mT - 22, PW + 44, PH + 44)}`;
@@ -109,11 +117,15 @@ for (let yy = y0; yy <= y1; yy++) {
   s += `<text x="${r2(x)}" y="${mT + PH + 36}" text-anchor="middle" font-family="sans-serif" font-size="21" fill="#94a3b8">${yy}</text>`;
 }
 
-// the sell ladder, in the order it happened and labelled by the band it landed in
+// ⚠ RANK THE LADDER BY DOLLARS, NOT BY DATE. Taking the first eight chronologically listed
+// case #14's dust sales at $0.0022 and omitted the four Max Bubble sales at $0.80-$0.93 that
+// are the whole finding. Show the sales that moved the money, newest first among equals.
+const LADDER = S.slice().sort((a, b) => b.usd - a.usd).slice(0, 8)
+  .sort((a, b) => a.ts.localeCompare(b.ts));
 let ly = mT + 4;
-s += `<text x="${mL + PW + 28}" y="${ly}" font-family="sans-serif" font-size="18" font-weight="700" fill="${RO2}" letter-spacing="1">WHERE IT SOLD</text>`;
+s += `<text x="${mL + PW + 28}" y="${ly}" font-family="sans-serif" font-size="18" font-weight="700" fill="${RO2}" letter-spacing="1">${S.length > 8 ? "ITS BIGGEST SALES" : "WHERE IT SOLD"}</text>`;
 ly += 30;
-for (const t of S.slice(0, 8)) {
+for (const t of LADDER) {
   const lab = BAND_LABELS[t.band]?.l ?? "?";
   s += `<rect x="${mL + PW + 28}" y="${ly - 12}" width="13" height="13" rx="3" fill="${BAND_LABELS[t.band]?.c ?? "#64748b"}"/>`
      + `<text x="${mL + PW + 48}" y="${ly}" font-family="sans-serif" font-size="17" fill="#cbd5e1">${esc(lab)}</text>`

@@ -290,6 +290,7 @@
       "evidence": "case-14-evidence.md",
       "charts": [
         "14-earlybird-card.png",
+        "14-trades-card.png",
         "14-rainbow.png",
         "14-outflow.png"
       ],
@@ -342,7 +343,18 @@
       "nftCustodyNote": "These hold the NFT, not SPX — none has ever moved a single token, so SPX-flow clustering cannot see them. They are linked by the token's custody chain and by ETH gas, and they contribute nothing to any trading figure.",
       "holdsNowNote": "384,955 SPX (~$204,232), all in 0xc41e7f22, still being sold into Uniswap as recently as 2026. CORRECTS an earlier reading of 0 — the consolidation was invisible to a 1-to-1 drain rule, which rejected the second gather because by then the target was no longer empty. ⚠ 0xc41e7f22 also received 2,000,000 in July 2025 from a Banana Gun-style router, so part of this balance may be trade proceeds rather than the original stack.",
       "study": 3,
-      "status": "draft"
+      "status": "draft",
+      "counterfactual": {
+        "computed": "2026-09-22",
+        "spot": 0.5305,
+        "realisedPlusHeld": 1763668,
+        "ifNeverSold": 5441413,
+        "soldPortionAtSpot": 3188827,
+        "leftOnTable": 1629391,
+        "multipleActual": 34.4,
+        "multipleIfHeld": 106.1,
+        "note": "Compares what the chain shows against simply never selling, at TODAY's price — never at the ATH, which would read $12.9m for the sold portion and is a cherry-picked peak. The 3,860,923 SPX that left these wallets is excluded from both sides: it cannot be followed, so no claim is made about it."
+      }
     }
   ],
   "sharedCharts": [
