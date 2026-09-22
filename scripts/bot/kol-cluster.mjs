@@ -53,7 +53,7 @@ export function clusterOf(token, file = REGISTRY) {
   const wallets = [...new Set([...(c.wallets || []), c.trader, c.nftHolder]
     .filter(Boolean).map(a => a.toLowerCase()))];
   if (!wallets.length) throw new Error(`case #${token} has no wallets[]`);
-  return { token: c.token, wallets, archetype: c.archetype, holdsNow: c.holdsNow };
+  return { token: c.token, wallets, archetype: c.archetype, holdsNow: c.holdsNow, study: c.study ?? null, status: c.status ?? null };
 }
 
 /** What a transaction actually was. Pure; unit-tested.

@@ -110,8 +110,8 @@
       "verdict": "The mirror image of #2451. Every dollar spent went in at 'Bubble?' or hotter — not one buy outside those bands — and the selling came later and lower: 5 sales at an average of $0.71 against an average cost of $1.20. The trader wallet itself keeps 138 SPX; everything else sits in four vaults that have never traded.",
       "charts": [
         "3062-eyepatch-card.png",
+        "3062-trades-card.png",
         "3062-custody-chain.png",
-        "3062-rainbow.png",
         "3062-flow.png",
         "3062-cluster.png"
       ],
@@ -184,6 +184,12 @@
           "qty": 5000,
           "price": 0.3972,
           "band": "BUY!"
+        }
+      ],
+      "retiredCharts": [
+        {
+          "file": "3062-rainbow.png",
+          "why": "pre-CoW-fix render: states 83% of buy dollars in bubble bands, $18,048 spent at an average of $0.7853, and a single sale in Still Cheap at $0.6080. The recomputed truth is 100%, $14,952 at $1.2016, and five sales ending at $0.3972 in BUY!. Superseded by 3062-trades-card.png, which derives every figure at render time."
         }
       ]
     },
