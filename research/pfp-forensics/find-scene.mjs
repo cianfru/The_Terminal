@@ -76,11 +76,15 @@ const j = async u => {
   return null;
 };
 
-/** A holder sweep is trusted only if it reaches the count the token itself reports.
- *  Anything under this is a truncated read, not a small collection. */
-export const COMPLETE_FRAC = 0.97;
-export const isComplete = (fetched, expected) =>
-  !expected ? fetched > 0 : fetched >= Math.floor(expected * COMPLETE_FRAC);
+/** ⚠ COMPLETENESS IS PAGINATION EXHAUSTION, NOT A HOLDER COUNT.
+ *  The first version of this gate compared the sweep against the token's own
+ *  holders_count and it was wrong in both directions: anna6900 returned 70 rows against
+ *  a reported 27, [ETSUB.COM] 1,006 against 1,001, while Milady returned 5,635 against
+ *  5,911 twice in a row. That field is an approximate cached value; it cannot arbitrate
+ *  anything. The API telling us there is no next page is the only real end-of-list
+ *  signal, so that — and only that — marks a sweep complete. holders_count is kept as an
+ *  advisory note, never a gate. */
+export const MAX_PAGES = 1400;
 
 /** ERC-721 balanceOf, read from the contract. The only count we trust. */
 export async function balanceOf(contract, addr) {
@@ -95,16 +99,20 @@ export async function balanceOf(contract, addr) {
   return null;
 }
 
+/** Returns {rows, exhausted}. `exhausted` is true only when the API said there is no
+ *  next page — a page-cap stop or a dead request is NOT an end of list. Kemonokaki
+ *  Festival stopped at exactly 30,000 rows under a 600-page cap and the old code
+ *  reported that as a complete read of a 42,751-holder collection. */
 async function pageAll(url, pick) {
-  const out = []; let p = null;
-  for (let n = 0; n < 600; n++) {
+  const rows = []; let p = null, exhausted = false;
+  for (let n = 0; n < MAX_PAGES; n++) {
     const d = await j(url + (p ? (url.includes("?") ? "&" : "?") + new URLSearchParams(p) : ""));
-    if (!d) break;
-    for (const it of d.items || []) pick(out, it);
-    if (!d.next_page_params) break;
+    if (!d) break;                                  // request died => not exhausted
+    for (const it of d.items || []) pick(rows, it);
+    if (!d.next_page_params) { exhausted = true; break; }
     p = d.next_page_params;
   }
-  return out;
+  return { rows, exhausted };
 }
 
 /** Every NFT collection the seed wallets hold, with the spam already labelled. */
@@ -124,10 +132,12 @@ export async function sceneOf(wallets) {
   return [...m.values()];
 }
 
-export const holdersOf = (chain, addr) =>
-  pageAll(`${BS[chain]}/tokens/${addr}/holders`, (out, h) => {
+export const holdersOf = async (chain, addr) => {
+  const { rows, exhausted } = await pageAll(`${BS[chain]}/tokens/${addr}/holders`, (out, h) => {
     const a = (h.address?.hash || h.address || "").toLowerCase(); if (a) out.push(a);
   });
+  return { holders: [...new Set(rows)], exhausted };
+};
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   const token = Number(arg("case", 2451)), MIN = Number(arg("min", 3));
@@ -152,22 +162,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const depth = new Map(), short = [];
   for (const c of scene) {
-    let hs = await holdersOf(c.chain, c.addr);
-    if (!isComplete(hs.length, c.holders)) {                      // one retry, slowly
+    let r = await holdersOf(c.chain, c.addr);
+    if (!r.exhausted) {                                           // one retry, slowly
       await new Promise(x => setTimeout(x, 5000));
       const again = await holdersOf(c.chain, c.addr);
-      if (again.length > hs.length) hs = again;
+      if (again.exhausted || again.holders.length > r.holders.length) r = again;
     }
-    c.holderCount = hs.length;
-    c.complete = isComplete(hs.length, c.holders);
+    c.holderCount = r.holders.length;
+    c.complete = r.exhausted;
     if (!c.complete) short.push(c);
-    for (const a of hs) { if (!depth.has(a)) depth.set(a, []); depth.get(a).push(c.name); }
-    console.error(`  ${c.complete ? " " : "!"} ${c.name.slice(0, 28).padEnd(29)} ${String(hs.length).padStart(6)} / ${String(c.holders).padStart(6)} holders`);
+    for (const a of r.holders) { if (!depth.has(a)) depth.set(a, []); depth.get(a).push(c.name); }
+    console.error(`  ${c.complete ? " " : "!"} ${c.name.slice(0, 28).padEnd(29)} ${String(r.holders.length).padStart(6)} rows (reported ${c.holders})`);
     await new Promise(x => setTimeout(x, 300));
   }
   if (short.length) {
     console.error(`\n!! ${short.length} collection(s) read short — the scene is INCOMPLETE and candidates are undercounted:`);
-    for (const c of short) console.error(`   ${c.chain} ${c.name}: got ${c.holderCount} of ${c.holders}`);
+    for (const c of short) console.error(`   ${c.chain} ${c.name}: ${c.holderCount} rows, pagination never reached the end`);
     if (process.argv.includes("--write"))
       throw new Error(`refusing to --write a truncated scene (${short.length} short). Re-run; the reads are rate-limited, not empty.`);
   }
