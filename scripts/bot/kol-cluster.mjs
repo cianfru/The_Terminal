@@ -150,6 +150,11 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
       j(`${BS}/transactions/${tx}`, fetchImpl),
       j(`${BS}/transactions/${tx}/token-transfers`, fetchImpl),
     ]);
+    // ⚠ A DROPPED LEG SILENTLY CHANGES THE VERDICT. One flaky read of this endpoint made a
+    // rotation look like a sale and put 227,058 SPX on the wrong side of a rendered card —
+    // the run before and the run after both agreed, so nothing looked wrong. A partial read
+    // must stop the job, never quietly produce a different answer.
+    if (!legs) throw new Error(`token-transfers unavailable for ${tx} — refusing to classify on a partial read`);
     const shape = { valueIn: 0, valueOut: 0, otherIn: 0 };
     let unwrapped = 0, spxOut = 0;
     for (const L of legs?.items || []) {
@@ -162,7 +167,12 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
       if (set.has(to)) { if (isValue) shape.valueIn += v; else if (!isSpx) shape.otherIn += v; }
       if (set.has(from) && isValue) shape.valueOut += v;
     }
-    if (spxOut > 0 && shape.valueIn === 0 && unwrapped > 0) shape.valueIn = unwrapped;
+    // ⚠ ONLY INFER PAYMENT FROM AN UNWRAP WHEN NOTHING ELSE CAME BACK. A multi-hop router
+    // burns WETH and USDC to the zero address as part of its own internal plumbing, which
+    // has nothing to do with our wallet being paid. Without the otherIn guard this fired on
+    // the 680,000-SPX/ASTEROID swap, set valueIn, and kept it classified as a $212,470 sale
+    // — precisely the error the audit was criticised for making.
+    if (spxOut > 0 && shape.valueIn === 0 && shape.otherIn === 0 && unwrapped > 0) shape.valueIn = unwrapped;
     const r0 = rows.find(r => r.tx === tx);
     const base = classify({ dir: r0.dir, cp: r0.cp, txTo: t?.to?.hash,
                             txToName: t?.to?.name || "", txMethod: t?.method || "" });
