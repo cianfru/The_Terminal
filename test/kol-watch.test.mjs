@@ -2,6 +2,7 @@
 // the decisions that, if wrong, post a false claim about a named wallet.
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { classify, clusterOf, POOLS, ROUTERS } from "../scripts/bot/kol-cluster.mjs";
 import { pickSale, alreadyPosted, recordPosted, copyFor } from "../scripts/bot/kol-watch.mjs";
 import { logTicks } from "../scripts/bot/kol-sale-card.mjs";
@@ -108,4 +109,18 @@ test("the registry hands the watcher every wallet, not the two named in prose", 
 
 test("log ticks land on round numbers across the whole range", () => {
   assert.deepEqual(logTicks(0.002, 0.5), [0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5]);
+});
+
+// ⚠ The disarm is a promise to somebody. Pin it, so nobody re-arms it by accident and so a
+// future refactor cannot quietly undo it: the flag must be true, and it must be enforced on
+// execution rather than on import — an import-time exit truncated this very file and took
+// thirteen tests with it, while Node reported the remainder as passing.
+test("the watcher stays disarmed at the subject's request", async () => {
+  const { DISARMED } = await import("../scripts/bot/kol-watch.mjs");
+  assert.equal(DISARMED, true, "kol-watch was re-armed — the tracked wallet asked not to be followed");
+  const src = readFileSync(new URL("../scripts/bot/kol-watch.mjs", import.meta.url), "utf8");
+  assert.ok(/if \(import\.meta\.url === `file:\/\/\$\{process\.argv\[1\]\}`\) \{\s*\n\s*if \(DISARMED\)/.test(src),
+    "the disarm check must sit inside the direct-execution guard, never at module scope");
+  const wf = readFileSync(new URL("../.github/workflows/kol-watch.yml", import.meta.url), "utf8");
+  assert.ok(!/^\s*schedule:/m.test(wf), "the watch workflow must have no schedule while disarmed");
 });

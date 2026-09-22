@@ -14,8 +14,17 @@
 // household that has sold 77% of what it bought. The LANE caps it at one post per day
 // whatever happens, and every fired sale is remembered so it can never post twice.
 //
-// KILL SWITCH: repo variable KOL_WATCH_DRY_RUN=1, or DRY_RUN=1 locally. Dry runs render
-// the card to kol-sale-preview.png and post nothing.
+// ⚠⚠ DISARMED 2026-09-22 AT THE SUBJECT'S REQUEST. The wallet this watched asked not to
+// be followed. DISARMED below is the hard stop: the script exits before reading any
+// ledger, so it does not merely refrain from posting — it stops LOOKING. Monitoring
+// somebody who asked you not to is the thing they objected to, whether or not you publish
+// what you see.
+//
+// Re-arming is a deliberate edit here and in .github/workflows/kol-watch.yml, whose
+// schedule is removed. Do not do it without the subject's agreement.
+//
+// KILL SWITCH (retained, now secondary): KOL_WATCH_DRY_RUN=1 or DRY_RUN=1 renders the card
+// and posts nothing.
 // ============================================================================
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -31,6 +40,11 @@ const PRICES = join(ROOT, "public/price-history.json");
 const RARITY = join(ROOT, "public/aeon-rarity.json");
 const LANE = "kolwatch";
 const FRESH_DAYS = 4;                 // only fire on a sale that is genuinely recent
+
+/** Disarmed by default. A flag in the environment cannot turn this back on; only editing
+ *  this constant can, which is deliberate — it makes re-arming a decision somebody signs
+ *  their name to in a diff, not a variable toggled in a settings page. */
+export const DISARMED = true;
 
 const arg = k => (process.argv.find(a => a.startsWith(`--${k}=`)) || "").split("=")[1];
 const dryRun = process.env.DRY_RUN === "1" || process.env.KOL_WATCH_DRY_RUN === "1" || process.argv.includes("--dry-run");
@@ -112,4 +126,14 @@ async function main() {
   console.log(`kol-watch #${token}: posted ${tweetId}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error("kol-watch failed:", e.message); process.exit(0); });
+// ⚠ THE GUARD BELONGS ON EXECUTION, NOT ON IMPORT. Placing it at module scope exited the
+// process the moment a test imported this file: the suite went 479 -> 466 and Node reported
+// the truncated file as "1 test, passed". A disarm that quietly deletes its own tests is
+// not a disarm anybody can verify.
+if (import.meta.url === `file://${process.argv[1]}`) {
+  if (DISARMED) {
+    console.log("kol-watch is DISARMED at the subject's request — not reading, not posting.");
+    process.exit(0);
+  }
+  main().catch(e => { console.error("kol-watch failed:", e.message); process.exit(0); });
+}

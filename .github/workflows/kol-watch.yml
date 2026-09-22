@@ -8,13 +8,17 @@
 # call — the LANE caps this at one post per day, and every fired sale is remembered
 # so the same one can never post twice.
 #
-# KILL SWITCH: set repo variable KOL_WATCH_DRY_RUN=1 to silence it instantly. Dry
-# runs still detect and render, they just post nothing.
-name: KOL watch
+# ⚠⚠ DISARMED 2026-09-22 AT THE SUBJECT'S REQUEST. The wallet this watched asked not to
+# be followed, and that request is honoured. The schedule is REMOVED, not silenced: a repo
+# variable is a toggle somebody flips back by accident, and a cron that still fires is
+# still following someone who said no.
+#
+# The job now refuses to post even when dispatched by hand — DISARMED is hardcoded below,
+# above any input. Re-arming is a deliberate edit to this file AND to kol-watch.mjs, which
+# is the point. Do not re-enable without the subject's agreement.
+name: KOL watch (disarmed)
 
 on:
-  schedule:
-    - cron: "37 */4 * * *"      # every 4h, off the hour so it does not pile onto the other crons
   workflow_dispatch:
     inputs:
       token:
@@ -45,7 +49,9 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-          KOL_WATCH_DRY_RUN: ${{ github.event.inputs.dry_run || vars.KOL_WATCH_DRY_RUN }}
+          # hardcoded: not vars, not inputs. Nothing short of editing this line posts.
+          KOL_WATCH_DISARMED: "1"
+          KOL_WATCH_DRY_RUN: "1"
         run: node scripts/bot/kol-watch.mjs --token=${{ github.event.inputs.token || '2451' }}
 
       - name: Remember what was posted
