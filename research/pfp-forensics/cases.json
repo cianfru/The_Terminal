@@ -222,7 +222,7 @@
       },
       "holdsNow": 37479,
       "archetype": "FOMO, then diamond hands",
-      "verdict": "Every dollar went in at 'Bubble?' or hotter, the largest buy three days before the all-time high. Has never sold. Down about 74%. The only genuine holder of the four, and he bought exactly wrong.",
+      "verdict": "99% of the dollars went in at 'Bubble?' or hotter, the largest buy three days before the all-time high. Has never sold. Down about 74%. The only genuine holder of the four, and he bought exactly wrong.",
       "charts": [
         "2559-rainbow.png"
       ],
@@ -236,22 +236,25 @@
       "clusterTrades": {
         "scope": "cluster",
         "buys": {
-          "n": 13,
-          "qty": 2860,
-          "usd": 5315,
-          "avgPrice": 1.85879,
-          "pctUsdBubblePlus": 100
+          "n": 23,
+          "qty": 3753,
+          "usd": 6758,
+          "avgPrice": 1.80067,
+          "pctUsdBubblePlus": 99
         },
         "sells": {
           "n": 0,
           "qty": 0,
           "usd": 0,
+          "avgPrice": null,
           "pctUsdBubblePlus": 0
         },
         "firstBuy": "2025-07-07",
         "lastBuy": "2025-12-17",
         "recomputed": "2026-09-22",
-        "note": "SUPERSEDES 14 buys / $5,662. The dropped buy ($347) belonged to 0x7e4d2336, which left the core tier. The finding is untouched: every dollar went in at 'Bubble?' or hotter and nothing has ever been sold."
+        "note": "SUPERSEDES 14 buys / $5,662. The dropped buy ($347) belonged to 0x7e4d2336, which left the core tier. The finding is untouched: every dollar went in at 'Bubble?' or hotter and nothing has ever been sold.",
+        "reconciles": true,
+        "netReceived": 33726
       },
       "gasLinkedNote": "4 wallets hold 1,139 SPX on gas evidence alone, all of it in 0x7e4d2336. Recorded, never summed into the core.",
       "study": null,
@@ -286,7 +289,7 @@
       },
       "holdsNow": 384955,
       "archetype": "early, sold big, still holding",
-      "verdict": "Bought 10,256,465 SPX for $51,278 starting two weeks after launch, not one dollar of it in a bubble band. Sold 6,010,588 for $1,559,436. Consolidated the remainder into a fresh wallet and still holds 384,955, still selling into Uniswap in 2026.",
+      "verdict": "Bought 10,256,465 SPX for $51,278 starting two weeks after launch, not one dollar of it in a bubble band. Sold 6,195,542 for $1,617,729, and rotated a further 715,045 into other tokens. Consolidated the remainder into a fresh wallet and still holds 384,955.",
       "evidence": "case-14-evidence.md",
       "charts": [
         "14-earlybird-card.png",
@@ -303,7 +306,7 @@
       ],
       "clusterTrades": {
         "scope": "cluster",
-        "recomputed": "2026-09-21",
+        "recomputed": "2026-09-22",
         "buys": {
           "n": 24,
           "qty": 10256465,
@@ -312,16 +315,25 @@
           "pctUsdBubblePlus": 0
         },
         "sells": {
-          "n": 25,
-          "qty": 6010588,
-          "usd": 1559436,
-          "avgPrice": 0.25945,
-          "pctUsdBubblePlus": 81
+          "n": 23,
+          "qty": 6195542,
+          "usd": 1617729,
+          "avgPrice": 0.26111,
+          "pctUsdBubblePlus": 78
         },
-        "movedOut": 3860923,
+        "movedOut": 2969186,
         "firstBuy": "2023-09-02",
         "lastMarketTrade": "2026-05-05",
-        "note": "SUPERSEDES the earlier 7,206,588 bought / 2,249,039 sold / $12,758. Those were the pre-consolidation cluster, which could not see 0x98e97737 — a wallet that bought its own SPX on the open market and sold 3.7M into the 2024-25 highs."
+        "note": "SUPERSEDES the earlier 7,206,588 bought / 2,249,039 sold / $12,758. Those were the pre-consolidation cluster, which could not see 0x98e97737 — a wallet that bought its own SPX on the open market and sold 3.7M into the 2024-25 highs.",
+        "rotation": {
+          "n": 5,
+          "qty": 715045,
+          "usd": 281268,
+          "avgPrice": 0.39336,
+          "pctUsdBubblePlus": 0,
+          "note": "SPX disposed at market whose proceeds came back as another token, not as money. Counted separately from sells: it is not cash taken out."
+        },
+        "reconciles": true
       },
       "secondHop": {
         "ran": "2026-09-21",
@@ -353,7 +365,8 @@
         "leftOnTable": 1629391,
         "multipleActual": 34.4,
         "multipleIfHeld": 106.1,
-        "note": "Compares what the chain shows against simply never selling, at TODAY's price — never at the ATH, which would read $12.9m for the sold portion and is a cherry-picked peak. The 3,860,923 SPX that left these wallets is excluded from both sides: it cannot be followed, so no claim is made about it."
+        "note": "Compares what the chain shows against simply never selling, at TODAY's price — never at the ATH, which would read $12.9m for the sold portion and is a cherry-picked peak. The 3,860,923 SPX that left these wallets is excluded from both sides: it cannot be followed, so no claim is made about it.",
+        "supersededBy": "Recompute 2026-09-22 after the shape upgrade: sold is now 6,195,542 for $1,617,729 and a separate 715,045 was rotated, so the earlier left-on-the-table arithmetic needs redoing before it is quoted."
       }
     }
   ],
@@ -401,5 +414,6 @@
     "what": "All four cases re-clustered after the consolidation rule, the drain-fan-out fix and the one-transfer-one-link dedupe, because those three changed case #14 materially.",
     "result": "#2451 unchanged (6 core / 410,623). #3062 unchanged (5 core / 36,642), and its trades reproduce to the dollar. #14 is the corrected five-wallet core already recorded. Only #2559 moved, losing one gas-only wallet from the headline."
   },
-  "studyNote": "study = the order cases were published as posts, which is not token order. status: posted | queued | draft | traced (traced = reconstructed but never published as a numbered study)."
+  "studyNote": "study = the order cases were published as posts, which is not token order. status: posted | queued | draft | traced (traced = reconstructed but never published as a numbered study).",
+  "classifierNote": "Trades are classified by venue first, then UPGRADED by transaction shape: a transfer with value coming back in the same transaction is a sale even when the settler is unknown to us. An external audit found two such sales (220,000 SPX) filed as transfers. Every case now reconciles: buys + in + lpNet - sells - rotation - out == the balance the chain reports."
 }

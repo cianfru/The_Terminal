@@ -39,6 +39,43 @@ export const ROUTERS = new Set([
   "0xdef171fe48cf0115b1d80b88dc8eab59176fee57", // Paraswap
 ]);
 const NPM = "0xc36442b4a4522e871399cd717abdd847ab11fe88"; // Uniswap V3 Positions NFT
+const ZERO = "0x0000000000000000000000000000000000000000";
+
+/** ⚠ A VENUE LIST CANNOT SEE A VENUE IT HAS NEVER MET.
+ *  Keying on POOLS/ROUTERS fixed the CoW miss but left the same bug one layer out: on
+ *  2026-09-07 and 09-08 the case-#14 wallet sent 110,000 SPX each to 0x225a38bc and took
+ *  24.4293 and 23.4932 WETH straight back, unwrapped to ETH. Unambiguous sales, both filed
+ *  as plain transfers, because that settler is in no list of ours. An external audit caught
+ *  it; our own classifier could not. So a trade is also recognised by its SHAPE. */
+export const VALUE_TOKENS = new Set([
+  "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
+  "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
+  "0x6b175474e89094c44da98b954eedeac495271d0f", // DAI
+]);
+
+/** Upgrade a venue verdict using the shape of the transaction. Pure; unit-tested.
+ *
+ *  ⚠ THIS ONLY EVER UPGRADES. A first attempt replaced the venue classifier outright and
+ *  collapsed case #14 from 24 buys to 10: most swaps pay with NATIVE ETH, so there is no
+ *  WETH transfer out of the wallet to find and real buys read as plain transfers. Worse,
+ *  the ledger still reconciled, because the errors offset. The venue path is validated
+ *  against a published case study and stays primary; shape may only turn a "transfer" into
+ *  the trade it actually was.
+ *
+ *  ⚠ ROTATION IS NOT A SALE. On 2026-05-29 that wallet put 680,000 SPX through the pools
+ *  and took back 1,100,683,446 ASTEROID. An external audit called it a $212,470 sale; it is
+ *  a disposal at market whose proceeds never became money, and counting it would put
+ *  $212,470 into a headline that says "taken out". */
+export function upgradeKind(kind, { valueIn = 0, valueOut = 0, otherIn = 0 } = {}) {
+  if (kind === "out" && valueIn > 0) return "sell";
+  // A disposal whose proceeds came back as some OTHER token is a rotation, whether the
+  // venue path spotted the venue or not — the 680,000-SPX/ASTEROID swap is routed through
+  // a known router, so it arrives here already labelled "sell".
+  if ((kind === "out" || kind === "sell") && valueIn === 0 && otherIn > 0) return "rotation";
+  if (kind === "in" && valueOut > 0) return "buy";
+  return kind;
+}
 const VENUE_NAME = /AugustusSwapper|ConveyorRouter|UniversalRouter|AggregationRouter|GPv2Settlement|ExchangeProxy/i;
 
 const j = async (u, f = fetch) => { try { const r = await f(u, { headers: { accept: "application/json" } }); return r.ok ? r.json() : null; } catch { return null; } };
@@ -105,12 +142,33 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
   let rows = [...byTx.values()].sort((a, b) => a.ts.localeCompare(b.ts));
   if (sinceDays) { const cut = Date.now() - sinceDays * 864e5; rows = rows.filter(r => Date.parse(r.ts) >= cut); }
 
-  const meta = new Map();
+  // Every leg of each transaction, not just the SPX one, so a trade can be recognised by the
+  // value moving the other way even when the counterparty is one we have never seen.
+  const kinds = new Map();
   for (const tx of new Set(rows.map(r => r.tx))) {
-    const t = await j(`${BS}/transactions/${tx}`, fetchImpl);
-    meta.set(tx, { txTo: t?.to?.hash, txToName: t?.to?.name || "", txMethod: t?.method || "" });
+    const [t, legs] = await Promise.all([
+      j(`${BS}/transactions/${tx}`, fetchImpl),
+      j(`${BS}/transactions/${tx}/token-transfers`, fetchImpl),
+    ]);
+    const shape = { valueIn: 0, valueOut: 0, otherIn: 0 };
+    let unwrapped = 0, spxOut = 0;
+    for (const L of legs?.items || []) {
+      const addr = (L.token?.address_hash || L.token?.address || "").toLowerCase();
+      const from = (L.from?.hash || "").toLowerCase(), to = (L.to?.hash || "").toLowerCase();
+      const v = Number(L.total?.value || 0) / 10 ** Number(L.token?.decimals ?? 18);
+      const isSpx = addr === SPX.toLowerCase(), isValue = VALUE_TOKENS.has(addr);
+      if (isValue && to === ZERO) unwrapped += v;      // unwrap: seller is paid native ETH
+      if (set.has(from) && isSpx) spxOut += v;
+      if (set.has(to)) { if (isValue) shape.valueIn += v; else if (!isSpx) shape.otherIn += v; }
+      if (set.has(from) && isValue) shape.valueOut += v;
+    }
+    if (spxOut > 0 && shape.valueIn === 0 && unwrapped > 0) shape.valueIn = unwrapped;
+    const r0 = rows.find(r => r.tx === tx);
+    const base = classify({ dir: r0.dir, cp: r0.cp, txTo: t?.to?.hash,
+                            txToName: t?.to?.name || "", txMethod: t?.method || "" });
+    kinds.set(tx, upgradeKind(base, shape));
   }
-  return rows.map(r => ({ ...r, kind: classify({ dir: r.dir, cp: r.cp, ...meta.get(r.tx) }) }));
+  return rows.map(r => ({ ...r, kind: kinds.get(r.tx) ?? "out" }));
 }
 
 export const sells = rows => rows.filter(r => r.kind === "sell");
