@@ -18,7 +18,7 @@
 // Parameterised by case, so the next one cannot drift either.
 // ============================================================================
 import { Resvg } from "@resvg/resvg-js";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { FONT } from "../../scripts/bot/font.mjs";
 import { brandStripe, auraBg, cardDepth, plotPanel } from "../../scripts/bot/chrome.mjs";
 import { buildModel, bandVal, bandIndex, BAND_LABELS } from "../../src/models.js";
@@ -26,6 +26,7 @@ import { DEFAULT_RAW } from "../../src/data.js";
 import { clusterOf, tradeHistory } from "../../scripts/bot/kol-cluster.mjs";
 
 const R = p => new URL(p, import.meta.url);
+const uri = p => `data:image/png;base64,${readFileSync(p).toString("base64")}`;
 const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const r2 = n => Number(n.toFixed(2));
 const f = n => Math.round(n).toLocaleString();
@@ -42,6 +43,22 @@ const dl = [...P.keys()].sort();
 const priceOn = d => P.get(d) ?? P.get(dl.filter(x => x <= d).pop());
 const m = buildModel(DEFAULT_RAW), NB = m.bands.length;
 const BUBBLE = 5;                       // band index 5 = "Bubble?"; anything at or above is hot
+
+/** The piece itself, fetched by token id from the published metadata and cached. A card
+ *  about a profile picture that does not show the picture makes the reader go and look it
+ *  up. Resvg cannot resolve a remote href, so it has to be inlined as a data URI. */
+const ART = "/tmp/aeon-art-" + TOKEN + ".png";
+async function art() {
+  if (existsSync(ART)) return uri(ART);
+  const meta = JSON.parse(readFileSync(R("../../public/aeon-rarity.json"), "utf8")).tokens.find(t => t.id === TOKEN);
+  if (!meta?.img) return null;
+  try {
+    const r = await fetch(meta.img);
+    if (!r.ok) return null;
+    writeFileSync(ART, Buffer.from(await r.arrayBuffer()));
+    return uri(ART);
+  } catch { return null; }        // a missing picture must never fail the card
+}
 
 const cl = clusterOf(TOKEN);
 const rows = (await tradeHistory(cl.wallets))
@@ -133,6 +150,21 @@ for (const t of LADDER) {
   ly += 50;
 }
 if (!S.length) s += `<text x="${mL + PW + 28}" y="${ly}" font-family="sans-serif" font-size="17" fill="#64748b">never sold</text>`;
+
+// the piece, under the ladder in the right column — AEON art is 1200x1636, so the face sits
+// about 46% down; crop to that or the circle fills with hair.
+const ART_URI = await art();
+if (ART_URI) {
+  const ax = mL + PW + 28 + 111, AR = 72, aw = AR * 2, ah = aw * (1636 / 1200);
+  const ay = Math.max(ly + 76, mT + PH - 118);
+  s += `<defs><clipPath id="pf"><circle cx="${r2(ax)}" cy="${r2(ay)}" r="${AR}"/></clipPath></defs>
+<circle cx="${r2(ax)}" cy="${r2(ay)}" r="${AR + 7}" fill="${RO}" fill-opacity="0.16"/>
+<image href="${ART_URI}" x="${r2(ax - AR)}" y="${r2(ay - ah * 0.46)}" width="${aw}" height="${r2(ah)}" clip-path="url(#pf)"/>
+<circle cx="${r2(ax)}" cy="${r2(ay)}" r="${AR}" fill="none" stroke="${RO2}" stroke-width="3"/>
+<text x="${r2(ax)}" y="${r2(ay + AR + 28)}" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="800" fill="#cbd5e1">AEON #${TOKEN}</text>`;
+} else {
+  process.stderr.write(`  (no art for #${TOKEN} — card rendered without it)\n`);
+}
 
 // figures, derived
 let y = mT + PH + 96;
