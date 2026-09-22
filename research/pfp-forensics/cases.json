@@ -74,7 +74,9 @@
         },
         "recomputed": "2026-09-21",
         "note": "Reconciles with the trader-scope figures to within rounding on DOLLARS ($64,179 vs $64,095 bought, $247,636 vs $247,593 sold) and identically on the percentages. The extra 11 buys at cluster scope are dust from the smaller members. The 80% sell figure already published holds."
-      }
+      },
+      "study": 1,
+      "status": "posted"
     },
     {
       "token": 3062,
@@ -138,7 +140,9 @@
         },
         "recomputed": "2026-09-21",
         "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade."
-      }
+      },
+      "study": 2,
+      "status": "queued"
     },
     {
       "token": 2559,
@@ -200,7 +204,9 @@
         "recomputed": "2026-09-22",
         "note": "SUPERSEDES 14 buys / $5,662. The dropped buy ($347) belonged to 0x7e4d2336, which left the core tier. The finding is untouched: every dollar went in at 'Bubble?' or hotter and nothing has ever been sold."
       },
-      "gasLinkedNote": "4 wallets hold 1,139 SPX on gas evidence alone, all of it in 0x7e4d2336. Recorded, never summed into the core."
+      "gasLinkedNote": "4 wallets hold 1,139 SPX on gas evidence alone, all of it in 0x7e4d2336. Recorded, never summed into the core.",
+      "study": null,
+      "status": "traced"
     },
     {
       "token": 14,
@@ -234,6 +240,7 @@
       "verdict": "Bought 10,256,465 SPX for $51,278 starting two weeks after launch, not one dollar of it in a bubble band. Sold 6,010,588 for $1,559,436. Consolidated the remainder into a fresh wallet and still holds 384,955, still selling into Uniswap in 2026.",
       "evidence": "case-14-evidence.md",
       "charts": [
+        "14-earlybird-card.png",
         "14-rainbow.png",
         "14-outflow.png"
       ],
@@ -284,7 +291,9 @@
         "0x3542f155502840cc20b1255ad76054546717e89c"
       ],
       "nftCustodyNote": "These hold the NFT, not SPX — none has ever moved a single token, so SPX-flow clustering cannot see them. They are linked by the token's custody chain and by ETH gas, and they contribute nothing to any trading figure.",
-      "holdsNowNote": "384,955 SPX (~$204,232), all in 0xc41e7f22, still being sold into Uniswap as recently as 2026. CORRECTS an earlier reading of 0 — the consolidation was invisible to a 1-to-1 drain rule, which rejected the second gather because by then the target was no longer empty. ⚠ 0xc41e7f22 also received 2,000,000 in July 2025 from a Banana Gun-style router, so part of this balance may be trade proceeds rather than the original stack."
+      "holdsNowNote": "384,955 SPX (~$204,232), all in 0xc41e7f22, still being sold into Uniswap as recently as 2026. CORRECTS an earlier reading of 0 — the consolidation was invisible to a 1-to-1 drain rule, which rejected the second gather because by then the target was no longer empty. ⚠ 0xc41e7f22 also received 2,000,000 in July 2025 from a Banana Gun-style router, so part of this balance may be trade proceeds rather than the original stack.",
+      "study": 3,
+      "status": "draft"
     }
   ],
   "sharedCharts": [
@@ -330,5 +339,6 @@
     "ran": "2026-09-22",
     "what": "All four cases re-clustered after the consolidation rule, the drain-fan-out fix and the one-transfer-one-link dedupe, because those three changed case #14 materially.",
     "result": "#2451 unchanged (6 core / 410,623). #3062 unchanged (5 core / 36,642), and its trades reproduce to the dollar. #14 is the corrected five-wallet core already recorded. Only #2559 moved, losing one gas-only wallet from the headline."
-  }
+  },
+  "studyNote": "study = the order cases were published as posts, which is not token order. status: posted | queued | draft | traced (traced = reconstructed but never published as a numbered study)."
 }

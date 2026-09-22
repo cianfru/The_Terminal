@@ -92,6 +92,9 @@ function Case({ c, isMobile }) {
   const bought = t.buys || {}, sold = t.sells || {};
   return (
     <section style={{ borderTop: `1px solid ${HEADRULE}`, paddingTop: 26, margin: "46px 0 0" }}>
+      <div style={{ fontFamily: SANS, fontSize: 12, letterSpacing: "0.14em", textTransform: "uppercase", color: DIM, fontWeight: 600, marginBottom: 6 }}>
+        {c.study ? `Case study #${c.study}` : "Traced, not published"}{c.status === "queued" ? " · not posted yet" : ""}
+      </div>
       <h2 style={{ fontFamily: SANS, fontSize: isMobile ? 22 : 26, color: TEXT, fontWeight: 700, margin: "0 0 4px", letterSpacing: "-0.01em" }}>
         AEON #{c.token}
       </h2>
@@ -144,7 +147,12 @@ function Case({ c, isMobile }) {
 }
 
 export default function CasesPage({ isMobile }) {
-  const cases = useMemo(() => REG.cases.slice().sort((a, b) => b.token - a.token), []);
+  // ⚠ ORDER BY PUBLISHING ORDER, NOT TOKEN ID. Sorting by token put #14 last — the newest
+  // study, whose own card reads "Case study #3" — beneath the oldest case, so a reader
+  // arriving from that post scrolled past three older ones to reach it.
+  const cases = useMemo(
+    () => REG.cases.slice().sort((a, b) =>
+      (b.study ?? -1) - (a.study ?? -1) || b.token - a.token), []);
   const wallets = useMemo(
     () => new Set(cases.flatMap(c => [...(c.wallets || []), ...(c.nftCustody || [])].map(a => a.toLowerCase()))).size,
     [cases]);
