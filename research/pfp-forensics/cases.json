@@ -40,7 +40,7 @@
       },
       "holdsNow": 410623,
       "archetype": "sold into strength",
-      "verdict": "Recovered 3.9x cost by selling 80% of dollars into 'Bubble?' or hotter, including $109,304 at Max Bubble. Also bought $33,110 at Max Bubble. Still holds 410,591 SPX, most of it vaulted. The best-timed of the four, and still not a DCA holder.",
+      "verdict": "Recovered 3.9x cost by selling 80% of dollars into 'Bubble?' or hotter, including $109,304 at Max Bubble. Also bought $33,110 at Max Bubble. Still holds 410,623 SPX, most of it vaulted. The best-timed of the four, and still not a DCA holder.",
       "charts": [
         "2451-nft-timeline.png",
         "2451-buys-and-sells.png",
@@ -61,12 +61,16 @@
         "buys": {
           "n": 34,
           "usd": 64179,
-          "pctUsdBubblePlus": 57
+          "pctUsdBubblePlus": 57,
+          "qty": 1092500,
+          "avgPrice": 0.05875
         },
         "sells": {
           "n": 23,
           "usd": 247636,
-          "pctUsdBubblePlus": 80
+          "pctUsdBubblePlus": 80,
+          "qty": 836673,
+          "avgPrice": 0.29598
         },
         "recomputed": "2026-09-21",
         "note": "Reconciles with the trader-scope figures to within rounding on DOLLARS ($64,179 vs $64,095 bought, $247,636 vs $247,593 sold) and identically on the percentages. The extra 11 buys at cluster scope are dust from the smaller members. The 80% sell figure already published holds."
@@ -101,7 +105,7 @@
       },
       "holdsNow": 36642,
       "archetype": "bought the top, sold the dip",
-      "verdict": "The mirror image of #2451. 83% of dollars spent went in at 'Bubble?' or hotter, $9,483 of it at Max Bubble; the single sale was into weakness. The trader wallet itself keeps 138 SPX — everything else sits in four vaults that have never traded.",
+      "verdict": "The mirror image of #2451. Every dollar spent went in at 'Bubble?' or hotter — not one buy outside those bands — and the selling came later and lower: 5 sales at an average of $0.71 against an average cost of $1.20. The trader wallet itself keeps 138 SPX; everything else sits in four vaults that have never traded.",
       "charts": [
         "3062-custody-chain.png",
         "3062-rainbow.png",
@@ -121,12 +125,16 @@
         "buys": {
           "n": 12,
           "usd": 14952,
-          "pctUsdBubblePlus": 100
+          "pctUsdBubblePlus": 100,
+          "qty": 12443,
+          "avgPrice": 1.20165
         },
         "sells": {
           "n": 5,
           "usd": 7629,
-          "pctUsdBubblePlus": 44
+          "pctUsdBubblePlus": 44,
+          "qty": 10761,
+          "avgPrice": 0.70896
         },
         "recomputed": "2026-09-21",
         "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade."
@@ -250,7 +258,8 @@
           "n": 25,
           "qty": 6010588,
           "usd": 1559436,
-          "avgPrice": 0.25945
+          "avgPrice": 0.25945,
+          "pctUsdBubblePlus": 81
         },
         "movedOut": 3860923,
         "firstBuy": "2023-09-02",

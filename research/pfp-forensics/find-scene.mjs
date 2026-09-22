@@ -55,9 +55,26 @@ export const AEON = "0xc374a204334d4edd4c6a62f0867c752d65e9579c";
 /** A collection is spam if it advertises, or if it is too big to mean anything.
  *  Both halves are needed: "zkSync Drop" passes a name check on some listings but
  *  1,267,582 holders is not a community, and "5O OOO USD FOR FREE" has only 1,001. */
-export const SPAM_NAME = /(\.io|\.com|\.net|\.finance|t\.ly|t\.me|https?:|\$|\bwin\b|free|reward|drop\b|scan |claim|airdrop|bounty|auto(eth|wbtc)|voucher|giveaway|\d{3},\d{3}|USD)/i;
+export const SPAM_NAME = /(\.io|\.com|\.net|\.finance|t\.ly|t\.me|https?:|\$|\bwin\b|free|reward|drop\b|scan |claim|airdrop|bounty|auto(eth|wbtc)|voucher|giveaway|\d{3},\d{3}|USD|open edition)/i;
 export const SPAM_HOLDERS = 60000;
-export const isSpam = (name, holders) => SPAM_NAME.test(name || "") || (holders || 0) > SPAM_HOLDERS;
+
+/** ⚠ SPAM HIDES ITS DOMAIN BEHIND SPACES. "[ 256 ] DAOEVENT . COM" and "[ ETSUB . COM ]"
+ *  both walked past a \.com test and landed in the scene, where they inflated depth for
+ *  every wallet that had ever been dusted. Strip whitespace before matching. */
+const squash = s => String(s || "").replace(/[\s\u200b-\u200d]/g, "");
+
+/** ⚠ AND IT MINTS ROUND NUMBERS. A spam contract airdrops a round batch and keeps one, so
+ *  its holder count lands on 1001 / 2001 / 3001 / 3501 / 3601 / 3801 with uncanny
+ *  regularity. Real collections do not: AEON 1199, Milady 5911, Kemonokaki 4463,
+ *  doominis 1353, StarBored 6492. One above a round hundred, over 500, is a signature. */
+export const isRoundMint = h => h > 500 && (h - 1) % 100 === 0;
+
+/** A name that is nothing but digits and punctuation ("1", "#00232") is not a collection. */
+export const isNamelessMint = n => /^[\W\d_]*$/.test(String(n || "").trim());
+
+export const isSpam = (name, holders) =>
+  SPAM_NAME.test(name || "") || SPAM_NAME.test(squash(name)) ||
+  isNamelessMint(name) || isRoundMint(holders || 0) || (holders || 0) > SPAM_HOLDERS;
 
 // Blockscout rate-limits a long sweep. A 429 that returns null looks EXACTLY like an
 // empty collection, and the first run of this script duly reported 0 holders for

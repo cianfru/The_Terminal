@@ -127,6 +127,7 @@ import FavoritesLauncher from "./FavoritesLauncher.jsx";
 import { gcolFor } from "./terminal-colors.js";
 import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
+const CasesPage = lazy(() => import("./CasesPage.jsx"));
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
 const RallyChart = lazy(() => import("./RallyChart.jsx"));
@@ -763,6 +764,7 @@ export default function App() {
     else if (r === "aeon") params.set("view", "aeon");
     // the manual carries its page in ?p= so any page in the book is directly linkable
     else if (r === "docs") { params.set("view", "docs"); if (id) params.set("p", id); }
+    else if (r === "cases") params.set("view", "cases");
     else if (r === "next") params.set("view", "next");
     else if (r === "rainbow") params.set("view", "rainbow");
     else if (r === "chart" && id) {
@@ -844,6 +846,7 @@ export default function App() {
       else if (p.get("view") === "story") { setRoute("story"); setStoryWallet(p.get("wallet") || ""); }
       else if (p.get("view") === "wallet") { setRoute("wallet"); setWalletAddr(p.get("addr") || ""); }
       else if (p.get("view") === "cluster") { setRoute("cluster"); setClusterId(p.get("id") || ""); }
+      else if (p.get("view") === "cases") setRoute("cases");
       else if (p.get("view") === "next") setRoute("next");
       // SPX City left the gallery for its own /city tab. Old shared links (?chart=whalewatch /
       // spxcity / aeonskyline) still resolve, send them to the city instead of dropping to home.
@@ -1188,6 +1191,14 @@ export default function App() {
       {route === "docs" && (
         <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
           <DocsPage isMobile={isMobile} slug={docSlug} onNavigate={openDocs} />
+        </Suspense>
+      )}
+
+      {/* The proof surface for the PFP forensics posts — every case with its wallet
+          addresses, linked out, so a reader can check the claim instead of trusting it. */}
+      {route === "cases" && (
+        <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
+          <CasesPage isMobile={isMobile} />
         </Suspense>
       )}
 
