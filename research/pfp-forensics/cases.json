@@ -109,6 +109,7 @@
       "archetype": "bought the top, sold the dip",
       "verdict": "The mirror image of #2451. Every dollar spent went in at 'Bubble?' or hotter — not one buy outside those bands — and the selling came later and lower: 5 sales at an average of $0.71 against an average cost of $1.20. The trader wallet itself keeps 138 SPX; everything else sits in four vaults that have never traded.",
       "charts": [
+        "3062-eyepatch-card.png",
         "3062-custody-chain.png",
         "3062-rainbow.png",
         "3062-flow.png",
@@ -139,10 +140,52 @@
           "avgPrice": 0.70896
         },
         "recomputed": "2026-09-21",
-        "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade."
+        "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade.",
+        "firstBuy": {
+          "date": "2025-01-06",
+          "price": 1.5515,
+          "band": "Max Bubble"
+        },
+        "lastBuy": {
+          "date": "2025-09-11",
+          "price": 1.4683
+        },
+        "verifiedLive": "2026-09-22: balances re-read from the chain, 36,642 across the five wallets, matching the registry exactly."
       },
       "study": 2,
-      "status": "queued"
+      "status": "queued",
+      "sellStaircase": [
+        {
+          "date": "2025-07-01",
+          "qty": 2700,
+          "price": 1.0929,
+          "band": "Bubble?"
+        },
+        {
+          "date": "2025-10-05",
+          "qty": 261,
+          "price": 1.5748,
+          "band": "Bubble?"
+        },
+        {
+          "date": "2025-10-22",
+          "qty": 2000,
+          "price": 0.8939,
+          "band": "HODL!"
+        },
+        {
+          "date": "2025-11-25",
+          "qty": 800,
+          "price": 0.6168,
+          "band": "Still Cheap"
+        },
+        {
+          "date": "2026-07-05",
+          "qty": 5000,
+          "price": 0.3972,
+          "band": "BUY!"
+        }
+      ]
     },
     {
       "token": 2559,
