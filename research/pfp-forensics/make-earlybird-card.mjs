@@ -21,7 +21,10 @@
 // tokens — a fungible token cannot be tainted, so no amount downstream is attributable
 // here. See trace-second-hop.mjs and cases.json secondHop.
 //
-// Every figure is derived at render time. Art is fetched to /tmp by the caller.
+// ⚠ EVERY figure derives at render time, INCLUDING THE TITLE. It read "$1.56 million out"
+// while the stat directly beneath it said $1,617,729, because the headline was the one
+// string still typed by hand when the classifier found two more sales.
+// Art is fetched to /tmp by the caller.
 // ============================================================================
 import { Resvg } from "@resvg/resvg-js";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -53,7 +56,23 @@ const rows = (await tradeHistory(cl.wallets)).map(r => ({ ...r, price: priceOn(r
 const B = rows.filter(r => r.kind === "buy"), S = rows.filter(r => r.kind === "sell");
 const q = a => a.reduce((x, t) => x + t.qty, 0), u = a => a.reduce((x, t) => x + t.qty * t.price, 0);
 const boughtQ = q(B), boughtU = u(B), soldQ = q(S), soldU = u(S);
-const movedOut = boughtQ - soldQ - cl.holdsNow;   // what left the cluster, neither sold nor held
+// ⚠ NEVER DERIVE THIS AS A RESIDUAL. It was `bought - sold - holds`, which silently
+// absorbs everything the classifier does not name: once rotation was split out, the
+// residual read 3,675,968 against a true 3,140,994, the gap being 715,045 rotated less
+// 171,807 received from outside less the 8,263 net LP gain. Count what actually left.
+const ROT = rows.filter(r => r.kind === "rotation");
+// ⚠ AND NET PER COUNTERPARTY, NOT IN AGGREGATE. Netting all inflows against all outflows
+// subtracted an unrelated 171,807 that arrived from a third party, giving 2,969,186 for
+// coins that went to 35 OTHER addresses. Per counterparty, a round trip cancels — the
+// 2,000,000 posted as collateral and recovered nets to zero — while an unrelated receipt
+// cannot reduce what somebody else was sent.
+const net = new Map();
+for (const r of rows) {
+  if (!r.cp || (r.kind !== "out" && r.kind !== "in")) continue;
+  net.set(r.cp, (net.get(r.cp) || 0) + (r.kind === "out" ? r.qty : -r.qty));
+}
+const movedOut = [...net.values()].filter(v => v > 0).reduce((a, b) => a + b, 0);
+const rotatedQ = ROT.reduce((s, t) => s + t.qty, 0);
 const firstBuy = B.slice().sort((a, b) => a.ts.localeCompare(b.ts))[0];
 const hop = kase.secondHop;
 if (!hop) throw new Error("no secondHop block in the registry — run trace-second-hop.mjs first");
@@ -71,8 +90,8 @@ let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" view
 <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0b0b16"/><stop offset="100%" stop-color="#05050e"/></linearGradient></defs>
 <rect width="${W}" height="${H}" fill="url(#bg)"/>
 ${auraBg(GRN, W, H, { opacity: 0.24, accent2: VI })}${cardDepth(W, H)}${brandStripe(H)}
-<text x="${mL}" y="80" font-family="sans-serif" font-size="41" font-weight="800" fill="#f1f5f9">They bought 10.3 million SPX for $51,278</text>
-<text x="${mL}" y="130" font-family="sans-serif" font-size="41" font-weight="800" fill="${GRN2}">and have taken $1.56 million out</text>
+<text x="${mL}" y="80" font-family="sans-serif" font-size="41" font-weight="800" fill="#f1f5f9">${esc(`They bought ${(boughtQ / 1e6).toFixed(1)} million SPX for $${f(boughtU)}`)}</text>
+<text x="${mL}" y="130" font-family="sans-serif" font-size="41" font-weight="800" fill="${GRN2}">${esc(`and have taken $${(soldU / 1e6).toFixed(2)} million out`)}</text>
 <text x="${mL}" y="176" font-family="sans-serif" font-size="23" fill="#94a3b8">Buying started two weeks after launch, averaging $0.005. Not one dollar in a bubble band.</text>
 <text x="${mL}" y="212" font-family="sans-serif" font-size="21" fill="#64748b">Case study #3 \u2014 AEON #${TOKEN}. Five wallets, linked by complete self-drains.</text>
 ${plotPanel(mL - 24, mT - 24, PW + 48, PH + 48)}`;
@@ -121,7 +140,7 @@ cells.forEach(([k, v, sub, c], i) => {
 y += 128;
 s += `<text x="${mL}" y="${y}" font-family="sans-serif" font-size="25" font-weight="700" fill="#e2e8f0">Two of these wallets emptied into one fresh address, 72 seconds apart.</text>`
    + `<text x="${mL}" y="${y + 36}" font-family="sans-serif" font-size="21" fill="#94a3b8">That address still holds ${f(cl.holdsNow)} SPX and is still selling. It is why this household is still here.</text>`
-   + `<text x="${mL}" y="${y + 66}" font-family="sans-serif" font-size="21" fill="#94a3b8">Part of its balance arrived later from a router, so not all of it traces to those 2023 buys.</text>`;
+   + `<text x="${mL}" y="${y + 66}" font-family="sans-serif" font-size="21" fill="#94a3b8">${esc(rotatedQ ? `A further ${f(rotatedQ)} SPX went through the pools into other tokens \u2014 disposed, never turned into money.` : "Part of its balance arrived later from a router, so not all of it traces to those 2023 buys.")}</text>`;
 s += `<text x="${mL}" y="${H - 40}" font-family="sans-serif" font-size="19" fill="#64748b">A profile picture never proves who owns a wallet — it is a lead, not an identity.</text>
 <text x="${W - 54}" y="${H - 40}" text-anchor="end" font-family="sans-serif" font-size="19" fill="#64748b">spx6900rainbow.xyz</text></svg>`;
 writeFileSync("/tmp/earlybird-card.png", new Resvg(s, { fitTo: { mode: "width", value: W }, font: FONT }).render().asPng());
