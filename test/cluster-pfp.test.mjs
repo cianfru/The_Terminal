@@ -74,13 +74,20 @@ test("the gas-funder guard is tight enough to reject a service", () => {
   assert.ok(MAX_FUNDED < 42);
 });
 
-test("drainFanOut counts distinct SPX recipients, not transfers", async () => {
+test("drainFanOut counts wallets DRAINED INTO, never wallets merely paid", async () => {
   const { drainFanOut } = await import("../scripts/cluster-pfp.mjs");
+  // ⚠ This asserted "distinct SPX recipients" until case #14. Counting every recipient
+  // discarded 0x9f7e2f5e, which drained 100% of its balance — 2,142,133 of 2,142,133 —
+  // into an empty wallet, purely because it had earlier made partial payments to 12
+  // addresses. A distributor makes many PARTIAL payments; a migrator empties itself and
+  // can only do that once per refill. The partial row below is the regression guard.
   const rows = [
-    { dir: "OUT", cp: "0xaaa" }, { dir: "OUT", cp: "0xaaa" },  // same wallet twice = one recipient
-    { dir: "OUT", cp: "0xbbb" },
-    { dir: "IN",  cp: "0xccc" },                                // inbound never counts
-    { dir: "OUT", cp: null },                                   // malformed rows are skipped
+    { dir: "OUT", cp: "0xaaa", balBefore: 100, qty: 100 },   // full self-drain
+    { dir: "OUT", cp: "0xaaa", balBefore: 50,  qty: 50  },   // same wallet again = one target
+    { dir: "OUT", cp: "0xbbb", balBefore: 200, qty: 200 },   // full self-drain
+    { dir: "OUT", cp: "0xccc", balBefore: 1000, qty: 10 },   // a PAYMENT — must not count
+    { dir: "IN",  cp: "0xddd", balBefore: 0,   qty: 900 },   // inbound never counts
+    { dir: "OUT", cp: null,    balBefore: 100, qty: 100 },   // malformed rows are skipped
   ];
   assert.equal(await drainFanOut("0xme", rows), 2);
 });
@@ -99,8 +106,10 @@ test("drainFanOut ignores infrastructure — a trader selling into pools is not 
   const { drainFanOut } = await import("../scripts/cluster-pfp.mjs");
   const POOL = "0x52c77b0cb827afbad022e6d6caf2c44452edbc39"; // Uniswap V2: SPX
   const rows = [
-    { dir: "OUT", cp: POOL }, { dir: "OUT", cp: "0xpool2" }, { dir: "OUT", cp: "0xpool3" },
-    { dir: "OUT", cp: "0xvault" },
+    { dir: "OUT", cp: POOL,     balBefore: 100, qty: 100 },
+    { dir: "OUT", cp: "0xpool2", balBefore: 100, qty: 100 },
+    { dir: "OUT", cp: "0xpool3", balBefore: 100, qty: 100 },
+    { dir: "OUT", cp: "0xvault", balBefore: 100, qty: 100 },
   ];
   const skip = async a => a === POOL || a.startsWith("0xpool");
   assert.equal(await drainFanOut("0xme", rows, skip), 1, "only the plain wallet counts");

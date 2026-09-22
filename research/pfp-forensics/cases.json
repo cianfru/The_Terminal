@@ -3,7 +3,7 @@
   "thesis": "An AEON profile picture reads as conviction in SPX6900. Traced on-chain, not one of the cases so far is a buy-and-hold or DCA holder.",
   "contract": "0xc374a204334d4Edd4C6a62f0867C752d65E9579c",
   "spxContract": "0xE0f63A424a4439cBE457d80e4f4b51ad25b2c56C",
-  "updated": "2026-09-21",
+  "updated": "2026-09-22",
   "bandMeasure": "share of USD traded in band index >= 5 ('Bubble?' or hotter) on the frozen rainbow; model never re-fitted",
   "priceAsOf": {
     "date": "2026-09-21",
@@ -138,8 +138,8 @@
       "nftHolder": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
       "nftHolderRole": "holds it directly",
       "trader": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
-      "clusterWallets": 5,
-      "clusterNote": "5 wallets, found by scripts/cluster-pfp.mjs: the holder 0x3de73aec, 0xf87fb68d (28,921 SPX — more than the NFT holder itself), 0x7e4d2336 (1,139), 0x619a6035 and 0x8114c302 (both empty). Linked by two drain-into-empty moves of 876 and 98 SPX, plus gas. Every one of those links is far below the production engine's 50,000 floor, which is why it reported a single wallet.",
+      "clusterWallets": 4,
+      "clusterNote": "4 wallets by scripts/cluster-pfp.mjs (core tier). The holder 0x3de73aec (8,558 SPX), 0xf87fb68d (28,921 — more than the NFT holder itself), and two now-empty wallets 0x619a6035 and 0x8114c302. On 2025-07-20 those two BOTH emptied into 0x3de73aec (876 + 156 + 120 SPX) — a consolidation, not the lone drain recorded earlier; a second wallet gathering on the same day is stronger evidence than one. 0x619a6035 later drained its last 98 SPX into 0xf87fb68d. Every link is far below the production engine's 50,000 floor, which is why that engine reported a single wallet.",
       "buys": {
         "n": 10,
         "qty": 2617,
@@ -159,34 +159,40 @@
         "price": 1.2613,
         "band": "Bubble?"
       },
-      "holdsNow": 38618,
+      "holdsNow": 37479,
       "archetype": "FOMO, then diamond hands",
       "verdict": "Every dollar went in at 'Bubble?' or hotter, the largest buy three days before the all-time high. Has never sold. Down about 74%. The only genuine holder of the four, and he bought exactly wrong.",
       "charts": [
         "2559-rainbow.png"
       ],
-      "holdsNowNote": "38,618 across the cluster; 8,558 in the wallet that holds the NFT. The registry first recorded 8,558 — the single-wallet read, corrected once the no-minimum rules ran.",
+      "holdsNowNote": "37,479 across the core tier; 8,558 in the wallet that holds the NFT. CORRECTS an earlier 5-wallet / 38,618 reading that counted 0x7e4d2336 (1,139 SPX) in the headline. Re-run 2026-09-22 under the consolidation and drain-fan-out fixes, its ONLY links to this household are ETH gas — 0.497 ETH in from 0x7e4d2336 to 0x8114c302, 0.005 back from the holder — and no SPX structural link at all. By our own two-tier rule that is circumstantial, so it belongs in the supporting tier, not the headline.",
       "wallets": [
         "0x3de73aec76602bab50fe9499d6f230b653e9d619",
         "0xf87fb68dabc9b552f6245fa6b8d17e9fdabd15de",
-        "0x7e4d233667a97f998c78f4f97076a1da50820d35",
         "0x619a60351d23c9ad08e3a3b8fdf9a714a22490f3",
         "0x8114c302232c8db065a8e1be1594253c388c0c1d"
       ],
       "clusterTrades": {
         "scope": "cluster",
         "buys": {
-          "n": 14,
-          "usd": 5662,
+          "n": 13,
+          "qty": 2860,
+          "usd": 5315,
+          "avgPrice": 1.85879,
           "pctUsdBubblePlus": 100
         },
         "sells": {
           "n": 0,
+          "qty": 0,
           "usd": 0,
           "pctUsdBubblePlus": 0
         },
-        "recomputed": "2026-09-21"
-      }
+        "firstBuy": "2025-07-07",
+        "lastBuy": "2025-12-17",
+        "recomputed": "2026-09-22",
+        "note": "SUPERSEDES 14 buys / $5,662. The dropped buy ($347) belonged to 0x7e4d2336, which left the core tier. The finding is untouched: every dollar went in at 'Bubble?' or hotter and nothing has ever been sold."
+      },
+      "gasLinkedNote": "4 wallets hold 1,139 SPX on gas evidence alone, all of it in 0x7e4d2336. Recorded, never summed into the core."
     },
     {
       "token": 14,
@@ -310,5 +316,10 @@
       "max": 139
     },
     "note": "A previously recorded '10 of 24' was WRONG and had been unreproducible since the trait filter renamed identify()'s return key and silently broke the harness. Reproduced figure is 11/25. Ranked-first is NOT the same as identified: on the fragment path the tool never claims confidence, by design, because in a trait-generated collection a crop genuinely belongs to many tokens. The number worth publishing is confidently-wrong = 0, not an accuracy percentage."
+  },
+  "rerun": {
+    "ran": "2026-09-22",
+    "what": "All four cases re-clustered after the consolidation rule, the drain-fan-out fix and the one-transfer-one-link dedupe, because those three changed case #14 materially.",
+    "result": "#2451 unchanged (6 core / 410,623). #3062 unchanged (5 core / 36,642), and its trades reproduce to the dollar. #14 is the corrected five-wallet core already recorded. Only #2559 moved, losing one gas-only wallet from the headline."
   }
 }
