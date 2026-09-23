@@ -161,7 +161,10 @@ async function contract(a) { if (!(a in code)) code[a] = codeIsContract(await rp
 const led = {};
 async function ledger(a) {
   if (led[a]) return led[a];
-  const tf = await pages(`/addresses/${a}/token-transfers?token=${SPX}`);
+  const tf = (await pages(`/addresses/${a}/token-transfers?token=${SPX}`))
+    // ⚠ a wallet sending to itself moves nothing, but it lists once and reads as an inflow,
+    // inflating the balance-before that drain detection divides by — enough to hide a drain.
+    .filter(t => t.from?.hash?.toLowerCase() !== t.to?.hash?.toLowerCase());
   led[a] = withBalances(tf.map(t => ({
     ts: t.timestamp, dir: t.to?.hash?.toLowerCase() === a ? "IN" : "OUT",
     qty: Number(t.total?.value) / 1e8,

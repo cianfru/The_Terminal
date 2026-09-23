@@ -56,6 +56,10 @@ export async function loadLedger(files) {
       if (head) { head = false; continue; }
       if (!line) continue;
       const c = line.split(",");
+      // ⚠ A SELF-TRANSFER MOVES NOTHING. Indexed once, it read as an inflow: one wallet sent
+      // itself 1,046,592 SPX in 2024 and its rebuilt balance came out 1,046,592 against a live
+      // balance of zero — the only mismatch in 49 checked against the chain. Dropped at load.
+      if (c[0].toLowerCase() === c[1].toLowerCase()) continue;
       if (n >= cap) grow();
       from[n] = intern(c[0].toLowerCase()); to[n] = intern(c[1].toLowerCase());
       t[n] = parseTime(c[2]); v[n] = Number(c[3]) / 1e8;
