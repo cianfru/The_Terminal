@@ -13,7 +13,7 @@
 //
 // Required secrets to actually post (OAuth 1.0a user context for the bot account):
 //   X_API_KEY  X_API_SECRET  X_ACCESS_TOKEN  X_ACCESS_SECRET
-import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
+import { writeFileSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchLivePrice, fetchMajors, fetchHistory, computeStats } from "./stats.mjs";
@@ -34,12 +34,6 @@ const STATE_FILE = join(ROOT, "public/post-state.json");
 const DAILY_BAND_FILE = join(ROOT, "public/daily-band-state.json");
 const HISTORY_FILE = join(ROOT, "public/history.json");
 const CARD_AR_FILE = join(ROOT, "public/card-ar.json"); // owner-picked aspect ratios per card
-// The site's own copy of every daily post (?view=posts). Written BEFORE X is tried, so a
-// post reaches the site whatever X does — the account was suspended on 2026-09-23 and the
-// site is where the posts continue. Images are committed next to it and read via raw.
-const FEED_FILE = join(ROOT, "public/site-feed.json");
-const FEED_DIR = join(ROOT, "public/feed");
-const FEED_KEEP = 120;
 const readJson = (p, d) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return d; } };
 
 const arg = name => { const a = process.argv.find(x => x.startsWith(`--${name}=`)); return a ? a.split("=")[1] : null; };
@@ -190,30 +184,12 @@ if (state.lastPostedDate === today && force) {
   console.log(`Already posted today (${state.lastId ?? "?"} on ${today}) — posting anyway (force).`);
 }
 
-// ── The site feed. One entry per day; a rerun replaces that day's entry, never adds.
-// A video card (scale/cube zoom-outs) gets its static frame — the site shows a picture.
-try {
-  const png = media?.kind === "image" && media.data ? media.data : renderPostCard(post, stats);
-  mkdirSync(FEED_DIR, { recursive: true });
-  const img = `feed/${today}-${post.id}.png`;
-  writeFileSync(join(ROOT, "public", img), png);
-  const feed = readJson(FEED_FILE, { posts: [] });
-  // `auto` marks the bot's entry so a rerun replaces only ITS post for the day — never one the owner
-  // wrote by hand in the control panel (/control → ✍ Site posts), which shares this file.
-  const posts = [{ id: `auto-${today}`, ts: new Date().toISOString(), date: today, card: post.id, text: post.text, img, auto: true },
-    ...(feed.posts || []).filter(p => !(p.auto && p.date === today))]
-    .sort((a, b) => String(b.ts || b.date).localeCompare(String(a.ts || a.date))).slice(0, FEED_KEEP);
-  writeFileSync(FEED_FILE, JSON.stringify({ updated: new Date().toISOString(), posts }, null, 2) + "\n");
-  console.log(`Site feed ✓ "${post.id}" → public/${img}`);
-} catch (e) {
-  console.error(`site feed write failed (X attempt continues): ${e.message}`);
-}
-
-// X suspended: BOT_SITE_ONLY=1 (repo var) publishes to the site alone and still records the
-// day below, so the workflow stays green instead of failing on X every morning.
+// X suspended 2026-09-23: BOT_SITE_ONLY=1 (repo var, defaults on in post-tweet.yml) skips X and
+// still records the day below, so a manual run stays green instead of failing on X. (The name is
+// historical — a site feed existed briefly and was removed; it now just means "don't post to X".)
 const siteOnly = process.env.BOT_SITE_ONLY === "1";
 if (siteOnly) {
-  console.log("BOT_SITE_ONLY=1 — posted to the site feed only, X skipped.");
+  console.log("BOT_SITE_ONLY=1 — X skipped (account suspended); day recorded.");
 } else {
   const { TwitterApi } = await import("twitter-api-v2");
   const client = new TwitterApi(creds);
@@ -227,7 +203,6 @@ if (siteOnly) {
     }
   } catch (e) {
     console.error(`POST FAILED ✗ — code ${e.code ?? "?"}: ${JSON.stringify(e.data?.errors ?? e.data ?? e.message)}`);
-    console.error("The site feed already has today's post; set repo var BOT_SITE_ONLY=1 while X is unavailable.");
     process.exit(1);
   }
 }

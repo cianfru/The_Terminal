@@ -18,8 +18,6 @@ on:
       - "flipside/**"
       - "public/next-post.json"
       - "public/post-state.json"
-      - "public/site-feed.json"
-      - "public/feed/**"
       - "public/band-state.json"
       - "public/daily-band-state.json"
       - "public/milestone-state.json"

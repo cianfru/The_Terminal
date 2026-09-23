@@ -6,7 +6,7 @@ name: Post to X
 # otherwise post.mjs auto-falls back to dry-run.
 
 on:
-  # ⛔ PAUSED 2026-09-23 — X account suspended; owner: no daily cards at all for now (site or X).
+  # ⛔ PAUSED 2026-09-23 — X account suspended; owner: no daily cards for now.
   # To resume: uncomment the schedule below (and set repo var BOT_SITE_ONLY=0 once X is back).
   # schedule:
     # Target 08:00 America/New_York (Eastern — the bulk of the audience) year-round.
@@ -109,8 +109,8 @@ jobs:
           # (the guard exists to stop the scheduled cron from double-posting).
           BOT_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           BOT_POST: ${{ (github.event_name == 'workflow_dispatch' && inputs.post_id != 'auto') && inputs.post_id || '' }}
-          # X suspended 2026-09-23: the daily post goes to the site feed (?view=posts) only.
-          # Set repo var BOT_SITE_ONLY=0 once the account is back to resume posting to X too.
+          # X suspended 2026-09-23: never post to X while this is on (default).
+          # Set repo var BOT_SITE_ONLY=0 once the account is back.
           BOT_SITE_ONLY: ${{ vars.BOT_SITE_ONLY || '1' }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
@@ -120,10 +120,10 @@ jobs:
       - name: Commit post state (queue consume + once-per-day guard)
         if: always() && steps.gate.outputs.proceed == 'true'
         run: |
-          if [[ -n "$(git status --porcelain public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json public/site-feed.json public/feed)" ]]; then
+          if [[ -n "$(git status --porcelain public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json public/site-feed.json public/feed
+            git add public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json
             git commit -m "chore: post state $(date -u +%F)"
             # The tweet has ALREADY been posted by now; only the state commit remains. main is a busy
             # branch (crons + edits), so a bare push loses the race and reports a red ❌ for a post that
