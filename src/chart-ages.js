@@ -7,6 +7,7 @@ export const CHART_AGES = {
   aeonflow: "2026-08-15",
   aeonhodl: "2026-07-24",
   aeonleadlag: "2026-07-29",
+  aeonledger: "2026-09-23",
   aeonowners: "2026-07-24",
   aeonrarity: "2026-07-24",
   aeonsalesrarity: "2026-07-24",
