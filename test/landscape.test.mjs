@@ -73,3 +73,18 @@ test("selling SPX for a major stablecoin, staked ETH or BTC is a sale, not a rot
     assert.ok(VALUE_TOKENS.has(a), `${sym} must count as money`);
   assert.ok(!VALUE_TOKENS.has("0xfd03723a9a3abe0562451496a9a394d2c4bad4ab"), "niche stables (DYAD) stay out — conservative");
 });
+
+// Regression: a wallet with more SPX transfers than the page cap came back truncated with no error
+// (1,893 of 5,489) and its household read −537,445 SPX. tradeHistory must throw, never guess.
+test("tradeHistory refuses a ledger that runs past the page cap", async () => {
+  const { tradeHistory, LEDGER_MAX_PAGES } = await import("../scripts/bot/kol-cluster.mjs");
+  let calls = 0;
+  const endless = async () => ({ ok: true, status: 200, json: async () => {
+    calls++;
+    return { items: [{ timestamp: "2024-01-01T00:00:00Z", transaction_hash: "0x" + calls.toString(16).padStart(64, "0"),
+      from: { hash: "0x" + "1".repeat(40) }, to: { hash: "0x" + "2".repeat(40) }, total: { value: "100000000" } }],
+      next_page_params: { block_number: calls } };
+  } });
+  await assert.rejects(() => tradeHistory(["0x" + "2".repeat(40)], { fetchImpl: endless }), /truncated/);
+  assert.equal(calls, LEDGER_MAX_PAGES);
+});
