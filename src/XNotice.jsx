@@ -26,7 +26,7 @@ const CSS = `
 .xn:focus{ outline:none; }
 .xn-rb{ height:3px; background:linear-gradient(90deg,#5b2a86,#3b49c9,#1f8fe0,#12c2c2,#37d067,#c7d21f,#f0a915,#f2621b,#e5342f); }
 .xn-art{ position:relative; background:#000; }
-.xn-art img{ display:block; width:100%; height:auto; }
+.xn-art img{ display:block; width:100%; height:auto; aspect-ratio:3/2; }  /* space reserved before load, so the way out never starts on screen */
 .xn-art::after{ content:""; position:absolute; left:0; right:0; bottom:0; height:34%; background:linear-gradient(transparent,#07090e); }
 .xn-body{ padding:8px 28px 0; }
 .xn-tag{ font-family:'DepartureMono',ui-monospace,monospace; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#37f7a0;
@@ -48,7 +48,10 @@ const CSS = `
 .xn a:focus-visible, .xn button:focus-visible{ outline:2px solid #37f7a0; outline-offset:3px; }
 @keyframes xn-fade{ from{opacity:0} to{opacity:1} }
 @keyframes xn-rise{ from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none} }
-@media (max-width:560px){ .xn-back{ padding:0 0 32px; } .xn{ border-left:0; border-right:0; }
+/* phones: the card is always taller than the screen and the way out sits at its foot, so reaching it
+   takes a scroll on ANY phone height (a 748px card fit a 390x844 screen without one). */
+@media (max-width:560px){ .xn-back{ padding:0; } .xn{ margin:0; border-left:0; border-right:0; min-height:calc(100dvh + 140px);
+  display:flex; flex-direction:column; } .xn-body{ flex:1; }
   .xn-body{ padding:6px 20px 0; } .xn h2{ font-size:28px; } .xn p{ font-size:16px; } .xn-foot{ padding:16px 20px 20px; } }
 @media (prefers-reduced-motion:reduce){ .xn-back,.xn{ animation:none } }
 `;
@@ -82,7 +85,7 @@ export default function XNotice() {
       <div className="xn" ref={ref} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="xn-title">
         <div className="xn-rb" />
         <div className="xn-art">
-          <img src={IMG} alt="Two orbs offered on open palms: a rainbow one and a glitched question mark" />
+          <img src={IMG} width="1536" height="1024" alt="Two orbs offered on open palms: a rainbow one and a glitched question mark" />
         </div>
         <div className="xn-body">
           <div className="xn-tag"><i />New account</div>
