@@ -66,6 +66,9 @@ export function summarise(rows, balance) {
     firstBuy: bd[0] || null, lastBuy: bd.at(-1) || null,
     firstSell: sd[0] || null, lastSell: sd.at(-1) || null,
     holds: balance, ledgerSum, reconciles: Math.abs(ledgerSum - balance) < 1, byYear,
+    // every move in order, for the per-owner P&L and chart: [time, kind, qty]. Internal hops are already out.
+    trades: rows.filter(r => r.qty > 0 && ["buy", "sell", "rotation", "in", "out", "lpIn", "lpOut"].includes(r.kind))
+      .map(r => [r.ts, r.kind, +r.qty.toFixed(4)]),
   };
 }
 

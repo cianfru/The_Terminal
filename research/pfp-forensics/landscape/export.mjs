@@ -2,7 +2,7 @@
 // LANDSCAPE EXPORT — the AEON Ledger: one file for members, one for everyone.
 // ============================================================================
 //   node research/pfp-forensics/landscape/export.mjs --results=r.jsonl --households=h.json \
-//        --full=aeon-ledger.full.json --public=public/aeon-ledger.json
+//        --owners=aeon-owners.json --full=aeon-ledger.full.json --public=public/aeon-ledger.json
 //
 // The site's AEON Ledger (src/AeonLedger.jsx) reads this. Owner decision 2026-09-23: the NUMBERS are
 // public, the ADDRESSES are for members (the same two-layer model as smart-money). So:
@@ -31,8 +31,43 @@ export const sig3 = n => {
 
 const ym = ts => (ts ? ts.slice(0, 7) : null);
 
+/**
+ * Average-cost P&L in USD over one owner's trades, oldest first. Pure.
+ *   buy / received / LP out-of-pool   acquire at that day's price (a received coin's true cost is unknown,
+ *                                     so it enters at market — the same convention as the FIFO engine)
+ *   sell / rotation                   realize proceeds − average cost of the coins sold
+ *   moved out / into a pool           leave at average cost, nothing realized (a gift and an exchange
+ *                                     deposit look the same on-chain, so no gain or loss is invented)
+ * unrealized = what is held today × (spot − average cost).
+ */
+export function pnlOf(trades, priceOn, spot, holds) {
+  let units = 0, cost = 0, realized = 0, invested = 0, proceeds = 0, lastBuy = null, lastSell = null;
+  for (const [ts, k, q] of trades) {
+    const p = priceOn(ts.slice(0, 10)) || 0;
+    if (k === "buy" || k === "in" || k === "lpIn") {
+      units += q; cost += q * p;
+      if (k === "buy") { invested += q * p; lastBuy = { d: ts.slice(0, 10), qty: q, usd: q * p, price: p }; }
+    } else if (k === "sell" || k === "rotation") {
+      const avg = units > 0 ? cost / units : 0, take = Math.min(q, units);
+      realized += q * p - take * avg; proceeds += q * p;
+      cost -= take * avg; units -= take;
+      lastSell = { d: ts.slice(0, 10), qty: q, usd: q * p, price: p };
+    } else if (k === "out" || k === "lpOut") {
+      const avg = units > 0 ? cost / units : 0, take = Math.min(q, units);
+      cost -= take * avg; units -= take;
+    }
+  }
+  const avgCost = units > 0 ? cost / units : 0;
+  const h = Math.max(0, holds || 0);
+  return { avgCost, realized, unrealized: h * spot - h * avgCost, invested, proceeds, lastBuy, lastSell };
+}
+
 /** Build the full ledger document from phase-3 rows and the phase-2 households. Pure. */
-export function buildLedger(rows, hh) {
+export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn = () => 0, spot = 0 } = {}) {
+  const rank = new Map(rarity.map(t => [t.id, t.rank]));
+  const img = new Map(rarity.map(t => [t.id, t.img]));
+  const byWallet = new Map();
+  for (const [id, a] of Object.entries(tokenOwners)) { if (!byWallet.has(a)) byWallet.set(a, []); byWallet.get(a).push(Number(id)); }
   const a = aggregate(rows);
   const byKey = new Map(rows.map(r => [r.key, r]));
   const holders = a.per.filter(p => p.holds >= 1).sort((x, y) => y.holds - x.holds);
@@ -47,8 +82,13 @@ export function buildLedger(rows, hh) {
       const years = {};
       for (const [y, b] of Object.entries(p.byYear || {}))
         years[y] = { buyQty: b.buyQty, buyUsd: b.buyUsd, sellQty: b.sellQty, sellUsd: b.sellUsd };
+      const pieces = r.wallets.flatMap(w => byWallet.get(w) || []).map(id => [id, rank.get(id) ?? null])
+        .sort((a, b) => (a[1] ?? 1e9) - (b[1] ?? 1e9) || a[0] - b[0]);
+      const pfp = pieces.length ? { id: pieces[0][0], rank: pieces[0][1], img: img.get(pieces[0][0]) || null } : null;
+      const pnl = pnlOf(r.trades || [], priceOn, spot, p.holds);
       return {
-        n: i + 1, verdict: p.verdict, walletCount: p.wallets, aeon: p.aeon || 0,
+        n: i + 1, verdict: p.verdict, walletCount: p.wallets, aeon: Object.keys(tokenOwners).length ? pieces.length : (p.aeon || 0),
+        pfp, pieces, pnl, trades: r.trades || [],
         bought: p.bought, sold: p.sold, rotated: p.rotated, received: p.received, movedOut: p.movedOut,
         holds: p.holds, boughtUsd: p.boughtUsd, soldUsd: p.soldUsd,
         firstBuy: ym(r.firstBuy), lastSell: ym(r.lastSell), years,
@@ -58,6 +98,7 @@ export function buildLedger(rows, hh) {
   const all = hh.households || [];
   return {
     updated: (hh.asOf || new Date().toISOString()).slice(0, 10),
+    spot,
     scope: {
       aeonHolders: all.reduce((s, h) => s + (h.aeonHolders?.length || 0), 0),
       households: all.length,
@@ -81,9 +122,12 @@ export function publicLedger(full) {
   return {
     ...full,
     rounded: "per-owner figures rounded to 3 significant figures; totals exact",
-    owners: full.owners.map(({ wallets, years, ...o }) => {
+    owners: full.owners.map(({ wallets, years, trades, pnl, ...o }) => {
       const out = { ...o };
       for (const k of R) out[k] = sig3(o[k]);
+      const leg = x => (x ? { d: x.d, qty: sig3(x.qty), usd: sig3(x.usd) } : null);
+      out.pnl = { avgCost: +pnl.avgCost.toPrecision(3), realized: sig3(pnl.realized), unrealized: sig3(pnl.unrealized),
+        invested: sig3(pnl.invested), proceeds: sig3(pnl.proceeds), lastBuy: leg(pnl.lastBuy), lastSell: leg(pnl.lastSell) };
       out.years = Object.fromEntries(Object.entries(years).map(([y, b]) =>
         [y, Object.fromEntries(Object.entries(b).map(([k, v]) => [k, sig3(v)]))]));
       return out;
@@ -94,7 +138,13 @@ export function publicLedger(full) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const rows = readFileSync(arg("results"), "utf8").trim().split("\n").filter(Boolean).map(JSON.parse);
   const hh = JSON.parse(readFileSync(arg("households"), "utf8"));
-  const full = buildLedger(rows, hh);
+  const tokenOwners = arg("owners") ? JSON.parse(readFileSync(arg("owners"), "utf8")).owners : {};
+  const rarity = JSON.parse(readFileSync(arg("rarity", "public/aeon-rarity.json"), "utf8")).tokens || [];
+  const px = JSON.parse(readFileSync(arg("prices", "public/price-history.json"), "utf8"));
+  const P = new Map(px.map(r => [r.date.slice(0, 10), r.price])), days = [...P.keys()].sort();
+  const priceOn = d => P.get(d) ?? P.get(days.filter(x => x <= d).pop()) ?? 0;
+  const spot = P.get(days.at(-1));
+  const full = buildLedger(rows, hh, { tokenOwners, rarity, priceOn, spot });
   if (arg("full")) writeFileSync(arg("full"), JSON.stringify(full));
   const pub = publicLedger(full);
   if (JSON.stringify(pub).match(/0x[0-9a-f]{40}/i)) throw new Error("refusing to write: an address leaked into the public ledger");

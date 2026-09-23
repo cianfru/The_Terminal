@@ -140,3 +140,37 @@ test("a refresh re-reads address ledgers and caches only immutable transaction p
   assert.ok(IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/transactions/0x" + "a".repeat(64) + "/token-transfers"));
   assert.ok(!IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/addresses/0x" + "a".repeat(40) + "/token-transfers?token=0xe0f6"));
 });
+
+test("per-owner P&L: average cost, received coins at market, transfers out realize nothing", async () => {
+  const { pnlOf } = await import("../research/pfp-forensics/landscape/export.mjs");
+  const px = { "2024-01-01": 0.1, "2024-06-01": 0.5, "2025-01-01": 1.0 };
+  const priceOn = d => px[d] || 0;
+  const trades = [
+    ["2024-01-01T00:00:00Z", "buy", 1000],   // cost 100
+    ["2024-06-01T00:00:00Z", "in", 1000],    // received, enters at market: cost 500 → avg 0.30
+    ["2025-01-01T00:00:00Z", "sell", 500],   // proceeds 500 − 500×0.30 = +350 realized
+    ["2025-01-01T00:00:00Z", "out", 500],    // moved out at avg cost, nothing realized
+  ];
+  const r = pnlOf(trades, priceOn, 2.0, 1000);
+  assert.equal(r.realized, 350);
+  assert.ok(Math.abs(r.avgCost - 0.3) < 1e-12);
+  assert.ok(Math.abs(r.unrealized - 1700) < 1e-9, "1000 held × (2.00 − 0.30)");
+  assert.equal(r.invested, 100);
+  assert.deepEqual(r.lastBuy, { d: "2024-01-01", qty: 1000, usd: 100, price: 0.1 });
+  assert.equal(r.lastSell.d, "2025-01-01");
+});
+
+test("the ledger gives each owner its exact pieces, rarest first, as the profile picture", async () => {
+  const { buildLedger } = await import("../research/pfp-forensics/landscape/export.mjs");
+  const w = i => "0x" + String(i).padStart(40, "0");
+  const rows = [{ key: w(1), wallets: [w(1), w(2)], reconciles: true, buys: { qty: 10, usd: 1 }, sells: { qty: 0, usd: 0 },
+    rotation: { qty: 0, usd: 0 }, received: 0, movedOut: 0, holds: 10, byYear: {}, trades: [["2024-01-01T00:00:00Z", "buy", 10]] }];
+  const full = buildLedger(rows, { households: [] }, {
+    tokenOwners: { 5: w(1), 9: w(2), 7: w(3) },
+    rarity: [{ id: 5, rank: 300, img: "a" }, { id: 9, rank: 12, img: "b" }, { id: 7, rank: 1, img: "c" }],
+    priceOn: () => 0.1, spot: 0.2 });
+  const o = full.owners[0];
+  assert.deepEqual(o.pieces, [[9, 12], [5, 300]], "only this owner's wallets, rarest first");
+  assert.deepEqual(o.pfp, { id: 9, rank: 12, img: "b" });
+  assert.equal(o.aeon, 2);
+});
