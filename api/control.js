@@ -62,7 +62,6 @@ const STATE_PATH = "public/post-state.json"; // last-posted date guard (once-per
 const EXCLUDE_PATH = "public/rotation-excludes.json"; // cards held out of auto-rotation
 const DF_RELEASE_PATH = "public/deepfield-releases.json"; // {released:[chartId,…]} — the Deep Field drip
 const BIN_PATH = "public/binned-cards.json"; // cards hidden from the panel + dropped from rotation
-const FEED_PATH = "public/site-feed.json";   // the site's own posts (?view=posts) — owner-written while X is suspended
 
 const gh = (path, init = {}) => fetch("https://api.github.com" + path, {
   ...init,
@@ -138,7 +137,7 @@ export default async function handler(req, res) {
     res.status(500).json({ error: "Server not configured: set CONTROL_PASSWORD and GH_PAT in Vercel." });
     return;
   }
-  const { password, action, id, month, template, ar, excluded, binned, released, format, seconds, announce, sound, post, remove } = await readBody(req);
+  const { password, action, id, month, template, ar, excluded, binned, released, format, seconds, announce, sound } = await readBody(req);
   if (!safeEq(password ?? "", process.env.CONTROL_PASSWORD)) { res.status(401).json({ error: "Wrong password." }); return; }
 
   // Gate unlock: password already validated above, so just acknowledge.
@@ -250,62 +249,6 @@ export default async function handler(req, res) {
     // Save (or clear) an owner edit of a card's tweet copy. Persists permanently
     // to public/post-copy.json; the bot prefers it over the built-in default.
     // template null/empty → remove the override (reset to default).
-    // Write / edit / delete a post on the site's own feed (public/site-feed.json, read by ?view=posts).
-    // body.post = {id?, text, image?} — image is an optional data: URL (png/jpeg/webp, the panel
-    // downsizes it first), committed to public/feed/<id>.<ext>. body.remove = id deletes a post.
-    // Both files are deploy-ignored: the posts page reads them through this function / raw, so a
-    // post is live in seconds without spending a Vercel deploy.
-    if (action === "sitepost-save") {
-      const now = new Date();
-      let img = null, pid = null;
-      const text = typeof post?.text === "string" ? post.text.trim() : "";
-      if (!remove) {
-        if (!text && !post?.image && !post?.keepImg) { res.status(400).json({ error: "Write something or add an image." }); return; }
-        if (text.length > 5000) { res.status(400).json({ error: "Post is over 5,000 characters." }); return; }
-        pid = /^p-[a-z0-9-]{4,40}$/.test(post?.id || "") ? post.id : "p-" + now.getTime().toString(36);
-        if (post?.image) {
-          const m = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/=]+)$/.exec(post.image);
-          if (!m) { res.status(400).json({ error: "Image must be PNG, JPEG or WebP." }); return; }
-          if (m[2].length > 4_000_000) { res.status(400).json({ error: "Image too large." }); return; }
-          img = `feed/${pid}.${m[1] === "jpeg" ? "jpg" : m[1]}`;
-          const path = `public/${img}`;
-          const cur = await gh(`/repos/${OWNER}/${REPO}/contents/${path}?ref=${BRANCH}`);
-          const sha = cur.ok ? (await cur.json()).sha : undefined;
-          const put = await gh(`/repos/${OWNER}/${REPO}/contents/${path}`, {
-            method: "PUT", body: JSON.stringify({ message: `site post: image ${pid}`, content: m[2], branch: BRANCH, ...(sha ? { sha } : {}) }),
-          });
-          if (!put.ok) throw new Error("image write failed (" + put.status + ") " + await put.text());
-        }
-      }
-      let put, body;
-      for (let i = 0; i < 3; i++) {
-        let sha, obj = { posts: [] };
-        const cur = await gh(`/repos/${OWNER}/${REPO}/contents/${FEED_PATH}?ref=${BRANCH}`);
-        if (cur.ok) { const j = await cur.json(); sha = j.sha; try { obj = JSON.parse(Buffer.from(j.content, "base64").toString("utf8")) || obj; } catch { /* rewrite */ } }
-        let posts = Array.isArray(obj.posts) ? obj.posts : [];
-        if (remove) posts = posts.filter(p => p.id !== remove);
-        else {
-          const prev = posts.find(p => p.id === pid);
-          const entry = { id: pid, ts: prev?.ts || now.toISOString(), date: (prev?.ts || now.toISOString()).slice(0, 10),
-            text, ...(img ? { img } : post.keepImg && prev?.img ? { img: prev.img } : {}),
-            ...(prev ? { edited: now.toISOString() } : {}) };
-          posts = [entry, ...posts.filter(p => p.id !== pid)];
-        }
-        posts.sort((a, b) => String(b.ts || b.date).localeCompare(String(a.ts || a.date)));
-        const content = Buffer.from(JSON.stringify({ updated: now.toISOString(), posts }, null, 2) + "\n").toString("base64");
-        put = await gh(`/repos/${OWNER}/${REPO}/contents/${FEED_PATH}`, {
-          method: "PUT",
-          body: JSON.stringify({ message: `site post: ${remove ? "delete " + remove : (post?.id ? "edit " : "publish ") + pid}`, content, branch: BRANCH, ...(sha ? { sha } : {}) }),
-        });
-        if (put.ok) break;
-        body = await put.text();
-        if (put.status !== 409) break;
-        await new Promise(r => setTimeout(r, 400 * (i + 1)));
-      }
-      if (!put.ok) throw new Error("feed write failed (" + put.status + ") " + body);
-      res.status(200).json({ ok: true, id: remove || pid, removed: !!remove });
-      return;
-    }
     if (action === "copy-save") {
       if (!id) { res.status(400).json({ error: "missing id" }); return; }
       let put, body;

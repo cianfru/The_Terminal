@@ -9,19 +9,7 @@ const BASE = process.env.E2E_BASE || "http://localhost:4173";
 const WIDTHS = [320, 360, 390, 430];   // iPhone SE 1st-gen upward
 const ROUTES = ["/?view=charts", "/?chart=hodlwaves", "/?view=docs", "/deepfield"];
 let browser;
-let rawContext;
-before(async () => {
-  browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined });
-  // The X-suspension popup (src/XNotice.jsx) opens once per browser session and covers the page, so
-  // every test context starts with it already seen. The popup itself is tested on its own below,
-  // through rawContext — a fresh session, exactly as a first-time visitor gets it.
-  rawContext = browser.newContext.bind(browser);
-  browser.newContext = async o => {
-    const c = await rawContext(o);
-    await c.addInitScript(() => { try { sessionStorage.setItem("spx-x-notice-seen", "1"); } catch { /* ok */ } });
-    return c;
-  };
-});
+before(async () => { browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined }); });
 after(async () => { await browser?.close(); });
 
 const phone = w => ({ ...devices["iPhone 13"], viewport: { width: w, height: 844 }, hasTouch: true, isMobile: true });
@@ -598,24 +586,5 @@ test("390px: no request leaves the site for a font", async () => {
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
   assert.deepEqual(external.filter(u => /font|gstatic|googleapis/.test(u)), [], "fonts are all first-party");
-  await ctx.close();
-});
-
-test("390px: the X-suspension popup fits the phone, closes, and stays closed for the session", async () => {
-  const ctx = await rawContext(phone(390));
-  const page = await ctx.newPage();
-  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
-  const box = await geom(page, ".xn");
-  assert.ok(box, "popup shows on a first visit");
-  assert.ok(box.l >= 0 && box.r <= box.vw, `popup inside the viewport (${box.l}..${box.r} of ${box.vw})`);
-  for (const sel of [".xn-go", ".xn-later", ".xn-x"]) {
-    const g = await geom(page, sel);
-    assert.ok(g && g.h >= 40, `${sel} is a real tap target (${g?.h}px)`);
-  }
-  assert.deepEqual(await overflow(page).then(o => o.sw <= o.cw), true, "no horizontal overflow");
-  await page.tap(".xn-later");
-  assert.equal(await page.locator(".xn").count(), 0, "closes");
-  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".xn").count(), 0, "does not reopen in the same session");
   await ctx.close();
 });

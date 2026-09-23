@@ -11,21 +11,17 @@
   stop. Every card/chart/article/decision defaults to: show the real numbers, state the method, label the caveats,
   share it freely. When in doubt, MORE transparent.
 
-## ⛔ X ACCOUNT SUSPENDED 2026-09-23 — ALL AUTO-POSTING PAUSED, THE SITE IS THE CHANNEL
-- **State:** every scheduled card firing is OFF — `post-tweet.yml` schedule commented out (daily cards, site AND X),
-  `aeon-sale-watch.yml` schedule off + forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed; the
-  1st-of-month recap is skipped while `BOT_SITE_ONLY` is on. **Owner call: no automatic cards at all for now** ("no sense to
-  post cards when people land on a website with 72 charts").
-- **The site speaks instead:** a once-per-session popup (`src/XNotice.jsx`) + an amber bar on the landing (`.xnotice` in
-  `public/landing-next.html`) → **`/?view=posts`** (`src/PostsPage.jsx`, full-bleed in the landing's black style, phone-first).
-  Picture `public/suspended.jpg`; comms handle **@lanternlabsmain** (`src/x-notice.js`).
-- **Posts are OWNER-WRITTEN**: `/control` → **✍ Site posts** (text + optional image) → `api/control.js` `sitepost-save` →
-  `public/site-feed.json` + `public/feed/<id>.<ext>` (both deploy-ignored; the page reads via `/api/control?f=` then raw, so a
-  post is live in seconds). The bot's `post.mjs` can also write here (entries tagged `auto:true`, never touching manual ones).
+## ⛔ X ACCOUNT SUSPENDED 2026-09-23 — ALL AUTO-POSTING PAUSED, NOTHING SAID ON THE SITE
+- **State:** every scheduled card firing is OFF — `post-tweet.yml` schedule commented out, `aeon-sale-watch.yml` schedule off +
+  forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed. `BOT_SITE_ONLY` (repo var, defaults on in
+  post-tweet.yml) makes any manual run skip X (and skips the 1st-of-month recap). **Owner call: no cards at all for now.**
+- **⚠ THE SITE SAYS NOTHING ABOUT IT (owner, 2026-09-23, final).** A popup + landing bar + `?view=posts` page + owner-written
+  site feed were built and live for a few hours, then REMOVED in full at the owner's request: "people don't know anything and
+  they can just use the charts." Do NOT reintroduce a suspension notice, posts feed or picture unless the owner asks.
 - **⚠ DO NOT publish or hint at WHY the account went down.** Owner considers it a coordinated attack (the second one) and keeps
-  that private. Public framing only: a small, niche, data-first community — "no noise, just data."
+  that private. Comms handle if ever needed: @lanternlabsmain (owner-provided).
 - **To resume when X is back:** set repo var `BOT_SITE_ONLY=0`, uncomment the `post-tweet.yml` + `aeon-sale-watch.yml`
-  schedules (restore its DRY_RUN lines to `|| vars.AEON_SALE_DRY_RUN`), then retire XNotice + the landing bar if wanted.
+  schedules (restore its DRY_RUN lines to `|| vars.AEON_SALE_DRY_RUN`).
 
 ## 🔭 "DEEP FIELD" — MEMBERS AREA (renamed from "the Terminal" 2026-08-22; FREE CLOSED BETA now, paid later)
 - **Owner decided (2026-08-22): rename the Terminal → "Deep Field"** (Bloomberg/ITC both use "Terminal"; needed to differentiate)
