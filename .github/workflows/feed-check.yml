@@ -47,12 +47,3 @@ jobs:
         # upstream check above is what this run is actually asking about.
         run: node scripts/audit-feeds.mjs --warn
 
-      - name: Probe the Alchemy live-sales feed
-        # Unconditional. It was gated on a boolean input, which evaluated falsy on the
-        # first real run and skipped the one step that answers an open question — a
-        # diagnostic that might not run is not much of a diagnostic. It only prints,
-        # and continue-on-error keeps a missing key from failing the check.
-        continue-on-error: true
-        env:
-          ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
-        run: node scripts/bot/aeon-live-sales.mjs --probe

@@ -160,8 +160,6 @@ export const FEEDS = [
     require: ["total"], mayBeEmpty: ["listings"] },
   { file: "aeon-rarity.json", cadence: 400, by: "aeon.yml (once)", what: "AEON trait rarity (static once built)",
     require: ["total"], nonEmpty: ["tokens", "traitTypes"] },
-  { file: "aeon-live-sales.json", cadence: 2, by: "aeon-sale-watch.yml", what: "sub-day AEON sales from Alchemy",
-    mayBeEmpty: ["sales"] },
   // ⭐ THE STALL-CATCHER. Transfers now come from Alchemy (tracked by aeon-onchain.json's own date);
   // SALES are the one feed still on Dune. `updated` here is the newest SALES DATA date in the CSV,
   // NOT a run date, so a completed-but-empty (or suspended-account) pull still freezes it and turns

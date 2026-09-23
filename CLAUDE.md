@@ -234,6 +234,15 @@
     sales backfilled 21 sale-days across 07-23→08-20 (17,040→17,105 rows). Charts fresh; owners 1178. Verified live via dispatched
     `aeon.yml` + `aeon-sale-watch.yml` (dry-run) runs, both green, deploy succeeded. **KEPT as reference/tooling (not dead):**
     `bigquery/aeon_transfers.sql`, `dune/aeon_spx_balances.sql` + `gen-aeon-spx-query.mjs`, `scripts/aeon-snipe.mjs`, `aeon-live-tail.mjs`.
+- **✅ AEON SALES CLEAN-UP 2026-09-23 (owner thought sales had gone stale).** Checked: the DAILY sales are NOT stale — the Dune
+  pull (query 8218959) still works (run 2026-09-23: +157 sales, newest 2026-09-22) despite Dune's free-plan change. What WAS dead is
+  the Alchemy `getNFTSales` "live" feed: `aeon-live-sales.json` held **0 sales, always**, and Alchemy removes the endpoint
+  2026-09-30. **Retired:** its probe + bank steps (aeon-sale-watch.yml, feed-check.yml), the file, its audit row; the watcher's
+  live attempt is now opt-in (`AEON_LIVE_SALES=1`), code + tests kept dormant. **Fixed:** aeon.yml now COMMITS
+  `dune/out/aeon_sales.csv`, so the incremental cutoff persists (it had reset to 2026-07-23 every run, re-pulling two months daily)
+  and the repo keeps the full sales history if Dune ever stops. **🔲 Backup path if Dune stops:** validate the drafted
+  `bigquery/aeon_sales.sql` against Dune for the last ~30 days (GCP_SA_KEY is set, so CI can run it), then wire it gated like
+  the ETH migration. OpenSea's events API covers OpenSea only (~42% of volume; Blur is the larger venue) — not a full replacement.
 - **✅ ALCHEMY FREE TIER IS INTACT — VERIFIED 2026-08-28 (owner worried it was going paid-only like Dune; it is NOT).** The
   September deadline that drove our migrations is **DUNE going VIEW-ONLY on the free plan 2026-09-10** — NOT Alchemy. Confirmed on
   alchemy.com/pricing (2026-08-28): **free tier still live, 30M compute-units/month, no paid-only announcement**; the Transfers API
