@@ -37,11 +37,10 @@ const when = p => {
 
 const CSS = `
 @font-face{ font-family:'DepartureMono'; font-style:normal; font-weight:400; font-display:swap; src:url(/fonts/DepartureMono-Regular.woff2) format('woff2'); }
-@font-face{ font-family:'SpaceGrotesk'; font-style:normal; font-weight:300 700; font-display:swap; src:url(/fonts/SpaceGrotesk.woff2) format('woff2'); }
 .pp{ position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:60; overflow-y:auto; overflow-x:hidden;
   background:#08090b; color:#eef2f8; -webkit-overflow-scrolling:touch;
   --tx:#eef2f8; --dim:#a2adbe; --line:#182031; --line2:#243149; --live:#37f7a0; --warn:#fbbf24;
-  --pix:'DepartureMono',ui-monospace,monospace; --sans:'SpaceGrotesk','Space Grotesk',system-ui,sans-serif; }
+  --pix:'DepartureMono',ui-monospace,monospace; --sans:'Geist',system-ui,sans-serif; }
 .pp *{ box-sizing:border-box; }
 .pp-wrap{ max-width:720px; margin:0 auto; padding:0 16px 96px; }
 .pp-bar{ position:sticky; top:0; z-index:2; background:rgba(8,9,11,.92); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
@@ -67,7 +66,7 @@ const CSS = `
   border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
 .pp-comms span{ font-family:var(--pix); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
 .pp-comms a{ display:inline-flex; align-items:center; gap:8px; min-height:44px; color:var(--tx); text-decoration:none;
-  font-family:ui-monospace,'SF Mono',Menlo,monospace; font-size:16px; font-weight:600; }
+  font-family:'Geist Mono',ui-monospace,Menlo,monospace; font-size:16px; font-weight:600; }
 .pp-comms a:hover{ color:var(--live); }
 .pp-comms svg{ width:15px; height:15px; fill:currentColor; }
 .pp-sec{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:48px 0 0; padding-bottom:10px; border-bottom:1px solid var(--line2); }
