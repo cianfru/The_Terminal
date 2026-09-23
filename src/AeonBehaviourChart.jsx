@@ -61,7 +61,7 @@ export default function AeonBehaviourChart({ isMobile }) {
             tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
           <YAxis type="number" tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 50} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 50} />
           <Tooltip content={<Tip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
           <ReferenceLine y={0} stroke="rgba(255,255,255,0.3)" />
           <Bar dataKey="entered" stackId="f" fill="#34d399" fillOpacity={0.9} isAnimationActive={false} />

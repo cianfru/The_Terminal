@@ -74,9 +74,9 @@ export default function HolderChangeChart({ isMobile, preview = false }) {
             tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
           <YAxis yAxisId="l" tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 34 : 46} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 46} />
           <YAxis yAxisId="r" orientation="right" domain={["auto", "auto"]} tickFormatter={v => v + "%"}
-            tick={{ fill: LINE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 34 : 46} />
+            tick={{ fill: LINE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 48 : 46} />
           <ReferenceLine yAxisId="l" y={0} stroke="rgba(255,255,255,0.35)" />
           <Tooltip content={<Tip tiers={tiers} />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
           {!preview && <Legend wrapperStyle={{ fontFamily: MONO, fontSize: 11 }} />}

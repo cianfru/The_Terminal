@@ -34,6 +34,7 @@ import { renderAltOscCard } from "./alt-osc-card.mjs";
 import { renderFreeFloatCard } from "./free-float-card.mjs";
 import { renderNuplCard } from "./nupl-card.mjs";
 import { renderConcentrationCard } from "./concentration-card.mjs";
+import { renderGiniDustCard } from "./gini-dust-card.mjs";
 import { renderHodlWavesCard } from "./hodl-waves-card.mjs";
 import { renderValuationBandCard } from "./valuation-band-card.mjs";
 import { renderWalletGrowthCard } from "./wallet-growth-card.mjs";
@@ -66,6 +67,8 @@ import { renderCitySkylineCard } from "./city-skyline-card.mjs";
 import { renderTurnoverCard } from "./turnover-card.mjs";
 import { renderWhaleBehaviourCard } from "./whale-behaviour-card.mjs";
 import { renderWhaleMosaicCard } from "./whale-mosaic-card.mjs";
+import { bedrockSpec, bedrockStats } from "./bedrock-card.mjs";
+import { renderSupplyBridgeCard, supplyBridgeStats, diamondGapSeries, diamondGapSpec } from "./supply-bridge-card.mjs";
 import { renderCexFlowCard } from "./cex-flow-card.mjs";
 import { renderHodlCompareCard } from "./hodl-compare-card.mjs";
 import { renderUrpdCard } from "./urpd-card.mjs";
@@ -916,10 +919,10 @@ export const CARD_TYPES = new Set([
   "rainbow", "channel", "riskcolor", "risklevels", "riskheat", "runningroi", "longshort",
   "firesalerally", "underwater", "goldencross", "holdergrowth", "multichain", "chainrace",
   "holderspair", "mvrvbtc", "mvrvtrend", "supplyprofit", "floormodel", "altmarket",
-  "freefloat", "nupl", "concentration", "hodlwaves", "hodlcompare", "urpd", "bagsprofile", "urpdage",
+  "freefloat", "nupl", "concentration", "ginidust", "hodlwaves", "hodlcompare", "urpd", "bagsprofile", "urpdage",
   "lthsth", "sopr", "nrpl", "liveliness", "valband", "walletgrowth", "picycle", "spxbitcoin", "spxcohort", "costbasis",
   "cexsupply", "cexflow", "cexvenues", "cexvenflow", "cexsankey", "whalethennow", "whaleentry", "whales", "walletwaves", "wealthwaves", "survivorship", "supplyera", "exitmap", "smartmoney",
-  "cyclesync", "cycleclock", "rsidots", "monthcompare", "ethsol", "chainconc", "illiquid", "baltier", "dualholders", "basesurv", "supplycurve", "whalecensus", "whalebehaviour", "whalemosaic", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover",
+  "cyclesync", "cycleclock", "rsidots", "monthcompare", "ethsol", "chainconc", "illiquid", "baltier", "dualholders", "basesurv", "supplycurve", "whalecensus", "whalebehaviour", "whalemosaic", "bedrock", "supplybridge", "diamondgap", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover",
   // spec-driven generics
   "line", "bar", "mbars", "donut", "stack", "model", "cube", "scale", "gauge", "fngdial",
   "heatmap", "dca", "dcaladder", "statgrid", "kraken",
@@ -970,6 +973,9 @@ export function renderPostCard(post, stats, opts = {}) {
   if (type === "whalecensus") return renderWhaleCensusCard(stats, dims);
   if (type === "whalebehaviour") return renderWhaleBehaviourCard(stats, dims);
   if (type === "whalemosaic") return renderWhaleMosaicCard(stats, dims);
+  if (type === "bedrock") return renderLineCard(bedrockSpec(bedrockStats()), dims);
+  if (type === "supplybridge") return renderSupplyBridgeCard(supplyBridgeStats(), dims);
+  if (type === "diamondgap") return renderLineCard(diamondGapSpec(diamondGapSeries()), dims);
   if (type === "whales") return renderWhalesCard(stats, dims);
   if (type === "walletwaves") return renderWalletWavesCard(stats, dims);
   if (type === "wealthwaves") return renderWealthWavesCard(stats, dims);
@@ -982,6 +988,7 @@ export function renderPostCard(post, stats, opts = {}) {
   if (type === "freefloat") return renderFreeFloatCard(stats, dims);
   if (type === "nupl") return renderNuplCard(stats, dims);
   if (type === "concentration") return renderConcentrationCard(stats, dims);
+  if (type === "ginidust") return renderGiniDustCard(stats, dims);
   if (type === "hodlwaves") return renderHodlWavesCard(stats, dims);
   if (type === "urpd") return renderUrpdCard(stats, dims);
   if (type === "bagsprofile") return renderCostBasisProfileCard(stats, dims);

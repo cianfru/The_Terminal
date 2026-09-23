@@ -1,16 +1,6 @@
 {
-  "date": "2026-09-09",
+  "date": "2026-09-23",
   "signals": [
-    {
-      "type": "mvrv-trend",
-      "emoji": "↗️",
-      "title": "Holders clawing back toward break-even",
-      "detail": "MVRV has risen 0.61→1.07 over ~30d — the average holder is less underwater than ~30d ago.",
-      "framing": "Direction of the crowd's PnL, not just today's level.",
-      "note": "Trend read; don't imply it continues.",
-      "card": "breakeven",
-      "score": 1.5
-    },
     {
       "type": "drawdown",
       "emoji": "📉",
@@ -19,17 +9,27 @@
       "framing": "Deep drawdowns are the toll — it's paid them before (no recovery promise).",
       "note": "It's deep and unrecovered NOW; don't imply it always recovers.",
       "card": "underwater",
-      "score": 1.4207711075209062
+      "score": 1.4267082274263025
     },
     {
       "type": "survivorship",
       "emoji": "🪦",
-      "title": "80% of all-time holders are gone — 92% of today's never sold to zero",
-      "detail": "Of 26,750 wallets that ever held ≥5k SPX, 5,320 remain (80% churned). Yet 92% of CURRENT holders have never once sold to zero — survivorship.",
+      "title": "80% of all-time holders are gone — 91% of today's never sold to zero",
+      "detail": "Of 26,865 wallets that ever held ≥5k SPX, 5,334 remain (80% churned). Yet 91% of CURRENT holders have never once sold to zero — survivorship.",
       "framing": "Enormous all-time churn, but the survivors are diamond-handed. The honest \"who's still here\" read.",
       "note": "Right-censoring: recent cohorts read high. \"Gone\" = fell below the 5k bar.",
       "card": "survivorship",
       "score": 1.3
+    },
+    {
+      "type": "deep-value",
+      "emoji": "🟣",
+      "title": "-78% below its long-run trend (BUY! band)",
+      "detail": "Fair value for its age is $2.31; price sits -78% under it.",
+      "framing": "Where today sits in the long power-law arc.",
+      "note": "Not a prediction.",
+      "card": "valuation",
+      "score": 1.2754306071223311
     }
   ]
 }

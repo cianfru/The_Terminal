@@ -73,7 +73,7 @@ function buildScene(el, data, { onlyMovers, isMobile, flowWin = 30, onPick }) {
   const mkLabel = (text, color, size = 11, weight = 500) => {
     const d = document.createElement("div");
     d.textContent = text;
-    Object.assign(d.style, { color, font: `${weight} ${size}px 'Space Grotesk', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.94" });
+    Object.assign(d.style, { color, font: `${weight} ${size}px 'Geist', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.94" });
     return new CSS2DObject(d);
   };
   const addLabel = (text, x, y, z, color, size, weight) => { const l = mkLabel(text, color, size, weight); l.position.set(x, y, z); scene.add(l); };
@@ -138,8 +138,8 @@ function buildScene(el, data, { onlyMovers, isMobile, flowWin = 30, onPick }) {
     const div = document.createElement("div");
     div.style.cssText = "text-align:center;pointer-events:none";
     div.innerHTML =
-      `<div style="font:800 13.5px 'Space Grotesk',sans-serif;color:#e6edf7;letter-spacing:.3px;text-shadow:0 1px 3px #000">${c.label}</div>` +
-      `<div style="font:700 11.5px 'Space Grotesk',sans-serif;color:${scol};text-shadow:0 1px 3px #000">${c.n} · net ${np} · ${c.sentiment}</div>`;
+      `<div style="font:800 13.5px 'Geist',sans-serif;color:#e6edf7;letter-spacing:.3px;text-shadow:0 1px 3px #000">${c.label}</div>` +
+      `<div style="font:700 11.5px 'Geist',sans-serif;color:${scol};text-shadow:0 1px 3px #000">${c.n} · net ${np} · ${c.sentiment}</div>`;
     const label = new CSS2DObject(div);
     label.position.set(c.center.x, HMAX * 0.66, zB + 0.4);
     scene.add(label);
@@ -196,7 +196,7 @@ function buildScene(el, data, { onlyMovers, isMobile, flowWin = 30, onPick }) {
   Object.assign(tip.style, {
     position: "absolute", pointerEvents: "none", padding: "9px 12px", borderRadius: "11px", display: "none",
     background: "rgba(8,11,20,0.97)", border: "1px solid #5eead4", color: "#e2e8f0",
-    font: "500 12.5px 'Space Grotesk', system-ui, sans-serif", zIndex: "5", width: "232px",
+    font: "500 12.5px 'Geist', system-ui, sans-serif", zIndex: "5", width: "232px",
     boxShadow: "0 10px 34px rgba(0,0,0,0.6)", transform: "translate(-50%, -114%)", lineHeight: "1.5",
   });
   el.appendChild(tip);

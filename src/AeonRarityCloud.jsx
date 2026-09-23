@@ -149,7 +149,7 @@ export default function AeonRarityCloud({ tokens, total, tiers, tierOf, selId, o
   if (!tokens.length) return null;
 
   return (
-    <div ref={wrapRef} style={{ position: "relative", width: "100%", height: h, touchAction: "pan-y" }}>
+    <div ref={wrapRef} style={{ position: "relative", width: "100%", height: h, touchAction: "pan-y pinch-zoom" }}>
       <canvas
         ref={canvasRef}
         style={{ display: "block", cursor: hover ? "pointer" : "crosshair" }}

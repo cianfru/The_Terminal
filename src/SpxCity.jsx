@@ -329,7 +329,7 @@ export default function SpxCity({ isMobile, preview = false, initialMode = "spx"
     const label = t.ens || (t.a ? shortAddr(t.a) : "Wallet");
     return `
       <div style="padding:9px 12px 7px">
-        ${t.hood ? `<div style="color:${M.accent};font:700 10.5px 'Space Grotesk',system-ui;letter-spacing:.18em;text-transform:uppercase">${t.hood.name}</div>` : ""}
+        ${t.hood ? `<div style="color:${M.accent};font:700 10.5px 'Geist',system-ui;letter-spacing:.18em;text-transform:uppercase">${t.hood.name}</div>` : ""}
         <div style="color:#e2e8f0;font-weight:700;font-size:13px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${label}</div>
         <div style="color:#94a3b8;font-size:11.5px">${sizeOf(t)}${t.aeonN ? ` · ${t.aeonN} AEON` : ""} · held ${t.days}d</div>
       </div>
@@ -338,7 +338,7 @@ export default function SpxCity({ isMobile, preview = false, initialMode = "spx"
         <div style="position:relative;height:104px;border-top:1px solid rgba(255,255,255,0.08);background:${gradOf(t.a)}">
           <img src="https://render.zerion.io/preview?address=${t.a}" alt="" loading="lazy" onerror="this.remove()"
                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block"/>
-          <div style="position:absolute;left:11px;bottom:8px;color:#fff;font:700 12.5px 'Space Grotesk',system-ui;text-shadow:0 1px 5px rgba(0,0,0,0.75)">${label}</div>
+          <div style="position:absolute;left:11px;bottom:8px;color:#fff;font:700 12.5px 'Geist',system-ui;text-shadow:0 1px 5px rgba(0,0,0,0.75)">${label}</div>
         </div>
         <div style="padding:7px 12px;color:${M.accent};font-size:11px">Open in Zerion ↗</div>
       </a>` : ""}`;

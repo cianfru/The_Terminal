@@ -124,7 +124,7 @@ export default function RallyChart({ series, m, isMobile, initialView }) {
             scale="log" domain={[1, Math.ceil(maxMult * 1.15)]} allowDataOverflow
             tickFormatter={v => fMult(v)}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 46 : 58}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 58 : 58}
           />
           <Tooltip content={<CycleTip />} />
           {cycles.map((c, i) => (
@@ -189,7 +189,7 @@ export default function RallyChart({ series, m, isMobile, initialView }) {
                 scale="log" domain={["auto", "auto"]} allowDataOverflow
                 tickFormatter={v => fMult(v)}
                 tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 60}
+                axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 60}
               />
               <Tooltip
                 contentStyle={{ background: "rgba(4,4,12,0.97)", border: "1px solid rgba(74,222,128,0.4)", borderRadius: 10, fontFamily: SANS }}

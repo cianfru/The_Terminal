@@ -62,7 +62,7 @@ export function renderSkyline(el, model, opts = {}) {
   const mkLabel = (text, color, size = 11, weight = 500) => {
     const d = document.createElement("div");
     d.textContent = text;
-    Object.assign(d.style, { color, font: `${weight} ${size}px 'Space Grotesk', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.94" });
+    Object.assign(d.style, { color, font: `${weight} ${size}px 'Geist', system-ui, sans-serif`, whiteSpace: "nowrap", textShadow: "0 1px 3px #000", opacity: "0.94" });
     return new CSS2DObject(d);
   };
   const addLabel = (text, x, y, z, color, size, weight) => { const l = mkLabel(text, color, size, weight); l.position.set(x, y, z); scene.add(l); };
@@ -74,7 +74,7 @@ export function renderSkyline(el, model, opts = {}) {
   const makeLabelSprite = (name, sub, subColor) => {
     const DPR = 2, PAD = 9 * DPR, lh1 = 15 * DPR, lh2 = 13 * DPR;
     const cv = document.createElement("canvas"), ctx = cv.getContext("2d");
-    const f1 = `800 ${13 * DPR}px 'Space Grotesk', system-ui, sans-serif`, f2 = `700 ${11 * DPR}px 'Space Grotesk', system-ui, sans-serif`;
+    const f1 = `800 ${13 * DPR}px 'Geist', system-ui, sans-serif`, f2 = `700 ${11 * DPR}px 'Geist', system-ui, sans-serif`;
     ctx.font = f1; const w1 = ctx.measureText(name).width;
     ctx.font = f2; const w2 = ctx.measureText(sub).width;
     const W = Math.ceil(Math.max(w1, w2)) + PAD * 2, H = Math.ceil(lh1 + lh2 + PAD);
@@ -203,7 +203,7 @@ export function renderSkyline(el, model, opts = {}) {
   Object.assign(tip.style, {
     position: "absolute", pointerEvents: "none", padding: "9px 12px", borderRadius: "11px", display: "none",
     background: "rgba(8,11,20,0.97)", border: `1px solid ${accentHex}`, color: "#e2e8f0",
-    font: "500 12.5px 'Space Grotesk', system-ui, sans-serif", zIndex: "5", width: "232px",
+    font: "500 12.5px 'Geist', system-ui, sans-serif", zIndex: "5", width: "232px",
     boxShadow: "0 10px 34px rgba(0,0,0,0.6)", transform: "translate(-50%, -114%)", lineHeight: "1.5",
   });
   el.appendChild(tip);

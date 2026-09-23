@@ -88,7 +88,7 @@ export default function HoldersPriceChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 4 : 14, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <defs>
               <linearGradient id="hpFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={HOLDERS} stopOpacity={0.22} /><stop offset="100%" stopColor={HOLDERS} stopOpacity={0} /></linearGradient>
             </defs>
@@ -98,10 +98,10 @@ export default function HoldersPriceChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="holders" type="number" domain={view.hDomain} allowDataOverflow
               tickFormatter={fNum} tick={{ fill: HOLDERS, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             <YAxis yAxisId="price" orientation="right" type="number" scale="log" domain={view.pDomain} ticks={pTicks} allowDataOverflow
               tickFormatter={v => (v < 1 ? "$" + v : "$" + v)} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Line yAxisId="holders" type="monotone" dataKey="holders" stroke={HOLDERS} strokeWidth={1.8} dot={false} isAnimationActive={false} name="holders" fill="url(#hpFill)" />
             <Line yAxisId="price" type="monotone" dataKey="price" stroke={PRICE} strokeWidth={1.8} strokeOpacity={0.9} dot={false} isAnimationActive={false} name="price" />

@@ -23,7 +23,7 @@
   "majorcaps": "square",
   "dca": "square",
   "dcaladder": "square",
-  "ytd": "square",
+  "ytd": "landscape",
   "btcage": "square",
   "ethage": "square",
   "solage": "square",
@@ -36,7 +36,7 @@
   "runningroi": "square",
   "cycle": "square",
   "rsidots": "square",
-  "monthlyreturns": "landscape",
+  "monthlyreturns": "square",
   "monthcompare": "square",
   "diamondtrend": "square",
   "longshort": "square",
@@ -50,7 +50,6 @@
   "riskcolor": "square",
   "multichain": "landscape",
   "solnext": "square",
-  "whatnext": "square",
   "mvrvtrend": "square",
   "hodlwaves": "square",
   "concentration": "square",
@@ -69,7 +68,6 @@
   "illiquid": "landscape",
   "baltier": "landscape",
   "dualholders": "landscape",
-  "basesurv": "landscape",
   "supplycurve": "square",
   "whalecensus": "square",
   "whalebehaviour": "square",
@@ -104,5 +102,8 @@
   "whalethennow": "landscape",
   "turnover": "square",
   "cexsankey": "square",
-  "rally": "square"
+  "rally": "square",
+  "ginidust": "square",
+  "basesurv": "square",
+  "supplybridge": "square"
 }

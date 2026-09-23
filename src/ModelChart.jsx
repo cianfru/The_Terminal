@@ -86,7 +86,7 @@ export default function ModelChart({ series, m, isMobile }) {
             dataKey="resid" type="number" domain={[lo - pad, hi + pad]}
             tickFormatter={r => `${r >= 0 ? "+" : ""}${asPct(r).toFixed(0)}%`}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56}
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56}
           />
           <ZAxis range={[7, 7]} />
           {/* The rainbow bands, flattened into residual space, every band is a

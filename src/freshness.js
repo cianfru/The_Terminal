@@ -2,6 +2,8 @@
 // the runtime JSON file that backs it, its expected update cadence, and how stale is
 // "too stale". Mirrors the control panel's Data-freshness strip. Charts derived purely
 // from the live price feed aren't listed here — they're always current, so they get no tag.
+import { loadOnchain, loadHistory } from "./history-data.js";
+
 const DAY = 86400000;
 
 export const SOURCES = {
@@ -20,13 +22,23 @@ export const CHART_SOURCE = {
   urpd: "urpd", walletgrowth: "chainwallets", mvrvbtc: "btcmvrv", mvrv: "snapshot", costbasisladder: "urpdhist",
 };
 
+// Several of these files are ALSO loaded by the charts themselves (history-data.js keeps one
+// promise per feed). Fetching them again here to read a single date cost a second copy of
+// onchain.json — 249KB, a quarter of a chart page's weight on a phone, for one string. Reuse the
+// chart's promise where one exists and only fetch what nothing else has already asked for.
+const SHARED = { onchain: loadOnchain, snapshot: loadHistory };
+
 const cache = {};
 export function loadSourceDate(key) {
   const s = SOURCES[key];
   if (!s) return Promise.resolve(null);
   if (!cache[key]) {
-    cache[key] = fetch(s.file, { cache: "no-store" })
-      .then(r => (r.ok ? r.json() : null))
+    const shared = SHARED[key];
+    // `no-cache` (revalidate), not `no-store` (never keep a copy): these files change daily, so the
+    // response must be checked, but an unchanged one should come back as a 304 with no body rather
+    // than re-downloading a quarter of a megabyte on every visit.
+    const src = shared ? shared() : fetch(s.file, { cache: "no-cache" }).then(r => (r.ok ? r.json() : null));
+    cache[key] = src
       .then(d => { try { return s.pick(d) || null; } catch { return null; } })
       .catch(() => null);
   }

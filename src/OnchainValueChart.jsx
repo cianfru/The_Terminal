@@ -101,14 +101,14 @@ export default function OnchainValueChart({ isMobile, preview = false, initialVi
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" scale={mode === "realized" ? "log" : "auto"} domain={view.yDomain} allowDataOverflow
               tickFormatter={mode === "realized" ? (v => fPrice(v)) : mode === "mvrv" ? (v => v.toFixed(2) + "×") : (v => v.toFixed(1))}
-              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 52 : 66} />
+              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 65 : 66} />
             {mode === "mvrv" && <ReferenceLine y={1} stroke="#4ade80" strokeWidth={1.6} strokeOpacity={0.85} label={{ value: "break-even 1×", position: "insideBottomRight", fill: "#4ade80", fontSize: 11, fontFamily: MONO }} />}
             {mode === "z" && <ReferenceLine y={0} stroke="rgba(255,255,255,0.5)" strokeDasharray="5 5" />}
             <Tooltip content={<Tip mode={mode} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />

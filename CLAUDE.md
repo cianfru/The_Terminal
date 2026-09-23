@@ -1927,3 +1927,80 @@
   proceed (the once-per-day guard in post.mjs is a second backstop). GitHub schedules fire late/drift by minutes — known, left as-is. To
   change the timezone, swap the two UTC hours + the `want` offsets in the gate step.
 - Cards render via `renderPostCard` (shared by the bot and `api/og.js`).
+
+## 🔎 NFT-TO-WALLET FORENSICS — identify a PFP, then reconstruct the trader behind the address (2026-09-20/21)
+- **The pipeline, proven twice end-to-end:** a profile picture names a token → the token names an address → the
+  address's SPX history names a cluster → the cluster's trades go on the rainbow. The NFT is only the CUE; the
+  subject is the trader. Owner asked for exactly this shape, twice ("the NFT itself is just the queue we need").
+- **✅ `tools/nft-id/` — WHICH TOKEN IS THIS PICTURE? (build_index.py + identify.py + calibrate.py; out/ gitignored)**
+  `build_index.py` pulls all 3,333 AEON renders from the Alchemy CDN urls already in `aeon-rarity.json` (`img`
+  field — no IPFS needed, and IPFS gateways are BLOCKED from the sandbox: six tried, all 429/timeout) and writes
+  a ~395 MB npz of ORB descriptors + keypoints + thumbs + square thumbs. ~2 min. NOT AN LLM, deliberately: a
+  model returns a fluent guess; these are counts anyone re-derives.
+  - **THREE METHODS, and the third is the one that generalises.** (1) WHOLE picture → 63-bit DCT perceptual hash,
+    13/14 correct at 200px q50, the 14th correctly reported AMBIGUOUS (#1936 ≡ #2699 at hash resolution), 0 wrong.
+    (2) FRAGMENT → ORB+RANSAC, only 10/24 — and the failure is the ART not the algorithm: AEON is trait-generated,
+    so a crop on shared background matches dozens of tokens with a PERFECT homography. Crops therefore return
+    candidates, never a verdict (claimed confidence on 0 of 24 — correct behaviour). (3) **TRAITS BEAT BOTH.**
+  - **⭐⭐ THE REAL LESSON: read the metadata, don't match the pixels.** A trait-generated collection is labelled
+    attributes and every label is published, so naming a VISIBLE feature narrows multiplicatively before a pixel is
+    compared. `--traits=bandage,black-short-hair` → `Eyewear=Bandage-Nurse` (112 of 3,333) + `Hairstyle=black-short-hair`
+    (1 of 3,333) = one answer, checkable by anyone against public metadata. An inlier count needs them to re-run code.
+  - **THREE MEASURED FIXES, each wrong on the first attempt (all pinned in the file's comments):** ORB at 1,000
+    features scored 13 inliers on a degraded crop vs 38 at 2,000 (4k/8k add nothing) → NFEAT=2000; **RANSAC needs the
+    source KEYPOINT COORDINATES, not just descriptors** — without them geometric verification is impossible and the
+    method decays to unverifiable similarity; and **a circular crop is NOT `min(h,w)`** — on an already-square image
+    that returns the blanked corners too. The inscribed square is diameter/√2 (`square(img, frac=0.70)`) and index +
+    query must take the IDENTICAL crop. That last fix is what made X-style circular PFPs work.
+  - **⚠ THRESHOLDS ARE OVER-CONSERVATIVE ON THE KEYPOINT PATH — known, left alone deliberately.** #2559 scored **960
+    inliers vs 62** after a trait filter (15×) and still printed "no confident match", because the keypoint path never
+    returns confident by design. Tuning it so one case passes is the overfitting the tool exists to avoid; fix it with a
+    measured rule or not at all. Negatives are clean (4/4 refused: a Milady, a Kemonokaki, two of our own charts).
+  - **Identified so far:** AEON **#2451** (by eye, later confirmed), **#3062** (traits; ORB ranked #2828 first — it reads
+    GREYSCALE and the discriminator was a RED cross), **#2559** (goggles + black heart, 960 inliers).
+- **✅ `scripts/build-aeon-clusters.mjs` — AEON OWNER CLUSTERS (+ `public/aeon-clusters.json`, `aeon-addr-code.json`).**
+  NFTs have no balance to drain, so the linkage signal is the **FREE TRANSFER** — a token that moved with no sale behind
+  it. Matching every transfer against the sales feed splits 25,289 into 3,333 mints / 17,039 sales / 4,917 free.
+  **`minTokens 3` is the load-bearing knob: 67% of free-transfer pairs moved exactly ONE token (gifts).** At 1 token the
+  collection collapses to 191 owners with a 58-wallet blob; at 3 it does not. maxIn 3 / maxOut 6 / maxSize 12 (flag, never
+  trust). Validated: reproduced the hand-built #2451 cluster AND found a 4th wallet (`0x66134c83`, four free transfers
+  BOTH directions over three days, now drained). **Honest headline is a NEGATIVE result: 1,173 wallets → 1,158 owners.**
+  The multi-wallet structure is HISTORICAL (people traded across wallets then consolidated), so unlike SPX, AEON's
+  by-wallet concentration is already close to honest. 722 owners bought more than they sold and hold 2,556 tokens;
+  105 sold more and hold 190; 84 have exited entirely. 10 unit tests incl. the cases that must NOT link.
+- **✅ `scripts/build-wallet-archetypes.mjs` — WHAT ACTIVE WALLETS DO (public/wallet-archetypes.json).** `cex-sankey.json`
+  already carried 90-day throughput profiles for 400 wallets and nothing consumed them. Deterministic rules, no model:
+  `retention=(volIn−volOut)/(volIn+volOut)`, `skew` on counts. Thresholds READ OFF the distribution (retention is 0.000
+  at p25/p50/p75 so "balanced" must be tight; cp runs 3/6/21/206 so 10 sits between median and p75). A hand label in
+  EXCLUDE_LABELS always wins; never writes back. **THE FINDING: 93 routers moved 228.9M SPX and NOT ONE clears the whale
+  bar. Of 400 wallets with genuine two-way activity, TWELVE are net accumulating.** Activity and ownership are nearly
+  disjoint populations. Labels are BEHAVIOURAL, never identity.
+- **⭐⭐ TWO CASE STUDIES, deliberate mirror images (charts + long-form drafted, owner publishes).**
+  - **#2451 → `0x9c968da4` (the trader).** Bought 1,092,436 SPX for $64,095 (avg $0.0587) from Oct 2023; sold 836,673
+    for $247,593 (avg $0.2959) = **3.9× cost recovered**; still holds **410,591 SPX** across 3 wallets (trader / vault
+    `0x210ccbd5` 401,900 untouched since Nov-2024 / PFP shelf `0x655048fd` nonce 0). **80% of sell dollars in "Bubble?"
+    or hotter, $109,304 in Max Bubble** — but $33,110 of BUYING also went in at Max Bubble (disclosed, it is what makes
+    the rest credible). ⚠ I first reported "99% out" from the hot wallet alone — the 401,900 was VAULTED, not sold.
+  - **#3062 → `0xa76e3bec` (the opposite).** 13 buys $18,048 (avg $0.7853), 1 sale $2,026 at $0.6080. **83% of dollars
+    SPENT went in at "Bubble?" or hotter, $9,483 in Max Bubble.** Bought the top, sold the dip. Cluster = trader + **7
+    vaults that never send back**; 4 he opened outright (paid their gas AND sent tokens), 2 of those nonce-0 holding
+    EXACTLY what he sent. **8 wallets, 58,918 SPX; the trader keeps 138.** No vault has ever traded → the buy/sell chart
+    needs no redesign, the trader is the only actor.
+  - **⚠ THE ATTRIBUTION LIMIT, always stated: a PFP does not prove ownership.** X killed NFT verification in 2023, using
+    someone's art is routine, and tokens move — #3062 changed hands 5 days before we looked. Say "we cannot tell you
+    whose wallet this is" in the post; it is true, and someone will find the transfer in a minute if you don't.
+- **⚠⚠ MATCH THE CONTRACT, NEVER THE TICKER.** A counterfeit contract (`0x3150141f…`) forged 12,000 "SPX" into a wallet's
+  history from an address matching a real counterparty's first 5 and last 4 chars — address poisoning aimed at the
+  SETTLEMENT wallet. Filtering on `symbol === "SPX"` put those 12,000 into my own numbers until I keyed on the contract.
+  The main engines are safe (EXCLUDE_LABELS is address-keyed); ad-hoc Blockscout work is not.
+- **⚠ BLOCKSCOUT PAGINATION WILL LIE TO YOU.** A 6-page lookup on a busy address returned only that day's USDT traffic
+  and I wrongly declared 22,883 SPX "counterfeit". Use `&token=<contract>` to filter server-side, or page deep enough.
+- **🔲 OPEN, owner-gated:** (1) `aeon.yml` never commits `dune/out/*.csv`, so the "incremental" Dune sales cutoff resets to
+  2026-07-23 every run and the archive never persists — one line in the commit step fixes it; add `build-aeon-clusters.mjs`
+  to the rebuild step while there. (2) `candidates` in computeCexFlow is `.slice(0,20)` but **59 addresses pass the
+  thresholds — 39 never reach the review queue.** Mostly routers holding ~0 (so published figures are barely affected),
+  but the cap should rise. (3) Owner to verify `0xa3222357` et al on Etherscan before any EXCLUDE_LABELS edit.
+- **🎨 CHART FONT — ask for `sans-serif`, NEVER a concrete family.** All ~58 cards use `font-family="sans-serif"` and
+  `scripts/bot/font.mjs` REMAPS the generic sans family to **DejaVu Serif** (the house editorial face, chosen 2026-07-24 to
+  look unlike every generic-sans crypto card). Hardcoding `font-family="DejaVu Sans"` bypasses the remap and renders in the
+  wrong face — my one-off charts did exactly that until the owner spotted it. One file restyles everything; keep it that way.

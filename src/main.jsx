@@ -56,3 +56,7 @@ createRoot(document.getElementById('root')).render(
     {!gated && <Analytics />}
   </StrictMode>,
 )
+
+// real-user Core Web Vitals, bucketed and split by device (src/vitals.js)
+import { reportVitals } from "./vitals.js";
+(window.requestIdleCallback || setTimeout)(() => reportVitals());

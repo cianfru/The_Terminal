@@ -1,3 +1,5 @@
+import { useCoarsePointer } from "./viewport.js";
+import { useChartTokens } from "./chart-tokens.js";
 import { useState, useRef, useEffect } from "react";
 // Shared UI vocabulary for the interactive chart pages. Every chart previously
 // re-declared these fonts, the Metric readout, the tooltip container and the
@@ -15,24 +17,53 @@ export const MAX_W = 1400;
 // semantic colours (green/red/amber…) are passed through untouched.
 const WHITE_INK = new Set(["#f8fafc", "#f1f5f9", "#f4f6f9", "#fafafa", "#ffffff", "#fff", "#e2e8f0", "#e5e7eb", "#eef2f8"]);
 const MUTED_INK = new Set(["#cbd5e1", "#94a3b8", "#aab4c4", "#9aa6b6", "#8b96a8", "#64748b", "#7c8a9e", "#b4bfd0", "#a8b3c4"]);
+// The vivid accents are tuned for a near-black ground and fall to ~2:1 on the bright theme. Each
+// maps to a token that carries the SAME hue at a readable weight per theme (see terminal.css), so a
+// green readout stays green and still passes AA. Charts keep passing plain hexes; this reroutes them.
+const ACCENT_VAR = {
+  "#4ade80": "green", "#22c55e": "green", "#f87171": "red", "#ef4444": "red",
+  "#38bdf8": "sky", "#0ea5e9": "sky", "#7dd3fc": "lightsky", "#a78bfa": "violet", "#8b5cf6": "violet",
+  "#fbbf24": "amber", "#eab308": "amber", "#f59e0b": "amber2", "#22d3ee": "cyan",
+  "#818cf8": "indigo", "#fb7185": "rose", "#5eead4": "teal",
+};
 export function inkColor(c) {
   if (!c) return "var(--ch-ink)";
   const k = String(c).toLowerCase();
   if (WHITE_INK.has(k)) return "var(--ch-ink)";
   if (MUTED_INK.has(k)) return "var(--ch-mut)";
-  return c;
+  const a = ACCENT_VAR[k];
+  return a ? `var(--acc-${a},${k})` : c;
 }
 
 // Big-number readout shown in the metrics row above a chart.
 export function Metric({ label, value, color = "#f8fafc", sub }) {
+  const t = useChartTokens();
   return (
     <div style={{ textAlign: "center", minWidth: 96 }}>
-      <div style={{ fontFamily: MONO, fontSize: 11, color: "var(--ch-mut,#aab4c4)", letterSpacing: 1.1, textTransform: "uppercase" }}>{label}</div>
-      <div style={{ fontFamily: MONO, fontSize: 24, fontWeight: 700, color: inkColor(color) }}>{value}</div>
-      {sub && <div style={{ fontFamily: SANS, fontSize: 11, color: "var(--ch-dim,#8b96a8)" }}>{sub}</div>}
+      <div style={{ fontFamily: MONO, fontSize: t.metricLabel, color: "var(--ch-mut,#aab4c4)", letterSpacing: 1.1, textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontFamily: MONO, fontSize: t.metricValue, fontWeight: 700, color: inkColor(color) }}>{value}</div>
+      {sub && <div style={{ fontFamily: SANS, fontSize: t.metricSub, color: "var(--ch-dim,#8b96a8)" }}>{sub}</div>}
     </div>
   );
 }
+
+// ONE-LINE INSIGHT — what the chart says right now, above the plot: the current value, which way it
+// is moving, and what that means in plain words. On a phone this is often the only thing read, so it
+// carries the answer rather than decorating it. `dir` is "up" | "down" | "flat" (or null to omit).
+const ARROW = { up: "\u2197", down: "\u2198", flat: "\u2192" };
+export function Insight({ value, dir = null, since, meaning, color = "#f8fafc" }) {
+  const t = useChartTokens();
+  return (
+    <div className="chart-insight">
+      <span className="chart-insight-v" style={{ fontFamily: MONO, color: inkColor(color) }}>{value}</span>
+      {dir && <span className="chart-insight-d" style={{ color: dir === "up" ? inkColor("#4ade80") : dir === "down" ? inkColor("#f87171") : "var(--ch-mut,#aab4c4)" }}>
+        {ARROW[dir]}{since ? <span className="chart-insight-s"> {since}</span> : null}
+      </span>}
+      {meaning && <span className="chart-insight-m" style={{ fontFamily: SANS, fontSize: t.body }}>{meaning}</span>}
+    </div>
+  );
+}
+
 
 // Tooltip container, charts supply their own rows (and an optional bold title
 // line). `style` merges over the defaults for per-chart accents (border, padding).
@@ -54,8 +85,8 @@ export function Explain({ q, accent = "#38bdf8", children }) {
   // Just a clean explanation — no box, no bold callout heading. A green ">" prompt leads, then
   // the question and answer flow as one plain paragraph in the site's sans.
   return (
-    <div className="chart-explain" style={{ maxWidth: MAX_W, margin: "0 auto 22px", fontFamily: SANS, fontSize: 15, color: "var(--ch-body,#b4bfd0)", lineHeight: 1.7 }}>
-      {q && <><span style={{ color: "#4ade80", fontFamily: MONO, marginRight: 10, fontWeight: 700 }}>&gt;</span>{q}{" "}</>}
+    <div className="chart-explain" style={{ maxWidth: MAX_W, margin: "0 auto 22px", fontFamily: SANS, color: "var(--ch-body,#b4bfd0)", lineHeight: 1.7 }}>
+      {q && <><span style={{ color: "var(--acc-green,#4ade80)", fontFamily: MONO, marginRight: 10, fontWeight: 700 }}>&gt;</span>{q}{" "}</>}
       {children}
     </div>
   );
@@ -64,11 +95,14 @@ export function Explain({ q, accent = "#38bdf8", children }) {
 // Hover typewriter, identical to the top nav menu: the label types itself out on hover while the
 // control reserves its FULL width with an invisible ghost, so nothing reflows as characters stream.
 export function useHoverType(text) {
+  // Reduced motion: hand back the finished text and make type()/reset() no-ops.
+  const still = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion:reduce)").matches;
   const [shown, setShown] = useState(text);
   const timer = useRef(null);
   useEffect(() => () => clearTimeout(timer.current), []);
   useEffect(() => { setShown(text); }, [text]);
   const type = () => {
+    if (still) return;
     clearTimeout(timer.current);
     let j = 0;
     const step = () => { setShown(text.slice(0, j)); if (j < text.length) { j++; timer.current = setTimeout(step, 42); } };
@@ -80,7 +114,7 @@ export function useHoverType(text) {
 
 // THE app's single button vocabulary — squared (90° corners), mono, uppercase, and it inverts +
 // types its label out on hover, exactly like the top menu. Used for every chart-page control
-// (share / fullscreen / chart pager / back). icon optional; iconRight puts the icon after the label;
+// (share / chart pager / back). icon optional; iconRight puts the icon after the label;
 // an empty label makes an icon-only square button. Styling lives in .menubtn (terminal.css, .tzone).
 export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, className = "", active = false, style, type: btnType = "button" }) {
   const { shown, type, reset } = useHoverType(label || "");
@@ -91,7 +125,7 @@ export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, c
       style={style}>
       {icon && !iconRight && <span className="menubtn-ic">{icon}</span>}
       {label !== "" && (
-        <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur">_</i></span><span className="menubtn-y">{shown}<i className="tcur">_</i></span></span>
+        <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur" aria-hidden="true">_</i></span><span className="menubtn-y">{shown}<i className="tcur" aria-hidden="true">_</i></span></span>
       )}
       {icon && iconRight && <span className="menubtn-ic">{icon}</span>}
     </button>
@@ -104,7 +138,7 @@ export function MenuBtn({ label = "", icon, iconRight = false, onClick, title, c
 // one system. Styling lives in .vtab CSS (terminal.css, scoped under .tzone).
 export function ViewTabs({ tabs, value, onChange, style }) {
   return (
-    <div className="viewtabs" style={style}>
+    <div className="viewtabs chart-toolbar" style={style}>
       {tabs.map(([k, l]) => <TypeTab key={k} label={l} on={k === value} onClick={() => onChange(k)} />)}
     </div>
   );
@@ -118,7 +152,7 @@ export function TypeTab({ label, sub, on, onClick, title, style, className = "" 
   return (
     <button type="button" className={"vtab" + (on ? " on" : "") + (className ? " " + className : "")}
       onMouseEnter={type} onMouseLeave={reset} onClick={onClick} title={title} style={style}>
-      <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur">_</i></span><span className="menubtn-y">{shown}<i className="tcur">_</i></span></span>
+      <span className="menubtn-t"><span className="menubtn-g" aria-hidden="true">{label}<i className="tcur" aria-hidden="true">_</i></span><span className="menubtn-y">{shown}<i className="tcur" aria-hidden="true">_</i></span></span>
       {sub != null && <span className="vtsub">{sub}</span>}
     </button>
   );
@@ -134,9 +168,15 @@ export function ZoomResetButton({ onReset, accent = "#38bdf8", fontSize = 12, pa
 
 // The status row above a zoomable chart: hint text + reset button when zoomed.
 export function ZoomBar({ zoomed, onReset, accent = "#38bdf8", viewing = "Viewing a selected window." }) {
+  const coarse = useCoarsePointer();
+  // The fullscreen viewer this used to point at is gone: iOS Safari refuses requestFullscreen on
+  // anything that isn't a <video>, so on iPhone it was only ever a CSS overlay sitting under the
+  // URL bar — never actually fullscreen. The browser's own pinch zoom works on the page as-is
+  // (nothing here sets user-scalable=no), so that is what touch users are pointed at.
+  const hint = coarse ? "Pinch to zoom in on any part of the chart." : "Drag across the chart to zoom into any period.";
   return (
     <div className="chart-zoombar" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 10 }}>
-      <span style={{ fontFamily: SANS, fontSize: 12.5, color: "var(--ch-dim,#8b96a8)" }}>{zoomed ? viewing : "Drag across the chart to zoom into any period."}</span>
+      <span style={{ fontFamily: SANS, fontSize: 13, color: "var(--ch-dim,#8b96a8)" }}>{zoomed ? viewing : hint}</span>
       {zoomed && <ZoomResetButton onReset={onReset} accent={accent} />}
     </div>
   );

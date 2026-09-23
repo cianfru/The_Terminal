@@ -54,6 +54,10 @@ export default defineConfig({
           // three.js only feeds the lazy 3D chart — keep it in its own chunk so it
           // loads on demand (when the 3D tab is opened), NOT in the eager vendor bundle.
           if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) return 'three';
+          // recharts (+ its d3 deps) is ~100KB and is needed ONLY by pages that draw a chart.
+          // The landing, the docs and the phone gallery (which no longer mounts live previews)
+          // don't, so isolating it keeps that weight off those routes entirely.
+          if (/[\\/]node_modules[\\/](recharts|d3-[a-z]+|victory-vendor|decimal\.js-light|internmap|delaunator|robust-predicates)[\\/]/.test(id)) return 'recharts';
           return 'vendor';
         },
       },

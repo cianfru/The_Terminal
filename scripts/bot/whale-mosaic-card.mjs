@@ -1,8 +1,13 @@
-// "Whale Mosaic" — every wallet holding ≥100k SPX as ONE square, coloured by net flow: green for
-// accumulating, red for distributing, dark neutral for flat. Sorted biggest-buyer → flat → biggest-
-// seller, so the field reads as a gradient. Stripped to the one thing that matters — who is moving,
-// which way — across all three chains. Data: public/whales.json (ETH d30), base-onchain.json,
-// solana-onchain.json (per-wallet flow). The rotation-card twin of the live Whales Watching mosaic.
+// "Whale Mosaic" — the ≥100k-SPX wallets that MOVED, one square each, coloured by net flow: green for
+// accumulating, red for distributing, biggest buyer → biggest seller, so the field reads as a gradient.
+// Data: public/whales.json (ETH d30), base-onchain.json, solana-onchain.json (per-wallet flow).
+//
+// ⚠ MOVERS ONLY — and every line of text on this card has to say so. The SITE mosaic
+// (src/WhaleMosaic.jsx) draws the FULL census including the flat majority; this card leaves them out
+// so the colour isn't swamped. When the header still read "N wallets hold >100k SPX" over a grid of
+// movers, the card contradicted its own grid AND read as the opposite of the whalebehaviour card
+// ("77% held flat") off identical numbers. The headline now counts the movers the squares represent,
+// and the flat count is labelled "not shown".
 import { readFileSync } from "node:fs";
 import { Resvg } from "@resvg/resvg-js";
 import { FONT } from "./font.mjs";
@@ -72,10 +77,10 @@ export function whaleMosaicSvg(stats, opts = {}) {
 <rect width="${W}" height="${H}" fill="url(#wmbg)"/>
 ${cardDepth(W, H)}${brandStripe(H)}
 <text x="${mX}" y="${Math.round(66 * cW)}" fill="#f8fafc" font-size="${Math.round(33 * cW)}" font-weight="800" font-family="sans-serif" letter-spacing="1">SPX6900 · WHALE MOSAIC</text>
-<text x="${mX}" y="${Math.round(120 * cW)}" fill="#f1f5f9" font-size="${Math.round(46 * cW)}" font-weight="800" font-family="sans-serif">${total.toLocaleString()} wallets hold &gt;100k SPX</text>
+<text x="${mX}" y="${Math.round(120 * cW)}" fill="#f1f5f9" font-size="${Math.round(46 * cW)}" font-weight="800" font-family="sans-serif">${movers.length} of ${total.toLocaleString()} whales moved in 30 days</text>
 <text x="${mX}" y="${Math.round(166 * cW)}" fill="#22c55e" font-size="${Math.round(25 * cW)}" font-weight="800" font-family="sans-serif">${buy} accumulating</text>
 <text x="${mX + Math.round(300 * cW)}" y="${Math.round(166 * cW)}" fill="#f43f5e" font-size="${Math.round(25 * cW)}" font-weight="800" font-family="sans-serif">${sell} selling</text>
-<text x="${mX + Math.round(500 * cW)}" y="${Math.round(166 * cW)}" fill="#93a3b8" font-size="${Math.round(25 * cW)}" font-weight="800" font-family="sans-serif">${flat.toLocaleString()} flat</text>
+<text x="${mX + Math.round(500 * cW)}" y="${Math.round(166 * cW)}" fill="#93a3b8" font-size="${Math.round(25 * cW)}" font-weight="800" font-family="sans-serif">${flat.toLocaleString()} sat still · not shown</text>
 ${cells}
 <text x="${mX}" y="${H - 24}" fill="#8592a6" font-size="18" font-family="sans-serif">${esc("each square is a whale that moved · green accumulating · red selling · the rest are holding · spx6900rainbow.xyz")}</text>
 </svg>`;

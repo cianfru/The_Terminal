@@ -74,7 +74,7 @@ export default function AltMarketChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <defs>
               <linearGradient id="altfill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor={HOT} stopOpacity={0.5} />
@@ -91,7 +91,7 @@ export default function AltMarketChart({ isMobile, preview = false }) {
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={view.yDomain} allowDataOverflow
               tickFormatter={v => (v >= 0 ? "+" : "") + v.toFixed(1) + "σ"} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 58} />
+              axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 58} />
             <ReferenceLine y={1} stroke={HOT} strokeDasharray="5 5" strokeOpacity={0.7} />
             <ReferenceLine y={-1} stroke={COOL} strokeDasharray="5 5" strokeOpacity={0.7} />
             <ReferenceLine y={0} stroke="rgba(255,255,255,0.55)" strokeWidth={1.5}

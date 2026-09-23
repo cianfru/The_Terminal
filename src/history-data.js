@@ -6,7 +6,7 @@ let promise = null;
 
 export function loadHistory() {
   if (!promise) {
-    promise = fetch("/history.json", { cache: "no-store" })
+    promise = fetch("/history.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : []))
       .then(d => (Array.isArray(d) ? d : []))
       .catch(() => []);
@@ -81,7 +81,7 @@ export function loadSmartMoney() {
 let pricePromise = null;
 export function loadPriceHistory() {
   if (!pricePromise) {
-    pricePromise = fetch("/price-history.json", { cache: "no-store" })
+    pricePromise = fetch("/price-history.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : []))
       .then(d => (Array.isArray(d) ? d : []))
       .catch(() => []);
@@ -95,7 +95,7 @@ export function loadPriceHistory() {
 let lsPromise = null;
 export function loadLongShort() {
   if (!lsPromise) {
-    lsPromise = fetch("/longshort.json", { cache: "no-store" })
+    lsPromise = fetch("/longshort.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : []))
       .then(d => (Array.isArray(d) ? d : []))
       .catch(() => []);
@@ -113,7 +113,7 @@ let freeFloatPeersPromise = null;
 // banked by the freefloat-peers workflow. Resolves to { btc, eth } arrays (empty on any error).
 export function loadFreeFloatPeers() {
   if (!freeFloatPeersPromise) {
-    freeFloatPeersPromise = fetch("/freefloat-peers.json", { cache: "no-store" })
+    freeFloatPeersPromise = fetch("/freefloat-peers.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => ({ btc: d?.btc || [], eth: d?.eth || [] }))
       .catch(() => ({ btc: [], eth: [] }));
@@ -123,7 +123,7 @@ export function loadFreeFloatPeers() {
 
 export function loadBtcMvrv() {
   if (!btcMvrvPromise) {
-    btcMvrvPromise = fetch("/btc-mvrv.json", { cache: "no-store" })
+    btcMvrvPromise = fetch("/btc-mvrv.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.points) ? d : { points: [] }))
       .catch(() => ({ points: [] }));
@@ -179,7 +179,7 @@ export function loadWhaleLots() {
 let onchainPromise = null;
 export function loadOnchain() {
   if (!onchainPromise) {
-    onchainPromise = fetch("/onchain.json", { cache: "no-store" })
+    onchainPromise = fetch("/onchain.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (Array.isArray(d) && d.length ? d : null))
       .catch(() => null);
@@ -198,13 +198,13 @@ export function loadOnchain() {
 // (entities, spx-timeline — no safe public copy) a 403 returns null: truly members-only.
 export async function fetchPrivate(feed, publicPath, { publicSafe = false } = {}) {
   try {
-    const r = await fetch(`/api/auth?action=data&f=${feed}`, { cache: "no-store" });
+    const r = await fetch(`/api/auth?action=data&f=${feed}`, { cache: "no-cache" });
     if (r.ok) return await r.json();               // member — served the granular version from KV
     if (r.status === 403 && !publicSafe) return null;   // not a member + nothing safe to fall back to
     // 403 (publicSafe) / 404 (not published yet) / 503 (store off) / "not configured" → public file
   } catch { /* network — fall back */ }
   if (!publicPath) return null;
-  try { const r = await fetch(publicPath, { cache: "no-store" }); return r.ok ? await r.json() : null; }
+  try { const r = await fetch(publicPath, { cache: "no-cache" }); return r.ok ? await r.json() : null; }
   catch { return null; }
 }
 
@@ -227,7 +227,7 @@ export function loadEntities() {
 let aeonPromise = null;
 export function loadAeon() {
   if (!aeonPromise) {
-    aeonPromise = fetch("/aeon-onchain.json", { cache: "no-store" })
+    aeonPromise = fetch("/aeon-onchain.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.series) && d.series.length ? d : null))
       .catch(() => null);
@@ -240,7 +240,7 @@ export function loadAeon() {
 let cexSankeyPromise = null;
 export function loadCexSankey() {
   if (!cexSankeyPromise) {
-    cexSankeyPromise = fetch("/cex-sankey.json", { cache: "no-store" })
+    cexSankeyPromise = fetch("/cex-sankey.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && d.totals && (d.inflow?.length || d.outflow?.length) ? d : null))
       .catch(() => null);
@@ -253,7 +253,7 @@ export function loadCexSankey() {
 let aeonSalesPromise = null;
 export function loadAeonSales() {
   if (!aeonSalesPromise) {
-    aeonSalesPromise = fetch("/aeon-sales.json", { cache: "no-store" })
+    aeonSalesPromise = fetch("/aeon-sales.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.daily) && d.daily.length ? d : null))
       .catch(() => null);
@@ -280,7 +280,7 @@ export function loadAeonRarity() {
 let aeonListPromise = null;
 export function loadAeonListings() {
   if (!aeonListPromise) {
-    aeonListPromise = fetch("/aeon-listings.json", { cache: "no-store" })
+    aeonListPromise = fetch("/aeon-listings.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.listings) && d.listings.length ? d : null))
       .catch(() => null);
@@ -291,13 +291,13 @@ export function loadAeonListings() {
 // Aeon market valuation (MVRV / supply-in-profit / URPD / deals / biggest sales / trait premiums).
 let aeonMktPromise = null;
 export function loadAeonMarket() {
-  if (!aeonMktPromise) aeonMktPromise = fetch("/aeon-market.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => d && d.valuation ? d : null).catch(() => null);
+  if (!aeonMktPromise) aeonMktPromise = fetch("/aeon-market.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(d => d && d.valuation ? d : null).catch(() => null);
   return aeonMktPromise;
 }
 // Aeon trader intelligence (wallet P&L leaderboard).
 let aeonTradersPromise = null;
 export function loadAeonTraders() {
-  if (!aeonTradersPromise) aeonTradersPromise = fetch("/aeon-traders.json", { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(d => d && Array.isArray(d.top) ? d : null).catch(() => null);
+  if (!aeonTradersPromise) aeonTradersPromise = fetch("/aeon-traders.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(d => d && Array.isArray(d.top) ? d : null).catch(() => null);
   return aeonTradersPromise;
 }
 
@@ -307,7 +307,7 @@ export function loadAeonTraders() {
 let urpdPromise = null;
 export function loadUrpd() {
   if (!urpdPromise) {
-    urpdPromise = fetch("/urpd.json", { cache: "no-store" })
+    urpdPromise = fetch("/urpd.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.buckets) && d.buckets.length ? d : null))
       .catch(() => null);
@@ -320,7 +320,7 @@ export function loadUrpd() {
 let urpdHistPromise = null;
 export function loadUrpdHistory() {
   if (!urpdHistPromise) {
-    urpdHistPromise = fetch("/urpd-history.json", { cache: "no-store" })
+    urpdHistPromise = fetch("/urpd-history.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.weeks) && d.weeks.length ? d : null))
       .catch(() => null);
@@ -337,7 +337,7 @@ export function loadWhales() {
     // PUBLIC: whales.json powers SPX City (a public showpiece) + its per-building Zerion cards, so it
     // carries addresses openly (raw top-holder addresses are already visible on any explorer; the
     // proprietary LINKAGE is what stays members-only via entities.json).
-    whalesPromise = fetch("/whales.json", { cache: "no-store" })
+    whalesPromise = fetch("/whales.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.wallets) && d.wallets.length ? d : null))
       .catch(() => null);
@@ -350,7 +350,7 @@ export function loadWhales() {
 let whaleCampaignsPromise = null;
 export function loadWhaleCampaigns() {
   if (!whaleCampaignsPromise) {
-    whaleCampaignsPromise = fetch("/whale-campaigns.json", { cache: "no-store" })
+    whaleCampaignsPromise = fetch("/whale-campaigns.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.wallets) ? d : null))
       .catch(() => null);
@@ -363,7 +363,7 @@ export function loadWhaleCampaigns() {
 let solanaOnchainPromise = null;
 export function loadSolanaOnchain() {
   if (!solanaOnchainPromise) {
-    solanaOnchainPromise = fetch("/solana-onchain.json", { cache: "no-store" })
+    solanaOnchainPromise = fetch("/solana-onchain.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.wallets) ? d : null))
       .catch(() => null);
@@ -374,7 +374,7 @@ export function loadSolanaOnchain() {
 let baseOnchainPromise = null;
 export function loadBaseOnchain() {
   if (!baseOnchainPromise) {
-    baseOnchainPromise = fetch("/base-onchain.json", { cache: "no-store" })
+    baseOnchainPromise = fetch("/base-onchain.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.wallets) ? d : null))
       .catch(() => null);
@@ -387,7 +387,7 @@ export function loadBaseOnchain() {
 let cexFlowPromise = null;
 export function loadCexFlow() {
   if (!cexFlowPromise) {
-    cexFlowPromise = fetch("/cex-flow.json", { cache: "no-store" })
+    cexFlowPromise = fetch("/cex-flow.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.days) && d.days.length ? d : null))
       .catch(() => null);
@@ -401,7 +401,7 @@ export function loadCexFlow() {
 let chainWalletsPromise = null;
 export function loadChainWallets() {
   if (!chainWalletsPromise) {
-    chainWalletsPromise = fetch("/chain-wallets.json", { cache: "no-store" })
+    chainWalletsPromise = fetch("/chain-wallets.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (Array.isArray(d) && d.length ? d : null))
       .catch(() => null);
@@ -416,7 +416,7 @@ export function loadChainWallets() {
 let valuationPromise = null;
 export function loadValuation() {
   if (!valuationPromise) {
-    valuationPromise = fetch("/valuation.json", { cache: "no-store" })
+    valuationPromise = fetch("/valuation.json", { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.series) && d.series.length ? d : null))
       .catch(() => null);
@@ -437,7 +437,7 @@ export function loadCityTimeline(asset) {
   const f = asset === "aeon" ? "aeon" : "spx";
   if (!timelinePromises[f]) {
     // PUBLIC: the SPX City time machine is part of the public showpiece, so its timeline is public too.
-    timelinePromises[f] = fetch(file, { cache: "no-store" })
+    timelinePromises[f] = fetch(file, { cache: "no-cache" })
       .then(r => (r.ok ? r.json() : null))
       .then(d => (d && Array.isArray(d.wallets) && d.n > 0 ? d : null))
       .catch(() => null);

@@ -213,8 +213,14 @@ export function computeCexFlow(transfers, { labels = EXCLUDE_LABELS, asOf = null
     const fk = kindOf(t.from), tk = kindOf(t.to);
     if (tk === "cex" && fk !== "cex") bump(venueIn, canonVenue(labels[t.to].name), t.from, t.amt);
     else if (fk === "cex" && tk !== "cex") bump(venueOut, canonVenue(labels[t.from].name), t.to, t.amt);
-    if (!labels[t.from]) { const e = tp(t.from); e.out++; e.volOut += t.amt; e.cp.add(t.to); }
-    if (!labels[t.to]) { const e = tp(t.to); e.in++; e.volIn += t.amt; e.cp.add(t.from); }
+    // Throughput is tracked for EVERY address, tagged ones included. `candidates` still lists only
+    // untagged wallets (that is its job), but the tagged ones are the only hand-labelled examples we
+    // have — without profiling them on identical fields there is nothing to grade a classifier against.
+    { const e = tp(t.from); e.out++; e.volOut += t.amt; e.cp.add(t.to); if (fk) e.kind = fk; }
+    { const e = tp(t.to); e.in++; e.volIn += t.amt; e.cp.add(t.from); if (tk) e.kind = tk; }
+    // venues touched, from the FULL rows rather than the truncated display top-N
+    if (fk === "cex") { const e = tp(t.to); (e.vIn ||= new Set()).add(canonVenue(labels[t.from].name)); }
+    if (tk === "cex") { const e = tp(t.from); (e.vOut ||= new Set()).add(canonVenue(labels[t.to].name)); }
   }
 
   const rollup = m => [...m].map(([venue, g]) => {
@@ -226,15 +232,26 @@ export function computeCexFlow(transfers, { labels = EXCLUDE_LABELS, asOf = null
 
   const inflow = rollup(venueIn), outflow = rollup(venueOut);
   const totalIn = inflow.reduce((s, v) => s + v.total, 0), totalOut = outflow.reduce((s, v) => s + v.total, 0);
-  const candidates = [...thru].map(([a, e]) => ({ a, txIn: e.in, txOut: e.out, cp: e.cp.size, volIn: Math.round(e.volIn), volOut: Math.round(e.volOut) }))
-    .filter(c => c.txIn >= 30 && c.txOut >= 30 && c.cp >= 25)          // moves both ways, to many parties = infrastructure
+  const row = ([a, e]) => ({
+    a, txIn: e.in, txOut: e.out, cp: e.cp.size,
+    volIn: Math.round(e.volIn), volOut: Math.round(e.volOut),
+    venuesIn: e.vIn ? e.vIn.size : 0, venuesOut: e.vOut ? e.vOut.size : 0,
+    kind: e.kind || null,                                              // the hand label, when there is one
+  });
+  const all = [...thru].map(row);
+  const candidates = all.filter(c => !c.kind && c.txIn >= 30 && c.txOut >= 30 && c.cp >= 25)   // moves both ways, to many parties = infrastructure
     .sort((a, b) => (b.volIn + b.volOut) - (a.volIn + a.volOut)).slice(0, 20);
+  // The profile set is DELIBERATELY wider than the candidate thresholds. Those thresholds are the
+  // thing a classifier is meant to improve on, so a set filtered by them could never show it
+  // catching something they miss. Anything with real two-way activity is included, labelled or not.
+  const profiles = all.filter(c => c.kind || ((c.txIn + c.txOut) >= 8 && (c.volIn + c.volOut) >= dust))
+    .sort((a, b) => (b.volIn + b.volOut) - (a.volIn + a.volOut)).slice(0, 400);
 
   return {
     updated: new Date(t1).toISOString().slice(0, 10),
     window: { from: new Date(cutoff).toISOString().slice(0, 10), to: new Date(t1).toISOString().slice(0, 10), days, dust, topN },
     totals: { in: totalIn, out: totalOut, net: totalIn - totalOut },
-    inflow, outflow, candidates,
+    inflow, outflow, candidates, profiles,
   };
 }
 

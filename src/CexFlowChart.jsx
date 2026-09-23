@@ -81,16 +81,16 @@ export default function CexFlowChart({ isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 40 : 62, bottom: 24, left: isMobile ? 4 : 16 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
             {view.spans.map(([a, b], i) => <ReferenceArea key={i} x1={a} x2={b} yAxisId="flow" fill="#64748b" fillOpacity={0.14} stroke="none" />)}
             <XAxis dataKey="ts" type="number" domain={view.xDomain} ticks={view.xTicks} scale="time" allowDataOverflow
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis yAxisId="flow" domain={[-view.om, view.om]} tickFormatter={v => (v / 1e6).toFixed(0) + "M"}
-              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 40 : 52} />
+              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 50 : 52} />
             <YAxis yAxisId="price" orientation="right" scale="log" domain={[view.pMin * 0.9, view.pMax * 1.1]} allowDataOverflow
-              tickFormatter={v => "$" + (v >= 1 ? v.toFixed(1) : v.toFixed(2))} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 40 : 54} />
+              tickFormatter={v => "$" + (v >= 1 ? v.toFixed(1) : v.toFixed(2))} tick={{ fill: PRICE, fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={false} tickLine={false} width={isMobile ? 50 : 54} />
             <ReferenceLine yAxisId="flow" y={0} stroke="rgba(255,255,255,0.45)" />
             <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
             <Bar yAxisId="flow" dataKey="roll" isAnimationActive={false} maxBarSize={6}>

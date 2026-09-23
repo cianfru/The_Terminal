@@ -72,7 +72,7 @@ function BandHistory({ series, isMobile }) {
         <XAxis dataKey="ts" type="number" scale="time" domain={["dataMin", "dataMax"]} ticks={xT}
           tickFormatter={yr} tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} />
         <YAxis type="number" domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tickFormatter={v => `${v * 100}`}
-          tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} width={isMobile ? 30 : 40} />
+          tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} width={isMobile ? 48 : 40} />
         <Line type="monotone" dataKey="v" stroke="#ffffff" strokeWidth={1.6} dot={false} isAnimationActive={false} />
       </ComposedChart>
     </ResponsiveContainer>
@@ -237,7 +237,7 @@ export default function LandingPage({ isMobile, priceData }) {
                   <XAxis dataKey="ts" type="number" scale="time" domain={["dataMin", "dataMax"]} ticks={chart.xT}
                     tickFormatter={ts => new Date(ts).getUTCFullYear()} tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} />
                   <YAxis scale="log" domain={[chart.yMin, chart.yMax]} ticks={chart.logT} tickFormatter={fT}
-                    tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} width={isMobile ? 44 : 56} allowDataOverflow />
+                    tick={{ fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.12)" }} tickLine={false} width={isMobile ? 55 : 56} allowDataOverflow />
                   {Array.from({ length: 9 }).map((_, i) => (
                     <Area key={i} dataKey={`b${i}`} fill={BAND_LABELS[i].c} fillOpacity={0.62} stroke="none" isAnimationActive={false} activeDot={false} />
                   ))}

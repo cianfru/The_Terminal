@@ -84,7 +84,7 @@ export default function QuantileFanChart({ series, isMobile, preview = false }) 
             axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} minTickGap={isMobile ? 30 : 18} />
           <YAxis type="number" scale="log" domain={yDomain} ticks={yTicks} allowDataOverflow
             tickFormatter={v => (v < 1 ? "$" + v : "$" + v.toLocaleString())} tick={{ fill: "#94a3b8", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 48 : 62} />
+            axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 60 : 62} />
           {!preview && <Tooltip content={<Tip />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />}
           <Area dataKey="redBand" stroke="none" fill="#dc2626" fillOpacity={0.14} isAnimationActive={false} activeDot={false} />
           <Area dataKey="greenBand" stroke="none" fill="#22c55e" fillOpacity={0.11} isAnimationActive={false} activeDot={false} />

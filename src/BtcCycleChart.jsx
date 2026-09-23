@@ -140,9 +140,9 @@ export default function BtcCycleChart({ series, isMobile }) {
           <XAxis dataKey="ts" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={fMon}
             tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} minTickGap={isMobile ? 50 : 36} />
           <YAxis yAxisId="spx" scale="log" domain={stats.spxDomain} allowDataOverflow tickFormatter={fP}
-            tick={{ fill: "#4ade80", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 46 : 60} />
+            tick={{ fill: "#4ade80", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 58 : 60} />
           <YAxis yAxisId="btc" orientation="right" scale="log" domain={stats.btcDomain} allowDataOverflow tickFormatter={fBtc}
-            tick={{ fill: "#f7931a", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 40 : 52} />
+            tick={{ fill: "#f7931a", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 50 : 52} />
           <Tooltip content={<Tip />} />
           {HALVINGS.map((h, i) => (
             <ReferenceLine yAxisId="spx" key={i} x={h} stroke="rgba(255,255,255,0.2)" label={{ value: "BTC Halving", fill: "#94a3b8", fontSize: 11, position: "insideBottomLeft", angle: -90, offset: 8 }} />

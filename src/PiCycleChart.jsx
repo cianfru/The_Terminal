@@ -74,7 +74,7 @@ export default function PiCycleChart({ series, isMobile, preview = false }) {
         {!preview && <ChartZoomHint />}
         <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
           <ComposedChart data={view.vis} margin={{ top: 10, right: isMobile ? 8 : 20, bottom: 24, left: isMobile ? 0 : 12 }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none" }}>
+            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp} style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
             <defs>
               <linearGradient id="pcArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={PC} stopOpacity={0.32} /><stop offset="100%" stopColor={PC} stopOpacity={0} /></linearGradient>
             </defs>
@@ -89,7 +89,7 @@ export default function PiCycleChart({ series, isMobile, preview = false }) {
               tickFormatter={fShort} tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} />
             <YAxis type="number" domain={view.yDomain} allowDataOverflow tickFormatter={fR}
-              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+              tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }} axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
             <ReferenceLine y={z.btcTop} stroke="#64748b" strokeWidth={1.2} strokeDasharray="3 5"
               label={preview ? undefined : { value: "Bitcoin's top 1.0", position: "insideRight", fill: "#64748b", fontSize: 10.5, fontFamily: MONO }} />
             <ReferenceLine y={z.top} stroke="#f87171" strokeWidth={1.4} strokeDasharray="6 4"

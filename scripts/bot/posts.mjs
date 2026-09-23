@@ -36,6 +36,8 @@ import { turnoverOf } from "../../src/turnover.js";
 import { whaleBehaviourStats } from "./whale-behaviour-card.mjs";
 import { whaleMosaicStats } from "./whale-mosaic-card.mjs";
 import { cexFlowStats } from "./cex-flow-card.mjs";
+import { bedrockStats } from "./bedrock-card.mjs";
+import { supplyBridgeStats, diamondGapSeries } from "./supply-bridge-card.mjs";
 
 // --- owner-editable post copy ---------------------------------------------
 // EVERY card's tweet text is owner-editable from the control panel. Cards wrap
@@ -1180,18 +1182,83 @@ Conviction looks like silence.`,
     };
   },
 
-  // Whale mosaic — every ≥100k wallet as one square, green accumulating / red selling / dark flat,
+  // Whale mosaic — the ≥100k wallets that MOVED, one square each, green accumulating / red selling,
   // across all three chains. The glanceable "who's moving, which way" snapshot. Minimal by design.
+  // ⚠ The card draws ONLY the movers (the quiet majority would swamp the colour), so the copy has to
+  // say so: it names how many moved out of how many exist, and says the flat ones are off the board.
+  // Earlier copy claimed "every wallet, one square each" — true of the SITE mosaic (src/WhaleMosaic.jsx
+  // draws the full census) but NOT of this card, which read as a contradiction against whalebehaviour.
   () => {
     const m = whaleMosaicStats();
     if (!m) return null;
-    const lean = m.buy > m.sell ? "more are accumulating than selling" : m.sell > m.buy ? "more are selling than accumulating" : "buyers and sellers are even";
+    const moved = m.buy + m.sell;
+    // Kept short on purpose: this post runs close to the 290-char ceiling, and the wallet counts
+    // grow a digit (and a comma) as the cohort does.
+    const lean = m.buy > m.sell ? "buyers outnumber sellers" : m.sell > m.buy ? "sellers outnumber buyers" : "buyers and sellers are even";
     return {
       id: "whalemosaic",
-      text: ct`🐋 Every wallet holding over 100k SPX, one square each — ${m.total.toLocaleString()} whales across 3 chains.
-Right now ${m.buy} are accumulating and ${m.sell} are selling; the rest sit tight — ${lean}. Green is buying, red is selling.
-We watch every wallet, live. Real intel, real numbers.`,
+      text: ct`🐋 ${moved} of SPX6900's ${m.total.toLocaleString()} whales moved in 30 days — one square each, green buying, red selling.
+${m.buy} added and ${m.sell} sold — ${lean}. The other ${m.flat.toLocaleString()} didn't move a coin — not on the board.
+Every wallet over 100k SPX, 3 chains, checked daily.`,
       card: { type: "whalemosaic" },
+    };
+  },
+
+  // ⚗️ A PUBLISHED NEGATIVE RESULT. We ported Bitview's Raw Bedrock floor model (floor.bitview.space)
+  // to SPX and it does not hold up on three years of history — so we say so, with the chart that
+  // shows why. Being seen to run experiments and report the ones that fail is the honesty moat doing
+  // its job; it is also the only way "we checked" means anything when an experiment DOES work.
+  // NO_ROTATE: a one-off, hand-posted. Numbers that carry the argument are computed, not typed.
+  () => {
+    const m = bedrockStats();
+    if (!m) return null;
+    const since = new Date(m.firstInPlay).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+    return {
+      id: "bedrock",
+      text: ct`⚗️ We ran a Bitcoin floor model on SPX6900. It doesn't work yet — and that's worth publishing.
+It ranks how much supply is underwater against its own history, then finds the price that would put the crowd back in that much pain. Bitcoin has 17 years to rank against. SPX has three: the model's line was within 25% of price on ${m.inPlay} of ${m.n} days, none of them before ${since}.
+Re-running it next year. The experiments that fail get published too.`,
+      card: { type: "bedrock" },
+    };
+  },
+
+  // 💎 THE DENOMINATOR BRIDGE. Our own diamond-hands figure gets read in public as "there is no
+  // supply left" — but it is 90% of HELD supply, and the engine excludes exchanges, LP and the
+  // bridge from that denominator by construction, so it cannot speak to them. CLAUDE.md's standing
+  // rule is that a diamond number names its denominator or bridges both; this card is the bridge,
+  // and the post says the quiet part: 200M+ sits on exchanges, outside the number entirely.
+  // The listing-fill caveat is IN the copy on purpose — without it this would just be the opposite
+  // error (exchange supply here is mostly venue inventory, not holders queuing to dump).
+  // NO_ROTATE: fired by hand when the claim comes round again, which it will.
+  () => {
+    const b = supplyBridgeStats();
+    if (!b) return null;
+    const M = n => (n / 1e6).toFixed(0) + "M";
+    return {
+      id: "supplybridge",
+      text: ct`💎 "90% diamond hands" is 90% of a subset — and the subset leaves out the coins most ready to sell.
+It is 90% of the ${M(b.held)} held in self-custody. Exchanges, pools and the bridge are not in that denominator at all: ${M(b.excluded)}, of which ${M(b.cex)} sits on exchanges. Measured against every coin that can trade, diamond hands are ${b.diamondOfAll.toFixed(0)}% — and ${M(b.sellReady)}, ${(b.sellReady / b.circulating * 100).toFixed(0)}% of supply, is on a venue, in a pool, or was bought inside 90 days. Most of that exchange balance arrived as listing inventory rather than holders queuing to sell, but it is still supply sitting where selling happens.
+Conviction is real. It is not the same as an empty order book.`,
+      card: { type: "supplybridge" },
+    };
+  },
+
+  // 💎 THE SAME POINT, OVER TIME — and the sharper version of it. The quoted diamond figure and the
+  // honest one were the same number at launch; they separated exactly as coins moved to exchanges.
+  // The copy leads with the comparison that settles it: over the last ~16 months the quoted number
+  // gained ~14 points while the one measured against ALL supply went nowhere. NO_ROTATE, hand-fired.
+  () => {
+    const g = diamondGapSeries();
+    if (!g?.then) return null;
+    const { cur, then } = g;
+    const mon = ts => new Date(ts).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
+    const pp = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(0);
+    return {
+      id: "diamondgap",
+      text: ct`💎 Since ${mon(then.ts)}, SPX6900's "90% diamond hands" went from ${then.ofHeld.toFixed(0)}% to ${cur.ofHeld.toFixed(0)}%. Measured against every coin that can trade, the same cohort went ${then.ofCirc.toFixed(0)}% to ${cur.ofCirc.toFixed(0)}%.
+Same coins, two denominators — ${pp(cur.ofHeld - then.ofHeld)} points against one, ${pp(cur.ofCirc - then.ofCirc)} against the other. The quoted figure counts self-custody only, and over that stretch supply on exchanges grew to ${cur.exch.toFixed(0)}% of everything circulating. It was never inside the number.
+A rising percentage is not the same as vanishing supply.`,
+      card: { type: "diamondgap" },
     };
   },
 
@@ -1393,6 +1460,26 @@ On-chain, reproducible — a position, not a signal.`,
 As the holder base grew, the whales' grip loosened: the top 10 slipped from ${first.top10.toFixed(0)}% to ${cur.top10.toFixed(0)}%. The float keeps spreading into more hands.
 Decentralising, on-chain.`,
       card: { type: "concentration" },
+    };
+  })(),
+
+  // "Why the Gini says 0.97" — the counterintuitive companion to the concentration card.
+  // Gini ROSE while real concentration FELL, because Gini is dominated by the dust tail:
+  // the holder base exploded and ~60% of wallets hold under $100, so every new small
+  // holder pushes Gini toward 1 even as the whales' grip loosens. This is exactly why the
+  // concentration chart publishes top-N share and leaves Gini off. A teaching/methodology
+  // post (NO_ROTATE, hand-postable) and the honest answer to "0.97 = whales own it all".
+  s => (s.onchain?.length >= 50) && (() => {
+    const o = s.onchain, cur = o.at(-1), first = o[0];
+    if (!Number.isFinite(cur?.gini) || !Number.isFinite(first?.gini)) return false;
+    const dust = Array.isArray(cur.wealth) && cur.holders > 0
+      ? (cur.wealth[0] / cur.holders) * 100 : null;
+    return {
+      id: "ginidust",
+      text: ct`SPX6900's Gini coefficient is ${cur.gini.toFixed(2)} — a number that usually screams "whales own everything."
+Here's why it misleads. Since launch: Gini ${first.gini.toFixed(2)} → ${cur.gini.toFixed(2)} (more unequal), top 100 wallets ${first.top100.toFixed(1)}% → ${cur.top100.toFixed(1)}% of supply (less concentrated), holders ${first.holders.toLocaleString()} → ${cur.holders.toLocaleString()}. Both moved, in opposite directions. Gini measures spread across every wallet, and ${dust != null ? dust.toFixed(0) + "% of wallets hold under $100" : "most wallets hold dust"} — every new small holder pushes Gini up even as real concentration falls. So we publish top-10 and top-100 share instead: ${cur.top10.toFixed(1)}% and ${cur.top100.toFixed(1)}%, excluding exchanges, LP and the bridge.
+A high Gini here is adoption, not capture.`,
+      card: { type: "ginidust" },
     };
   })(),
 
@@ -2492,7 +2579,7 @@ const weightOf = id => WEIGHT[id] ?? (BULLISH.has(id) ? 2 : 1);
 // marketcap ("real free-float cap / thin float") is RETIRED — its premise is false: SPX is a
 // fair launch with no lockup, so free float is ~88% (not thin). The honest story is
 // illiquid/liquid supply (the reframed freefloat card), so marketcap is out of the feed.
-const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
+const NO_ROTATE = new Set(["drawdown", "risk", "kraken", "dcaladder", "marketcap", "spxcohort", "ginidust", "bedrock", "supplybridge", "diamondgap", "cexsupply", "cexflow", "cexvenues", "cexvenflow", "nrpl", "liveliness", "citygrowth", "cityvalue", "citychurn", "citypercap", "cityvintage", "cityskyline", "turnover"]);
 
 // LONG-FORM cards — the few methodology / teaching posts that genuinely run long. HISTORY: these
 // once opted past a 290 "instant-read" cap. That cap was REMOVED (owner, 2026-08) — the account is
@@ -2557,7 +2644,7 @@ const LOOK = {
   whatnext: "race",
   // — Tier B: flavourful / distinct looks (used to break up the green lines) —
   riskcolor: "colorline", risklevels: "colorline", rsidots: "colorline",
-  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
+  riskheat: "dual", runningroi: "dual", cycle: "dual", longshort: "dual", underwater: "dual", goldencross: "dual", holdergrowth: "dual", holdersprice: "dual", mvrvbtc: "dual", mvrvtrend: "dual", supplyprofit: "dual", whales: "dual", whalemosaic: "mosaic", bedrock: "dual", supplybridge: "bars", diamondgap: "dual", whalethennow: "mosaic", whaleentry: "dual", walletwaves: "stack", wealthwaves: "stack", survivorship: "stack", supplyera: "dual", exitmap: "dual", smartmoney: "dual", floormodel: "dual", altmarket: "dual", freefloat: "dual", nupl: "dual", concentration: "dual", ginidust: "dual", picycle: "dual", spxbitcoin: "dual", spxcohort: "dual", cexflow: "dual", cexsupply: "stack", sopr: "dual", nrpl: "dual", liveliness: "dual", costbasis: "dual",
   firesalerally: "fanlines",
   model: "scatter",
   monthlyreturns: "heatmap", monthlyreturnssp: "heatmap", monthlyreturnsbtc: "heatmap",

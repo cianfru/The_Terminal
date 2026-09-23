@@ -9,7 +9,7 @@ import { useState } from "react";
 // determined visitor could bypass it. It exists to keep the unfinished redesign out of
 // the way of casual visitors, nothing more.
 
-const LOGO = "/logo_rainbow.png";
+const LOGO = "/logo_rainbow_128.png";
 const X_URL = "https://x.com/SPX6900Rainbow";
 const RAINBOW = "linear-gradient(90deg,#7c3aed,#2563eb,#06b6d4,#10b981,#a3e635,#fde047,#fb923c,#ef4444)";
 

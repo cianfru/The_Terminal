@@ -171,7 +171,7 @@ export default function RaceChart({ series, isMobile, fetchCoins, coins, basketL
             <ResponsiveContainer width="100%" height={isMobile ? 400 : 560}>
               <ComposedChart data={rows} margin={{ top: 10, right: isMobile ? 14 : 32, bottom: 24, left: isMobile ? 0 : 12 }}
                 onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-                style={{ cursor: "crosshair", userSelect: "none" }}>
+                style={{ cursor: "crosshair", userSelect: "none", touchAction: "pan-y pinch-zoom" }}>
                 <CartesianGrid strokeDasharray="2 8" stroke="rgba(255,255,255,0.06)" />
                 <XAxis dataKey="ts" type="number" domain={xDomain} ticks={xTicks} scale="time" allowDataOverflow
                   tickFormatter={fmtX}
@@ -180,7 +180,7 @@ export default function RaceChart({ series, isMobile, fetchCoins, coins, basketL
                 <YAxis type="number" scale="log" domain={yDomain} ticks={yTicks} allowDataOverflow
                   tickFormatter={v => v + "×"}
                   tick={{ fill: "#cbd5e1", fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
-                  axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 44 : 56} />
+                  axisLine={{ stroke: "rgba(255,255,255,0.15)" }} tickLine={false} width={isMobile ? 55 : 56} />
                 <ReferenceLine y={1} stroke="rgba(148,163,184,0.6)" strokeDasharray="5 5"
                   label={{ value: "start 1×", position: "insideBottomRight", fill: "#94a3b8", fontSize: 11, fontFamily: MONO }} />
                 <Tooltip content={<Tip coins={coins} spxColor={spxColor} />} cursor={{ stroke: "rgba(255,255,255,0.2)" }} />
