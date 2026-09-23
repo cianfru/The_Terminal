@@ -419,6 +419,12 @@
   "moved out" for every owner, and 59.6M of it had been classified plain "out" (only 0.06M overlapped a sale). **NEVER merged into
   "sold"** — shown as its own "Sent to exchanges · likely sold" block, an amber "→ exchanges" row tag, an owner-record tile, and a
   "To exchanges" sort. Step in `aeon-ledger.yml`; `export.mjs --cex=`. Tested (`test/cex-out.test.mjs`).
+- **✅ FIND AN AEON (`?chart=aeonfind`, `src/AeonFinder.jsx`, owner 2026-09-23: "identify an NFT without asking you").** The
+  site version of `tools/nft-id`'s lesson — READ THE TRAITS, don't match pixels. A faceted trait picker (each dropdown lists only the
+  values still possible, with counts) over `aeon-rarity.json`, plus a token-number box; the matching pieces show underneath, one tap =
+  the piece, traits, rank and its holder: "Owner #N" linked to `?chart=aeonledger&owner=N` (the ledger opens that owner's record —
+  `openN` in AeonLedger/OwnerList) or "not in the ledger" (holder has no SPX on Ethereum) + OpenSea. All client-side. Worked example
+  (first use): an X PFP → Space-Buns (75) → Cross face (9) → Sunset (1) = **#2904**, Owner #254. A PFP is a lead, never proof.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

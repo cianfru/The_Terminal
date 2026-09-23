@@ -119,6 +119,8 @@ export default function AeonLedger({ isMobile }) {
   const [d, setD] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("holds");
+  // ?owner=N (from Find an AEON) opens that owner's record straight away
+  const [openN] = useState(() => { try { return Number(new URLSearchParams(window.location.search).get("owner")) || null; } catch { return null; } });
   useEffect(() => {
     let off = false;
     fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null)
@@ -166,7 +168,7 @@ export default function AeonLedger({ isMobile }) {
             background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
         ))}
       </div>
-      <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} />
+      <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} openN={openN} />
 
       <Section title="The collection">
         <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 22 : 40 }}>
