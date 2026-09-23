@@ -2,7 +2,7 @@
 // LANDSCAPE EXPORT — the AEON Ledger: one file for members, one for everyone.
 // ============================================================================
 //   node research/pfp-forensics/landscape/export.mjs --results=r.jsonl --households=h.json \
-//        --owners=aeon-owners.json --full=aeon-ledger.full.json --public=public/aeon-ledger.json
+//        --owners=aeon-owners.json --cex=cex-out.json --full=aeon-ledger.full.json --public=public/aeon-ledger.json
 //
 // The site's AEON Ledger (src/AeonLedger.jsx) reads this. Owner decision 2026-09-23: the NUMBERS are
 // public, the ADDRESSES are for members (the same two-layer model as smart-money). So:
@@ -63,7 +63,7 @@ export function pnlOf(trades, priceOn, spot, holds) {
 }
 
 /** Build the full ledger document from phase-3 rows and the phase-2 households. Pure. */
-export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn = () => 0, spot = 0 } = {}) {
+export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn = () => 0, spot = 0, cexOut = null } = {}) {
   const rank = new Map(rarity.map(t => [t.id, t.rank]));
   const img = new Map(rarity.map(t => [t.id, t.img]));
   const byWallet = new Map();
@@ -86,9 +86,12 @@ export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn =
         .sort((a, b) => (a[1] ?? 1e9) - (b[1] ?? 1e9) || a[0] - b[0]);
       const pfp = pieces.length ? { id: pieces[0][0], rank: pieces[0][1], img: img.get(pieces[0][0]) || null } : null;
       const pnl = pnlOf(r.trades || [], priceOn, spot, p.holds);
+      const x = cexOut?.owners?.[p.key];
+      const cex = x ? { sent: x.qty, sentUsd: x.usd, back: x.back, net: x.net, netUsd: x.netUsd, viaDeposit: x.viaDeposit,
+        last: x.last, venues: x.venues } : null;
       return {
         n: i + 1, verdict: p.verdict, walletCount: p.wallets, aeon: Object.keys(tokenOwners).length ? pieces.length : (p.aeon || 0),
-        pfp, pieces, pnl, trades: r.trades || [],
+        pfp, pieces, pnl, cex, trades: r.trades || [],
         bought: p.bought, sold: p.sold, rotated: p.rotated, received: p.received, movedOut: p.movedOut,
         holds: p.holds, boughtUsd: p.boughtUsd, soldUsd: p.soldUsd,
         firstBuy: ym(r.firstBuy), lastSell: ym(r.lastSell), years,
@@ -112,8 +115,22 @@ export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn =
     byVerdict: a.byVerdict,
     sellersFor80pct: a.sellersFor80pct,
     holding: { owners: holders.length, top1: share(1), top5: share(5), top10: share(10), top25: share(25), top50: share(50) },
+    cex: cexOut ? cexTotals(owners, cexOut) : null,
     owners,
   };
+}
+
+/** Collection-wide exchange flows (cex-out.mjs): exact, like every other total. Pure. */
+function cexTotals(owners, cexOut) {
+  const t = { owners: 0, sent: 0, sentUsd: 0, back: 0, net: 0, netUsd: 0, viaDeposit: 0, venues: {},
+    exchanges: cexOut.exchanges || 0, deposits: cexOut.deposits || 0 };
+  for (const o of owners) {
+    if (!o.cex) continue;
+    t.owners++;
+    for (const k of ["sent", "sentUsd", "back", "net", "netUsd", "viaDeposit"]) t[k] += o.cex[k] || 0;
+    for (const [v, q] of Object.entries(o.cex.venues || {})) t.venues[v] = (t.venues[v] || 0) + q;
+  }
+  return t;
 }
 
 /** How many owners the public page lists (owner decision 2026-09-23); the rest are for members. */
@@ -131,12 +148,14 @@ export function publicLedger(full, limit = PUBLIC_OWNERS) {
     ...full,
     rounded: "per-owner figures rounded to 3 significant figures; totals exact",
     ownersTotal: full.owners.length,
-    owners: full.owners.slice(0, limit).map(({ wallets, years, trades, pnl, ...o }) => {
+    owners: full.owners.slice(0, limit).map(({ wallets, years, trades, pnl, cex, ...o }) => {
       const out = { ...o };
       for (const k of R) out[k] = sig3(o[k]);
       const leg = x => (x ? { d: x.d, qty: sig3(x.qty), usd: sig3(x.usd) } : null);
       out.pnl = { avgCost: +pnl.avgCost.toPrecision(3), realized: sig3(pnl.realized), unrealized: sig3(pnl.unrealized),
         invested: sig3(pnl.invested), proceeds: sig3(pnl.proceeds), lastBuy: leg(pnl.lastBuy), lastSell: leg(pnl.lastSell) };
+      out.cex = cex ? { sent: sig3(cex.sent), sentUsd: sig3(cex.sentUsd), back: sig3(cex.back), net: sig3(cex.net),
+        netUsd: sig3(cex.netUsd), last: cex.last, venues: Object.fromEntries(Object.entries(cex.venues || {}).map(([v, q]) => [v, sig3(q)])) } : null;
       out.years = Object.fromEntries(Object.entries(years).map(([y, b]) =>
         [y, Object.fromEntries(Object.entries(b).map(([k, v]) => [k, sig3(v)]))]));
       return out;
@@ -153,7 +172,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const P = new Map(px.map(r => [r.date.slice(0, 10), r.price])), days = [...P.keys()].sort();
   const priceOn = d => P.get(d) ?? P.get(days.filter(x => x <= d).pop()) ?? 0;
   const spot = P.get(days.at(-1));
-  const full = buildLedger(rows, hh, { tokenOwners, rarity, priceOn, spot });
+  const cexOut = arg("cex") ? JSON.parse(readFileSync(arg("cex"), "utf8")) : null;
+  const full = buildLedger(rows, hh, { tokenOwners, rarity, priceOn, spot, cexOut });
   if (arg("full")) writeFileSync(arg("full"), JSON.stringify(full));
   const pub = publicLedger(full);
   if (JSON.stringify(pub).match(/0x[0-9a-f]{40}/i)) throw new Error("refusing to write: an address leaked into the public ledger");
