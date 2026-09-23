@@ -13,11 +13,11 @@
 // Styling follows CasesPage/DocsPage: one column, rules instead of boxes, readable sizes.
 import { useEffect, useState } from "react";
 import { SANS, MONO } from "./chart-ui.jsx";
+import { SUSPENDED_IMG, COMMS_HANDLE } from "./x-notice.js";
 
 const RAW = "https://raw.githubusercontent.com/cianfru/SPX6900_rainbow_chart/main/public/";
 const DIM = "#8b98ad", BODY = "#cbd5e1", TEXT = "#f1f5f9", RULE = "#23232a", ACCENT = "#5eead4", WARN = "#fbbf24";
 
-export const SUSPENDED_IMG = "/suspended.jpg";
 
 async function loadFeed() {
   for (const base of [RAW, "/"]) {
@@ -54,6 +54,13 @@ function Notice({ isMobile }) {
         We're working to reactivate it. In the meantime, follow our posts here.{" "}
         <span style={{ color: ACCENT, fontWeight: 700 }}>Uncensored.</span>
       </p>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "4px 14px", marginTop: 22, paddingTop: 16, borderTop: `1px solid ${RULE}` }}>
+        <span style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: DIM }}>Comms · reach us on X</span>
+        <a href={`https://x.com/${COMMS_HANDLE}`} target="_blank" rel="noopener noreferrer"
+          style={{ fontFamily: MONO, fontSize: 16, fontWeight: 600, color: TEXT, textDecoration: "none", minHeight: 40, display: "inline-flex", alignItems: "center" }}>
+          @{COMMS_HANDLE} ↗
+        </a>
+      </div>
     </header>
   );
 }

@@ -131,6 +131,7 @@ import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
 const CasesPage = lazy(() => import("./CasesPage.jsx"));
 const PostsPage = lazy(() => import("./PostsPage.jsx"));
+import XNotice from "./XNotice.jsx";
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
 const RallyChart = lazy(() => import("./RallyChart.jsx"));
@@ -787,6 +788,7 @@ export default function App() {
   const openDeepField = () => { setRoute("terminal"); syncUrl("terminal"); window.scrollTo({ top: 0, behavior: "smooth" }); };
   // the 3D city opens into a mode via /city?m=spx|aeon|both (deep-linked from the SPX City menu sub-views)
   const cityMode = (() => { const m = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("m") : null; return m === "aeon" || m === "both" ? m : "spx"; })();
+  const openPosts = () => { setRoute("posts"); syncUrl("posts"); window.scrollTo({ top: 0 }); };
   const openDocs = (slug = "index") => { setDocSlug(slug); setRoute("docs"); syncUrl("docs", slug); window.scrollTo({ top: 0, behavior: "smooth" }); };
   // goChart(id) opens a chart at its default view; goChart(id, view) deep-links a sub-view.
   // relative keeps its own `rel` asset param (view values BTC/ETH/SOL/BASKET); every other
@@ -1590,6 +1592,8 @@ export default function App() {
       )}
       </div>{/* end content */}
 
+      {/* X suspended 2026-09-23 — one-time popup pointing to the posts page + comms handle */}
+      <XNotice route={route} onOpenPosts={openPosts} />
     </div>
   );
 }
