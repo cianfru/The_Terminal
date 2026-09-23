@@ -83,16 +83,22 @@ jobs:
           AEON_CONTRACT: ${{ vars.AEON_CONTRACT }}
         run: node scripts/build-aeon-transfers-alchemy.mjs
 
-      # SALES (with prices) are the ONE remaining Dune dependency — they feed trader P&L / MVRV /
-      # realized price, which Alchemy can't reconstruct historically (getNFTSales is a recent
-      # window + deprecates 2026-09-30). This soft-fails while the account is suspended, leaving
-      # the committed sales CSV frozen at 2026-07-23 (surfaced honestly by the freshness audit).
-      # Migrate to a free BigQuery sales pull to drop Dune entirely.
-      - name: Refresh AEON sales from Dune (sales only — the one remaining Dune feed)
+      # SALES — decoded from the chain, no Dune needed (2026-09-23). Dune moved sales behind payment in
+      # September 2026, so the chain decoder (build-aeon-sales-chain.mjs: Blockscout's free API, keyless)
+      # is now the source that keeps sales current. Validated against Dune for 2026-07-24 → 2026-09-22 before
+      # switching. The Dune step stays for now only as an OPTIONAL first try: while it still answers it
+      # contributes Dune's exact rows; the chain step then adds only sales newer than the committed archive
+      # and never a transaction already in it, so the two cannot double-count. When Dune stops answering,
+      # the Dune step soft-fails and the chain step carries sales alone — delete the Dune step then.
+      - name: Refresh AEON sales from Dune (optional — soft-fails once Dune stops answering)
+        continue-on-error: true
         env:
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
-          AEON_SALES_QUERY_ID: ${{ vars.AEON_SALES_QUERY_ID }}           # optional (else created + logged)
+          AEON_SALES_QUERY_ID: ${{ vars.AEON_SALES_QUERY_ID }}
         run: node scripts/build-aeon-dune-refresh.mjs
+
+      - name: Decode new AEON sales from the chain (keyless — the sales source)
+        run: node scripts/build-aeon-sales-chain.mjs
 
       - name: Rebuild transfer + sales reconstructions
         # onchain (holders/HODL-age/concentration/flow/skyline) + sales (floor/volume) from the

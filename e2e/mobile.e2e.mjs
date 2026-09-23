@@ -625,3 +625,29 @@ test("390px: the new-account popup fits, points at the new handle, and only clos
   assert.deepEqual(await overflow(page).then(o => o.sw <= o.cw), true, "no horizontal overflow");
   await ctx.close();
 });
+
+test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both inside the screen", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=aeonledger", { waitUntil: "networkidle" });
+  const row = page.locator(".al-row").first();
+  await row.waitFor();
+  const o = await overflow(page);
+  assert.ok(o.sw <= o.cw, `no sideways scroll (${o.sw} > ${o.cw})`);
+  const pic = row.locator(".al-card .al-pfp");
+  const pb = await pic.boundingBox();
+  assert.ok(pb && pb.width >= 44 && pb.height >= 44, "the picture is a real tap target");
+  await pic.tap();
+  const dlg = page.getByRole("dialog");
+  await dlg.waitFor();
+  assert.match(await dlg.getAttribute("aria-label"), /Owner #1/);
+  assert.ok((await page.locator(".al-thumb").count()) >= 1, "gallery lists the owner's pieces");
+  await page.getByRole("button", { name: "Close ✕" }).tap();
+  assert.equal(await page.getByRole("dialog").count(), 0, "gallery closes");
+  await row.tap();
+  await page.getByRole("dialog").waitFor();
+  const panel = await geom(page, ".al-panel");
+  assert.ok(panel.l >= 0 && panel.r <= panel.vw + 1, `sheet inside the viewport (${panel.l}..${panel.r})`);
+  assert.ok(await page.getByText(/Deep Field members|next ledger refresh/).count(), "the chart is behind the members wall");
+  await ctx.close();
+});

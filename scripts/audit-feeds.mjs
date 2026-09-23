@@ -165,7 +165,7 @@ export const FEEDS = [
   // NOT a run date, so a completed-but-empty (or suspended-account) pull still freezes it and turns
   // the row RED — the run-stamp version read "2 days old" while the charts sat in July. cadence 3 =
   // the daily sales pull may miss a run or two before it's flagged STALE in feed-health / the panel.
-  { file: "aeon-dune-status.json", cadence: 3, by: "aeon.yml", what: "AEON sales pull heartbeat (newest sales DATA date — the one feed still on Dune)",
+  { file: "aeon-dune-status.json", cadence: 3, by: "aeon.yml", what: "AEON sales heartbeat (newest sales DATA date — decoded from the chain; Dune optional)",
     require: ["updated", "ok"] },
   { file: "ens.json", cadence: 9, by: "aeon.yml (step)", what: "ENS names for the wallets we display",
     require: ["resolved", "named"], nonEmpty: ["names"] },

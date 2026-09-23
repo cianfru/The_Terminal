@@ -13,6 +13,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchPrivate } from "./history-data.js";
 import { SANS, MONO, MAX_W, Metric, Explain, ViewTabs } from "./chart-ui.jsx";
+import OwnerList from "./AeonLedgerOwners.jsx";
+import { OWNER_SORTS } from "./aeon-ledger-pos.js";
+import { loadMe } from "./members.js";
 
 const INK = "var(--ch-ink,#fff)", BODY = "var(--ch-body,#e2e9f2)", MUT = "var(--ch-mut,#d0d9e6)", DIM = "var(--ch-dim,#b1bccc)";
 const LINE = "rgba(148,163,184,0.28)";
@@ -33,7 +36,6 @@ const big = n => {
 };
 const usd = n => "$" + big(n);
 const pct = x => Math.round(x * 100) + "%";
-const short = a => a.slice(0, 6) + "…" + a.slice(-4);
 
 function Chip({ v }) {
   const m = V[v];
@@ -79,67 +81,12 @@ function Versus({ label, a, b, fmt }) {
 const th = { padding: "8px 10px", fontFamily: SANS, fontSize: 13, fontWeight: 600, color: MUT, textAlign: "right", whiteSpace: "nowrap", borderBottom: `1px solid ${LINE}` };
 const td = { padding: "9px 10px", fontFamily: MONO, fontSize: 14, color: INK, textAlign: "right", whiteSpace: "nowrap", borderBottom: `1px solid ${LINE}` };
 
-function OwnerRow({ o, members, isMobile }) {
-  const [open, setOpen] = useState(false);
-  const net = o.boughtUsd - o.soldUsd;
-  if (isMobile) {
-    return (
-      <div style={{ padding: "12px 0", borderBottom: `1px solid ${LINE}` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-          <span style={{ fontFamily: MONO, fontSize: 15, color: INK, fontWeight: 700 }}>Owner #{o.n}</span>
-          <Chip v={o.verdict} />
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginTop: 8, fontFamily: MONO, fontSize: 14, color: INK }}>
-          <div><div style={{ fontFamily: SANS, fontSize: 12, color: MUT }}>Holds</div>{big(o.holds)}</div>
-          <div><div style={{ fontFamily: SANS, fontSize: 12, color: MUT }}>Bought</div>{big(o.bought)}</div>
-          <div><div style={{ fontFamily: SANS, fontSize: 12, color: MUT }}>Sold</div>{big(o.sold + o.rotated)}</div>
-        </div>
-        <div style={{ fontFamily: SANS, fontSize: 13, color: DIM, marginTop: 6 }}>
-          {o.walletCount} wallet{o.walletCount === 1 ? "" : "s"} · {o.aeon} AEON · {o.firstBuy ? `first buy ${o.firstBuy}` : "never bought on-chain"}
-          {members && o.wallets && <> · <button onClick={() => setOpen(!open)} style={{ background: "none", border: 0, padding: 0, color: "#38bdf8", fontFamily: SANS, fontSize: 13, minHeight: 32, cursor: "pointer" }}>{open ? "hide wallets" : "wallets"}</button></>}
-        </div>
-        {open && <Wallets list={o.wallets} />}
-      </div>
-    );
-  }
-  return (
-    <>
-      <tr>
-        <td style={{ ...td, textAlign: "left", fontWeight: 700 }}>#{o.n}</td>
-        <td style={{ ...td, textAlign: "left" }}><Chip v={o.verdict} /></td>
-        <td style={td}>{big(o.holds)}</td>
-        <td style={td}>{big(o.bought)}</td>
-        <td style={td}>{big(o.sold + o.rotated)}</td>
-        <td style={{ ...td, color: net >= 0 ? "#34d399" : "#fb7185" }}>{(net >= 0 ? "+" : "−") + usd(Math.abs(net))}</td>
-        <td style={td}>{o.walletCount}</td>
-        <td style={td}>{o.aeon}</td>
-        <td style={td}>{o.firstBuy || "—"}</td>
-        <td style={td}>{o.lastSell || "—"}</td>
-        {members && <td style={td}>{o.wallets ? <button onClick={() => setOpen(!open)} style={{ background: "none", border: `1px solid ${LINE}`, color: INK, fontFamily: SANS, fontSize: 13, padding: "4px 10px", cursor: "pointer" }}>{open ? "Hide" : "Show"}</button> : "—"}</td>}
-      </tr>
-      {open && <tr><td colSpan={11} style={{ padding: "4px 10px 12px", borderBottom: `1px solid ${LINE}` }}><Wallets list={o.wallets} /></td></tr>}
-    </>
-  );
-}
-
-function Wallets({ list }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 14px", marginTop: 6 }}>
-      {list.map(a => (
-        <a key={a} href={`https://etherscan.io/address/${a}#tokentxns`} target="_blank" rel="noopener noreferrer"
-          style={{ fontFamily: MONO, fontSize: 14, color: "#38bdf8", textDecoration: "none", minHeight: 32, display: "inline-flex", alignItems: "center" }}>{short(a)} ↗</a>
-      ))}
-    </div>
-  );
-}
-
-const PAGE = 25;
-
 export default function AeonLedger({ isMobile }) {
   const [d, setD] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("holds");
-  const [shown, setShown] = useState(PAGE);
+  const [me, setMe] = useState(null);
+  useEffect(() => { loadMe().then(setMe); }, []);
   useEffect(() => {
     let off = false;
     fetchPrivate("aeon-ledger", "/aeon-ledger.json", { publicSafe: true }).then(x => { if (!off) setD(x || { empty: true }); });
@@ -148,7 +95,7 @@ export default function AeonLedger({ isMobile }) {
 
   const rows = useMemo(() => {
     if (!d?.owners) return [];
-    const key = { holds: o => o.holds, bought: o => o.bought, sold: o => o.sold + o.rotated, usd: o => o.soldUsd - o.boughtUsd }[sort];
+    const key = (OWNER_SORTS.find(x => x[0] === sort) || OWNER_SORTS[0])[2];
     return d.owners.filter(o => filter === "all" || o.verdict === filter).sort((a, b) => key(b) - key(a) || a.n - b.n);
   }, [d, filter, sort]);
 
@@ -232,37 +179,17 @@ export default function AeonLedger({ isMobile }) {
       </Section>
 
       <Section title="Every owner" sub={members
-        ? "Members view: each owner's wallets are listed and link to Etherscan."
-        : "Owners are numbered by what they hold today. Per-owner figures are rounded to three significant figures; the totals above are exact. Wallet addresses are available to Deep Field members."}>
-        <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={k => { setFilter(k); setShown(PAGE); }} />
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "10px 0 6px", fontFamily: SANS, fontSize: 14, color: MUT }}>
+        ? "Members view: tap an owner for every buy and sale on the SPX price, and the wallets behind it."
+        : "Each owner's picture is the rarest AEON they hold; tap it for all their pieces. P&L is SPX trading only, at average cost; per-owner figures are rounded to three significant figures. Tap an owner for the full record."}>
+        <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "12px 0 16px", fontFamily: SANS, fontSize: 14, color: MUT }}>
           Sort by
-          {[["holds", "Holds"], ["bought", "Bought"], ["sold", "Sold"], ["usd", "Most sold ($)"]].map(([k, l]) => (
-            <button key={k} onClick={() => setSort(k)} style={{ minHeight: 36, padding: "0 12px", cursor: "pointer", fontFamily: SANS, fontSize: 14,
+          {OWNER_SORTS.map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setSort(k)} aria-pressed={sort === k} style={{ minHeight: 40, padding: "0 12px", cursor: "pointer", fontFamily: SANS, fontSize: 14,
               background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
           ))}
         </div>
-        {isMobile ? (
-          <div>{rows.slice(0, shown).map(o => <OwnerRow key={o.n} o={o} members={members} isMobile />)}</div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead><tr>
-                <th style={{ ...th, textAlign: "left" }}>Owner</th><th style={{ ...th, textAlign: "left" }}>Verdict</th>
-                <th style={th}>Holds</th><th style={th}>Bought</th><th style={th}>Sold</th><th style={th}>Net bought ($)</th>
-                <th style={th}>Wallets</th><th style={th}>AEON</th><th style={th}>First buy</th><th style={th}>Last sell</th>
-                {members && <th style={th}>Addresses</th>}
-              </tr></thead>
-              <tbody>{rows.slice(0, shown).map(o => <OwnerRow key={o.n} o={o} members={members} />)}</tbody>
-            </table>
-          </div>
-        )}
-        {shown < rows.length && (
-          <button onClick={() => setShown(shown + PAGE * 2)} style={{ marginTop: 14, width: isMobile ? "100%" : "auto", minHeight: 44, padding: "0 20px",
-            background: "transparent", border: `1px solid ${LINE}`, color: INK, fontFamily: SANS, fontSize: 15, cursor: "pointer" }}>
-            Show more ({(rows.length - shown).toLocaleString()} left)
-          </button>
-        )}
+        <OwnerList key={filter + sort} rows={rows} me={me} spot={d.spot} isMobile={isMobile} />
       </Section>
 
       <Section title="How this is built, and what it can't tell you">
