@@ -13,7 +13,7 @@
 //
 // Required secrets to actually post (OAuth 1.0a user context for the bot account):
 //   X_API_KEY  X_API_SECRET  X_ACCESS_TOKEN  X_ACCESS_SECRET
-import { writeFileSync, readFileSync } from "node:fs";
+import { writeFileSync, readFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { fetchLivePrice, fetchMajors, fetchHistory, computeStats } from "./stats.mjs";
@@ -34,6 +34,12 @@ const STATE_FILE = join(ROOT, "public/post-state.json");
 const DAILY_BAND_FILE = join(ROOT, "public/daily-band-state.json");
 const HISTORY_FILE = join(ROOT, "public/history.json");
 const CARD_AR_FILE = join(ROOT, "public/card-ar.json"); // owner-picked aspect ratios per card
+// The site's own copy of every daily post (?view=posts). Written BEFORE X is tried, so a
+// post reaches the site whatever X does — the account was suspended on 2026-09-23 and the
+// site is where the posts continue. Images are committed next to it and read via raw.
+const FEED_FILE = join(ROOT, "public/site-feed.json");
+const FEED_DIR = join(ROOT, "public/feed");
+const FEED_KEEP = 120;
 const readJson = (p, d) => { try { return JSON.parse(readFileSync(p, "utf8")); } catch { return d; } };
 
 const arg = name => { const a = process.argv.find(x => x.startsWith(`--${name}=`)); return a ? a.split("=")[1] : null; };
@@ -184,19 +190,43 @@ if (state.lastPostedDate === today && force) {
   console.log(`Already posted today (${state.lastId ?? "?"} on ${today}) — posting anyway (force).`);
 }
 
-const { TwitterApi } = await import("twitter-api-v2");
-const client = new TwitterApi(creds);
+// ── The site feed. One entry per day; a rerun replaces that day's entry, never adds.
+// A video card (scale/cube zoom-outs) gets its static frame — the site shows a picture.
 try {
-  if (noMedia) {
-    const res = await client.v2.tweet({ text: post.text });
-    console.log(`Posted ✓ (text only) "${post.id}" tweet id ${res?.data?.id}`);
-  } else {
-    const id = await postWithMedia(client, post, stats, media);
-    console.log(`Posted ✓ "${post.id}" (${media.kind}) tweet id ${id}`);
-  }
+  const png = media?.kind === "image" && media.data ? media.data : renderPostCard(post, stats);
+  mkdirSync(FEED_DIR, { recursive: true });
+  const img = `feed/${today}-${post.id}.png`;
+  writeFileSync(join(ROOT, "public", img), png);
+  const feed = readJson(FEED_FILE, { posts: [] });
+  const posts = [{ date: today, id: post.id, text: post.text, img }, ...(feed.posts || []).filter(p => p.date !== today)]
+    .sort((a, b) => b.date.localeCompare(a.date)).slice(0, FEED_KEEP);
+  writeFileSync(FEED_FILE, JSON.stringify({ updated: new Date().toISOString(), posts }, null, 2) + "\n");
+  console.log(`Site feed ✓ "${post.id}" → public/${img}`);
 } catch (e) {
-  console.error(`POST FAILED ✗ — code ${e.code ?? "?"}: ${JSON.stringify(e.data?.errors ?? e.data ?? e.message)}`);
-  process.exit(1);
+  console.error(`site feed write failed (X attempt continues): ${e.message}`);
+}
+
+// X suspended: BOT_SITE_ONLY=1 (repo var) publishes to the site alone and still records the
+// day below, so the workflow stays green instead of failing on X every morning.
+const siteOnly = process.env.BOT_SITE_ONLY === "1";
+if (siteOnly) {
+  console.log("BOT_SITE_ONLY=1 — posted to the site feed only, X skipped.");
+} else {
+  const { TwitterApi } = await import("twitter-api-v2");
+  const client = new TwitterApi(creds);
+  try {
+    if (noMedia) {
+      const res = await client.v2.tweet({ text: post.text });
+      console.log(`Posted ✓ (text only) "${post.id}" tweet id ${res?.data?.id}`);
+    } else {
+      const id = await postWithMedia(client, post, stats, media);
+      console.log(`Posted ✓ "${post.id}" (${media.kind}) tweet id ${id}`);
+    }
+  } catch (e) {
+    console.error(`POST FAILED ✗ — code ${e.code ?? "?"}: ${JSON.stringify(e.data?.errors ?? e.data ?? e.message)}`);
+    console.error("The site feed already has today's post; set repo var BOT_SITE_ONLY=1 while X is unavailable.");
+    process.exit(1);
+  }
 }
 
 // Record the day (guard) and consume the queue if we used it, so tomorrow is auto

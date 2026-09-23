@@ -128,6 +128,7 @@ import { gcolFor } from "./terminal-colors.js";
 import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
 const CasesPage = lazy(() => import("./CasesPage.jsx"));
+const PostsPage = lazy(() => import("./PostsPage.jsx"));
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
 const RallyChart = lazy(() => import("./RallyChart.jsx"));
@@ -765,6 +766,7 @@ export default function App() {
     // the manual carries its page in ?p= so any page in the book is directly linkable
     else if (r === "docs") { params.set("view", "docs"); if (id) params.set("p", id); }
     else if (r === "cases") params.set("view", "cases");
+    else if (r === "posts") params.set("view", "posts");
     else if (r === "next") params.set("view", "next");
     else if (r === "rainbow") params.set("view", "rainbow");
     else if (r === "chart" && id) {
@@ -847,6 +849,7 @@ export default function App() {
       else if (p.get("view") === "wallet") { setRoute("wallet"); setWalletAddr(p.get("addr") || ""); }
       else if (p.get("view") === "cluster") { setRoute("cluster"); setClusterId(p.get("id") || ""); }
       else if (p.get("view") === "cases") setRoute("cases");
+      else if (p.get("view") === "posts") setRoute("posts");
       else if (p.get("view") === "next") setRoute("next");
       // SPX City left the gallery for its own /city tab. Old shared links (?chart=whalewatch /
       // spxcity / aeonskyline) still resolve, send them to the city instead of dropping to home.
@@ -1199,6 +1202,13 @@ export default function App() {
       {route === "cases" && (
         <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
           <CasesPage isMobile={isMobile} />
+        </Suspense>
+      )}
+
+      {/* The daily posts, on the site — the X account was suspended 2026-09-23. */}
+      {route === "posts" && (
+        <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
+          <PostsPage isMobile={isMobile} />
         </Suspense>
       )}
 
