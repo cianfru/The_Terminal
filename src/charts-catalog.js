@@ -146,6 +146,7 @@ export const AEON_GROUPS = [
     color: "#818cf8",
     desc: "Who holds AEON: age, ownership, concentration and flow.",
     charts: [
+      { id: "aeonledger", title: "AEON Ledger", desc: "Every AEON owner's SPX record, rebuilt from the chain and checked against it: who is holding and who has sold." },
       { id: "aeonhodl", title: "Holder Age", desc: "Each AEON by how long since it last changed hands: the maturation story." },
       { id: "aeonowners", title: "Owners Over Time", desc: "The holder base since mint, split by how many tokens each wallet holds." },
       { id: "aeonconcentration", title: "Concentration", desc: "The largest wallets' share of the collection over time." },

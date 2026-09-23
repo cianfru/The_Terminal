@@ -234,6 +234,15 @@
     sales backfilled 21 sale-days across 07-23→08-20 (17,040→17,105 rows). Charts fresh; owners 1178. Verified live via dispatched
     `aeon.yml` + `aeon-sale-watch.yml` (dry-run) runs, both green, deploy succeeded. **KEPT as reference/tooling (not dead):**
     `bigquery/aeon_transfers.sql`, `dune/aeon_spx_balances.sql` + `gen-aeon-spx-query.mjs`, `scripts/aeon-snipe.mjs`, `aeon-live-tail.mjs`.
+- **✅ AEON SALES CLEAN-UP 2026-09-23 (owner thought sales had gone stale).** Checked: the DAILY sales are NOT stale — the Dune
+  pull (query 8218959) still works (run 2026-09-23: +157 sales, newest 2026-09-22) despite Dune's free-plan change. What WAS dead is
+  the Alchemy `getNFTSales` "live" feed: `aeon-live-sales.json` held **0 sales, always**, and Alchemy removes the endpoint
+  2026-09-30. **Retired:** its probe + bank steps (aeon-sale-watch.yml, feed-check.yml), the file, its audit row; the watcher's
+  live attempt is now opt-in (`AEON_LIVE_SALES=1`), code + tests kept dormant. **Fixed:** aeon.yml now COMMITS
+  `dune/out/aeon_sales.csv`, so the incremental cutoff persists (it had reset to 2026-07-23 every run, re-pulling two months daily)
+  and the repo keeps the full sales history if Dune ever stops. **🔲 Backup path if Dune stops:** validate the drafted
+  `bigquery/aeon_sales.sql` against Dune for the last ~30 days (GCP_SA_KEY is set, so CI can run it), then wire it gated like
+  the ETH migration. OpenSea's events API covers OpenSea only (~42% of volume; Blur is the larger venue) — not a full replacement.
 - **✅ ALCHEMY FREE TIER IS INTACT — VERIFIED 2026-08-28 (owner worried it was going paid-only like Dune; it is NOT).** The
   September deadline that drove our migrations is **DUNE going VIEW-ONLY on the free plan 2026-09-10** — NOT Alchemy. Confirmed on
   alchemy.com/pricing (2026-08-28): **free tier still live, 30M compute-units/month, no paid-only announcement**; the Transfers API
@@ -364,6 +373,23 @@
   ONLY (mint cost + free transfers unknown → excluded = honest "trading P&L"). Site charts: **Trader Leaderboard · MVRV &
   Supply-in-Profit · Rarity vs Sale Price · Trait Values**. Tab is now ~13 charts. **🔲 NEEDS THOUGHT (owner parked):** a
   **Trait Explorer** (browse-by-trait gallery) + a **Cross-holder value board** (the 346 AEON+SPX dual-holders ranked by combined value).
+
+## 📒 AEON LEDGER — every AEON owner's SPX record, held vs sold (built 2026-09-23, owner-named)
+- **Site:** `?chart=aeonledger` (Project Aeon → Holders, first), `src/AeonLedger.jsx`. Every AEON holder grouped with the wallets it
+  structurally controls into one OWNER; each owner's full SPX history on Ethereum rebuilt trade by trade and RECONCILED to its
+  on-chain balance before it counts (693/693 did). Headline (snapshot 2026-09-23): 1,177 holders → 1,156 owners, 463 never held SPX;
+  of 693 with SPX: bought 999M SPX / $82M vs sold 726M / $101M (buying leads in COINS only because of launch-month prices — in
+  DOLLARS they took out more); 2025 net −$19M; 306 exited · 155 trimming · 86 holding · 146 never sold; top 10 hold 56% of what's
+  held; 60 owners did 80% of selling.
+- **TWO LAYERS (owner decision):** numbers public, ADDRESSES for Deep Field members only. `public/aeon-ledger.json` = no addresses +
+  per-owner figures rounded to 3 sig figs (totals exact); the full file goes to KV feed `aeon-ledger` (allow-listed in
+  `api/auth.js` PRIVATE_FEEDS) and is NEVER committed. `export.mjs` refuses to write a public file containing an address.
+- **Pipeline:** `research/pfp-forensics/landscape/` — `build-households.mjs` (phase 2) → `classify.mjs` (phase 3, `--fresh` caches
+  only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (dispatch-only, ~1h, BigQuery table +
+  Alchemy tail → KV + commit + deploy)**; sanity gate refuses <500 owners or >5% unreconciled. Feed audit cadence 35d.
+- **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
+  (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
+  on socials SLOWLY — one finding at a time.
 
 ## 🏙 AEON CITY / WHALE CITY — the 3D holder cities (built 2026-07-27, IN DEVELOPMENT, gated)
 - Two pages, ONE shared engine (`src/Skyline3D.jsx`): **Aeon City** (`?chart=aeonskyline`, AEON holders) and **Whale City**

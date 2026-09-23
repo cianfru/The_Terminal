@@ -203,11 +203,12 @@ async function main() {
   const today = (market.updated || new Date().toISOString().slice(0, 10));
   const level = market.levelNow || market.fairModel?.level || 0;
 
-  // LIVE feed first (Alchemy getNFTSales) so the post lands while the trade is still
-  // news; the daily Dune-derived recentSales is the fallback when there is no key or the
-  // call fails. Rarity + fair value come from the banked files either way.
+  // Candidates come from the daily Dune-derived recentSales. The Alchemy getNFTSales "live"
+  // path is RETIRED (2026-09-23): it never returned a sale for AEON and Alchemy removes the
+  // endpoint on 2026-09-30. Kept opt-in (AEON_LIVE_SALES=1) only so a replacement live source
+  // can reuse joinLiveSales. Rarity + fair value come from the banked files either way.
   let candidates = market.recentSales, source = "dune-daily";
-  if (ALCHEMY) {
+  if (ALCHEMY && process.env.AEON_LIVE_SALES === "1") {
     try {
       const live = await fetchLiveSales({ key: ALCHEMY, hours: LIVE_HOURS, contract: CONTRACT });
       const rarity = readJson(RARITY, null);

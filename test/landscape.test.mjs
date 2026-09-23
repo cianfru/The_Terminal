@@ -109,3 +109,34 @@ test("report verdicts are exhaustive and measured by quantity", async () => {
   assert.equal(a.totals.soldAll, 2000);
   assert.equal(a.sellersFor80pct, 1);
 });
+
+test("AEON Ledger public layer drops every address and rounds only per-owner figures", async () => {
+  const { sig3, buildLedger, publicLedger } = await import("../research/pfp-forensics/landscape/export.mjs");
+  assert.equal(sig3(14157552), 14200000);
+  assert.equal(sig3(975), 975);
+  assert.equal(sig3(1234.6), 1230);
+  assert.equal(sig3(0), 0);
+  const w = i => "0x" + String(i).padStart(40, "0");
+  const base = { reconciles: true, sells: { qty: 0, usd: 0 }, rotation: { qty: 0, usd: 0 }, received: 0, movedOut: 0, byYear: {} };
+  const rows = [
+    { ...base, key: w(1), wallets: [w(1), w(2)], aeon: 3, buys: { qty: 1234567, usd: 999 }, holds: 1234567, firstBuy: "2023-08-20T00:00:00Z" },
+    { ...base, key: w(3), wallets: [w(3)], aeon: 1, buys: { qty: 500, usd: 10 }, sells: { qty: 500, usd: 20 }, holds: 0 },
+  ];
+  const full = buildLedger(rows, { asOf: "2026-09-23T00:00:00Z", households: [
+    { aeonHolders: [w(1)], spxEver: true }, { aeonHolders: [w(3)], spxEver: true }, { aeonHolders: [w(9)], spxEver: false }] });
+  assert.equal(full.owners[0].n, 1);
+  assert.deepEqual(full.owners[0].wallets, [w(1), w(2)]);
+  assert.equal(full.scope.neverTouchedSpx, 1);
+  const pub = publicLedger(full);
+  assert.ok(!/0x[0-9a-f]{40}/i.test(JSON.stringify(pub)), "no address in the public layer");
+  assert.equal(pub.owners[0].holds, 1230000);
+  assert.equal(pub.totals.bought, 1235067, "totals stay exact");
+  assert.equal(pub.owners[0].firstBuy, "2023-08");
+});
+
+test("a refresh re-reads address ledgers and caches only immutable transaction pages", async () => {
+  const { IMMUTABLE_ONLY } = await import("../research/pfp-forensics/landscape/cached-fetch.mjs");
+  assert.ok(IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/transactions/0x" + "a".repeat(64)));
+  assert.ok(IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/transactions/0x" + "a".repeat(64) + "/token-transfers"));
+  assert.ok(!IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/addresses/0x" + "a".repeat(40) + "/token-transfers?token=0xe0f6"));
+});
