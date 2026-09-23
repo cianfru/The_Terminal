@@ -3,6 +3,7 @@
 export const CHART_AGES = {
   aeonbehaviour: "2026-07-24",
   aeonconcentration: "2026-07-24",
+  aeonfind: "2026-09-23",
   aeonfloor: "2026-07-24",
   aeonflow: "2026-08-15",
   aeonhodl: "2026-07-24",
