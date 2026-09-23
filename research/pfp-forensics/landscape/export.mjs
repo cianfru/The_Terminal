@@ -1,19 +1,15 @@
 // ============================================================================
-// LANDSCAPE EXPORT — the AEON Ledger: one file for members, one for everyone.
+// LANDSCAPE EXPORT — the AEON Ledger, fully public.
 // ============================================================================
 //   node research/pfp-forensics/landscape/export.mjs --results=r.jsonl --households=h.json \
-//        --owners=aeon-owners.json --cex=cex-out.json --full=aeon-ledger.full.json --public=public/aeon-ledger.json
+//        --owners=aeon-owners.json --cex=cex-out.json --public=public/aeon-ledger.json \
+//        --trades=public/aeon-ledger-trades.json [--full=aeon-ledger.full.json]
 //
-// The site's AEON Ledger (src/AeonLedger.jsx) reads this. Owner decision 2026-09-23: the NUMBERS are
-// public, the ADDRESSES are for members (the same two-layer model as smart-money). So:
-//   full    every owner with its wallet list → pushed to KV (push-private-feed.mjs, feed "aeon-ledger"),
-//           served only to logged-in members via /api/auth?action=data&f=aeon-ledger. NEVER committed.
-//   public  the same document with every wallet list removed and each owner's figures rounded to three
-//           significant figures. Collection totals, years and verdict counts stay EXACT — those are the
-//           findings, and they are what anyone can re-derive from the method and the chain.
-//
-// ⚠ Rounding is a courtesy, not anonymity. A determined reader can still match a large holding to the
-// chain; the page says so. What the public layer does not do is hand anyone a list of addresses.
+// The site's AEON Ledger (src/AeonLedger.jsx) reads this. Owner decision 2026-09-23 (final): EVERYTHING
+// PUBLIC — every owner, their wallets, figures and trade history. It is public chain data; the ledger only
+// reconstructs it (an earlier same-day version kept addresses and all but the top 10 for members).
+//   public   every owner with wallets, pieces, P&L, exchange flows; per-owner figures tidied, totals exact
+//   trades   owner number → trade list, a separate file so the list page loads light on a phone
 //
 // Owners are numbered by what they hold TODAY (Owner #1 holds the most), so a refresh can renumber.
 // ============================================================================
@@ -133,34 +129,22 @@ function cexTotals(owners, cexOut) {
   return t;
 }
 
-/** How many owners the public page lists (owner decision 2026-09-23); the rest are for members. */
-export const PUBLIC_OWNERS = 10;
+/** Round a figure for the published file: whole units above 100, 4 significant figures below. Pure.
+ *  Keeps the files small without moving any number a reader could check (totals stay exact). */
+const tidy = v => (typeof v !== "number" || !isFinite(v) || Number.isInteger(v) ? v : Math.abs(v) >= 100 ? Math.round(v) : +v.toPrecision(4));
+const tidyAll = x => JSON.parse(JSON.stringify(x, (k, v) => (k === "" ? v : tidy(v))));
 
 /**
- * The public copy: the top PUBLIC_OWNERS owners only, no wallet lists, per-owner figures rounded. Pure.
- * The rest are left OUT of the file, not hidden by the page: each owner's AEON pieces point at its wallet
- * through the token's owner, so a list rendered from a public file would be public whatever the page did.
- * Totals, years, verdict counts and concentration stay computed over EVERY owner.
+ * The published ledger (owner decision 2026-09-23, second call: "remove all restrictions, make the full list
+ * fully public" — it is public chain data, the ledger only puts it together). Two files:
+ *   ledger   every owner, with wallets and figures; totals EXACT, per-owner figures tidied (tidy())
+ *   trades   owner number → [[time, kind, qty]], loaded only when someone opens an owner's chart
  */
-export function publicLedger(full, limit = PUBLIC_OWNERS) {
-  const R = ["bought", "sold", "rotated", "received", "movedOut", "holds", "boughtUsd", "soldUsd"];
-  return {
-    ...full,
-    rounded: "per-owner figures rounded to 3 significant figures; totals exact",
-    ownersTotal: full.owners.length,
-    owners: full.owners.slice(0, limit).map(({ wallets, years, trades, pnl, cex, ...o }) => {
-      const out = { ...o };
-      for (const k of R) out[k] = sig3(o[k]);
-      const leg = x => (x ? { d: x.d, qty: sig3(x.qty), usd: sig3(x.usd) } : null);
-      out.pnl = { avgCost: +pnl.avgCost.toPrecision(3), realized: sig3(pnl.realized), unrealized: sig3(pnl.unrealized),
-        invested: sig3(pnl.invested), proceeds: sig3(pnl.proceeds), lastBuy: leg(pnl.lastBuy), lastSell: leg(pnl.lastSell) };
-      out.cex = cex ? { sent: sig3(cex.sent), sentUsd: sig3(cex.sentUsd), back: sig3(cex.back), net: sig3(cex.net),
-        netUsd: sig3(cex.netUsd), last: cex.last, venues: Object.fromEntries(Object.entries(cex.venues || {}).map(([v, q]) => [v, sig3(q)])) } : null;
-      out.years = Object.fromEntries(Object.entries(years).map(([y, b]) =>
-        [y, Object.fromEntries(Object.entries(b).map(([k, v]) => [k, sig3(v)]))]));
-      return out;
-    }),
-  };
+export function publicLedger(full) {
+  return { ...full, owners: tidyAll(full.owners.map(({ trades, ...o }) => o)) };
+}
+export function publicTrades(full) {
+  return { updated: full.updated, owners: Object.fromEntries(full.owners.map(o => [o.n, o.trades || []])) };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -175,8 +159,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const cexOut = arg("cex") ? JSON.parse(readFileSync(arg("cex"), "utf8")) : null;
   const full = buildLedger(rows, hh, { tokenOwners, rarity, priceOn, spot, cexOut });
   if (arg("full")) writeFileSync(arg("full"), JSON.stringify(full));
-  const pub = publicLedger(full);
-  if (JSON.stringify(pub).match(/0x[0-9a-f]{40}/i)) throw new Error("refusing to write: an address leaked into the public ledger");
-  writeFileSync(arg("public"), JSON.stringify(pub));
+  writeFileSync(arg("public"), JSON.stringify(publicLedger(full)));
+  writeFileSync(arg("trades", "public/aeon-ledger-trades.json"), JSON.stringify(publicTrades(full)));
   console.error(`aeon-ledger: ${full.owners.length} owners · ${full.scope.aeonHolders} AEON holders · as of ${full.updated}`);
 }

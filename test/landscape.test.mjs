@@ -128,14 +128,14 @@ test("AEON Ledger public layer drops every address and rounds only per-owner fig
   assert.deepEqual(full.owners[0].wallets, [w(1), w(2)]);
   assert.equal(full.scope.neverTouchedSpx, 1);
   const pub = publicLedger(full);
-  assert.ok(!/0x[0-9a-f]{40}/i.test(JSON.stringify(pub)), "no address in the public layer");
-  assert.equal(pub.owners[0].holds, 1230000);
+  assert.equal(pub.owners.length, 2, "every owner is published");
+  assert.deepEqual(pub.owners[0].wallets, [w(1), w(2)], "with its wallets");
+  assert.equal(pub.owners[0].trades, undefined, "trades live in their own file");
+  assert.equal(pub.owners[0].holds, 1234567, "large figures to the whole unit");
   assert.equal(pub.totals.bought, 1235067, "totals stay exact");
   assert.equal(pub.owners[0].firstBuy, "2023-08");
-  const top1 = publicLedger(full, 1);
-  assert.equal(top1.owners.length, 1, "only the top owners are published");
-  assert.equal(top1.ownersTotal, 2, "the page can say how many more there are");
-  assert.equal(top1.totals.bought, 1235067, "totals still cover every owner");
+  const { publicTrades } = await import("../research/pfp-forensics/landscape/export.mjs");
+  assert.deepEqual(Object.keys(publicTrades(full).owners), ["1", "2"]);
 });
 
 test("a refresh re-reads address ledgers and caches only immutable transaction pages", async () => {

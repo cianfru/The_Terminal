@@ -12,10 +12,10 @@ name: AEON Ledger refresh
 #   3b. exchanges  SPX each owner sent to exchanges, net of withdrawals (cex-out.mjs, offline over transfers.csv)
 #   4. ownership   ownerOf on the AEON contract for all 3,333 tokens (aeon-owners.mjs) → each owner's exact
 #                  pieces, the rarest as its picture; --check fails loudly in the log if it disagrees with our replay
-#   5. export      aeon-ledger.full.json (with wallet addresses) → KV, members only (feed "aeon-ledger")
-#                  public/aeon-ledger.json (no addresses, per-owner figures rounded) → committed + deployed
+#   5. export      public/aeon-ledger.json (every owner, wallets, figures) + public/aeon-ledger-trades.json
+#                  (each owner's trades, loaded when a chart opens) → committed + deployed
 #
-# Owner decision 2026-09-23: numbers public, addresses for Deep Field members. The full file is NEVER committed.
+# Owner decision 2026-09-23: fully public — it is public chain data, the ledger only reconstructs it. No KV.
 
 on:
   workflow_dispatch:
@@ -103,7 +103,7 @@ jobs:
         run: |
           node $LAND/report.mjs --results=results.jsonl
           node $LAND/export.mjs --results=results.jsonl --households=households.json --owners=aeon-owners.json --cex=cex-out.json \
-            --full=aeon-ledger.full.json --public=public/aeon-ledger.json
+            --public=public/aeon-ledger.json --trades=public/aeon-ledger-trades.json
           # sanity gate: a thin or badly-reconciled run must not replace a good snapshot
           node -e '
             const d = require("./public/aeon-ledger.json");
@@ -113,19 +113,13 @@ jobs:
             if (bad.length) { console.error("::error::refusing to publish — " + bad.join("; ")); process.exit(1); }
             console.log(`ok · ${d.owners.length} owners · ${d.scope.reconciled}/${d.scope.withSpx} reconciled · as of ${d.updated}`);'
 
-      - name: Members file → KV (addresses, members only)
-        env:
-          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
-          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
-        run: node scripts/push-private-feed.mjs --file=aeon-ledger.full.json --key=aeon-ledger
-
       - name: Commit the public ledger
         id: commit
         run: |
-          if [[ -n "$(git status --porcelain public/aeon-ledger.json)" ]]; then
+          if [[ -n "$(git status --porcelain public/aeon-ledger.json public/aeon-ledger-trades.json)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add public/aeon-ledger.json
+            git add public/aeon-ledger.json public/aeon-ledger-trades.json
             git commit -m "chore: AEON Ledger refresh $(date -u +%F)"
             for i in 1 2 3 4 5; do
               git push && break

@@ -15,6 +15,12 @@
 - **State:** every scheduled card firing is OFF — `post-tweet.yml` schedule commented out, `aeon-sale-watch.yml` schedule off +
   forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed. `BOT_SITE_ONLY` (repo var, defaults on in
   post-tweet.yml) makes any manual run skip X (and skips the 1st-of-month recap). **Owner call: no cards at all for now.**
+- **+ a "NEW CHART · JUST DEPLOYED" card (`src/NewChartNotice.jsx`, owner 2026-09-23) announcing the AEON Ledger:** appears ~0.5s
+  AFTER the popup is dismissed (XNotice dispatches `spx:xnotice-closed`; if the popup was already seen this session it shows ~1.2s
+  after load), with a synthesised two-note chime (plays only after a user gesture — browsers block audio otherwise, so it's silent
+  on a cold load). Easy to dismiss (×/Later/Esc), once per BROWSER (`localStorage["spx-newchart-aeonledger"]`), and opening the
+  ledger any way marks it seen. e2e seeds that key in every context and tests the card from a fresh one. To announce another
+  chart: change `ANNOUNCE` in the file.
 - **THE SITE'S ONLY MESSAGE: a "follow our new account" popup (owner, 2026-09-23, v2).** History: a suspension notice + posts
   page were built, then removed in full ("people just use the charts"), then the owner asked for ONE popup back with a new
   message. `src/XNotice.jsx` (mounted at the end of App.jsx), picture `public/new-account.jpg` (deliberately NOT named
@@ -381,9 +387,11 @@
   of 693 with SPX: bought 999M SPX / $82M vs sold 726M / $101M (buying leads in COINS only because of launch-month prices — in
   DOLLARS they took out more); 2025 net −$19M; 306 exited · 155 trimming · 86 holding · 146 never sold; top 10 hold 56% of what's
   held; 60 owners did 80% of selling.
-- **TWO LAYERS (owner decision):** numbers public, ADDRESSES for Deep Field members only. `public/aeon-ledger.json` = no addresses +
-  per-owner figures rounded to 3 sig figs (totals exact); the full file goes to KV feed `aeon-ledger` (allow-listed in
-  `api/auth.js` PRIVATE_FEEDS) and is NEVER committed. `export.mjs` refuses to write a public file containing an address.
+- **⭐ FULLY PUBLIC (owner, 2026-09-23, final): "remove all restrictions — it's public chain data, we only reconstructed it."**
+  `public/aeon-ledger.json` = EVERY owner with wallets, pieces, P&L, exchange flows (per-owner figures tidied, totals exact; ~565KB /
+  145KB gz) + `public/aeon-ledger-trades.json` = owner number → trades (~1.5MB / 293KB gz), fetched only when an owner sheet opens.
+  No KV, no members wall, charts + wallet links for everyone; `aeon-ledger` removed from `api/auth.js` PRIVATE_FEEDS. (Same-day
+  history, all REVERSED: first addresses members-only via KV, then top-10-only with a dimmed members wall.)
 - **Pipeline:** `research/pfp-forensics/landscape/` — `build-households.mjs` (phase 2) → `classify.mjs` (phase 3, `--fresh` caches
   only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (dispatch-only, ~1h, BigQuery table +
   Alchemy tail → KV + commit + deploy)**; sanity gate refuses <500 owners or >5% unreconciled. Feed audit cadence 35d.
@@ -391,18 +399,12 @@
   wide row: a ROUND picture of its RAREST held AEON (count badge, verdict-coloured ring) · Owner #N · SPX held · realized P&L ·
   unrealized P&L · last buy · last sale; a two-by-two card under 1000px. P&L = **SPX trading only**, average cost (`export.mjs pnlOf`;
   the sheet's client replay `positionFromTrades` is unit-tested to match it). **Picture tap → gallery** (piece large + traits + rank +
-  OpenSea, every held AEON rarest first). **Row tap → owner sheet**: public figures for everyone; the case-study chart (shared
-  `PositionDetail` in `bare` mode — buy orbs / sell triangles on the SPX price + realized-P&L curve + wallets) for **members only**,
-  drawn from the members file's `trades`. Overlays are PORTALLED to `.tzone` (the chart page is its own stacking context — the
+  OpenSea, every held AEON rarest first). **Row tap → owner sheet**: everything public; the case-study chart (shared
+  `PositionDetail` in `bare` mode — buy orbs / sell triangles on the SPX price + realized-P&L curve + wallets) for everyone,
+  drawn from `public/aeon-ledger-trades.json`. Overlays are PORTALLED to `.tzone` (the chart page is its own stacking context — the
   favorites tab drew over them at any z-index). Thumbnails from Alchemy's Cloudinary `thumbnailv2` (~50KB vs ~535KB originals).
   **Ownership = `aeon-owners.mjs` (`ownerOf` on the contract, 3,333 tokens, public RPC)** — matched our transfer replay for all
   1,178 wallets 2026-09-23; now a step in `aeon-ledger.yml` feeding `export.mjs --owners`.
-  **✅ PUBLIC = TOP 10 ONLY (owner, 2026-09-23: "just show the first 10, the rest is members only").** `export.mjs publicLedger`
-  writes only `PUBLIC_OWNERS = 10` owners (by SPX held) + `ownersTotal` into `public/aeon-ledger.json` (466KB → 10KB); totals /
-  years / verdicts / concentration still cover EVERY owner. The rest are left OUT OF THE FILE (a piece id leads to its wallet via
-  the token's owner, so page-only hiding would leak them). The page shows them as DIMMED PLACEHOLDER rows ("Owner #11 · Members
-  only", blank bars — never invented figures) under a "Members only · sign in" card (`MembersWall`; owner asked for opaque but
-  visible). Non-members also lose the verdict filter tabs. ⚠ Older commits of the public file still hold the full 693 in git history.
   **Its own nav tab: `AEON_LEDGER` after `DEEP_FIELD`** (landing `.mtop-ledger` + TerminalNav + both phone menus), teal. While wiring
   it, found the landing's desktop RAINBOW / DEEP_FIELD tabs threw `go is not defined` on click (the `go()` helpers live in later
   script blocks) — now a local `goTop`.

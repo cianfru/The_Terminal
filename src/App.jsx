@@ -130,6 +130,7 @@ import { gcolFor } from "./terminal-colors.js";
 import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
 import XNotice from "./XNotice.jsx";
+import NewChartNotice from "./NewChartNotice.jsx";
 const CasesPage = lazy(() => import("./CasesPage.jsx"));
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
@@ -1586,6 +1587,7 @@ export default function App() {
 
       {/* "Follow our new account" popup — once per session, dismissed only from the bottom (XNotice.jsx) */}
       <XNotice />
+      <NewChartNotice onOpen={() => goChart("aeonledger")} onChart={route === "chart" && tab === "aeonledger"} />
     </div>
   );
 }
