@@ -90,7 +90,9 @@ jobs:
       - name: Build + post
         if: steps.gate.outputs.proceed == 'true'
         run: |
-          if [ "$(date -u +%d)" = "01" ] && [ -z "${DRY_RUN}${BOT_CHECK}${BOT_VERIFY_MEDIA}${BOT_NO_MEDIA}${BOT_POST}${BOT_FORCE}" ]; then
+          # The recap posts straight to X, so it is skipped while X is off (BOT_SITE_ONLY=1);
+          # the daily post still goes to the site feed that day.
+          if [ "$(date -u +%d)" = "01" ] && [ "${BOT_SITE_ONLY}" != "1" ] && [ -z "${DRY_RUN}${BOT_CHECK}${BOT_VERIFY_MEDIA}${BOT_NO_MEDIA}${BOT_POST}${BOT_FORCE}" ]; then
             echo "== 1st of the month → posting the monthly recap (not the daily rotation) =="
             node scripts/bot/recap-run.mjs --post
           else

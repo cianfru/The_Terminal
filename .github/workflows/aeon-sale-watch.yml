@@ -13,8 +13,11 @@ name: AEON notable-sale watcher
 # Manual runs default to dry-run: detect + render the card, post nothing.
 
 on:
-  schedule:
-    - cron: "23 */6 * * *" # every 6h at :23 (reduced from hourly — posts ~weekly, so 6h latency is fine)
+  # ⛔ PAUSED 2026-09-23 — the X account is suspended; owner asked to stop the card firings.
+  # Every run is also forced to dry-run below. To resume: uncomment the schedule and restore
+  # the three DRY_RUN lines to `... || vars.AEON_SALE_DRY_RUN`.
+  # schedule:
+  #   - cron: "23 */6 * * *" # every 6h at :23
   workflow_dispatch:
     inputs:
       dry_run:
@@ -79,7 +82,7 @@ jobs:
           # Repo var AEON_SALE_DRY_RUN=1 keeps the schedule in watch-only mode. (Re-enabled
           # 2026-08-20 after the kill-switch: transfers→Alchemy, sales→Dune and OpenSea
           # listings are all live and verified again, so the watchers have fresh inputs.)
-          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || vars.AEON_SALE_DRY_RUN }}
+          DRY_RUN: '1' # paused 2026-09-23 (X suspended)
           AEON_SALE_HOURS: ${{ inputs.hours || '168' }}
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           ALCHEMY_NETWORK: ${{ vars.ALCHEMY_NETWORK }}
@@ -95,7 +98,7 @@ jobs:
         # A live listing priced below what its rarity sells for → a buy-now card on X. Its own
         # lane (firesale), one/day, gated on a genuine steal. Same DRY toggle as the sale watcher.
         env:
-          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || vars.AEON_SALE_DRY_RUN }}
+          DRY_RUN: '1' # paused 2026-09-23 (X suspended)
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           ALCHEMY_NETWORK: ${{ vars.ALCHEMY_NETWORK }}
           AEON_CONTRACT: ${{ vars.AEON_CONTRACT }}
@@ -110,7 +113,7 @@ jobs:
         # One wallet scooping ≥3 AEON in a few days → a card showing the haul. Its own lane
         # (aeonsweep), one/day, gated on a FRESH sweep. Same DRY toggle as the sale watcher.
         env:
-          DRY_RUN: ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '1' || vars.AEON_SALE_DRY_RUN }}
+          DRY_RUN: '1' # paused 2026-09-23 (X suspended)
           ALCHEMY_KEY: ${{ secrets.ALCHEMY_KEY }}
           ALCHEMY_NETWORK: ${{ vars.ALCHEMY_NETWORK }}
           AEON_CONTRACT: ${{ vars.AEON_CONTRACT }}
