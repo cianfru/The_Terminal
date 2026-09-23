@@ -5,17 +5,15 @@
 // consolidations — research/pfp-forensics/landscape/). Every household's ledger is summed and checked
 // against its on-chain balance before it counts; one that does not reconcile is listed, never guessed.
 //
-// TWO LAYERS (owner decision 2026-09-23, the smart-money model): the numbers are public; the wallet
-// ADDRESSES are for Deep Field members only. fetchPrivate() returns the members file (with `wallets`) to a
-// logged-in member and the public file (no addresses, per-owner figures rounded) to everyone else.
+// FULLY PUBLIC (owner decision 2026-09-23): every owner, their wallets, figures and trade charts. It is
+// public chain data — the ledger only reconstructs it. (A same-day first version walled addresses and all
+// but the top 10 behind the members login; the owner reversed that.)
 //
 // Built by landscape/export.mjs → public/aeon-ledger.json; refreshed by aeon-ledger.yml (dispatch).
 import { useEffect, useMemo, useState } from "react";
-import { fetchPrivate } from "./history-data.js";
 import { SANS, MONO, MAX_W, Metric, Explain, ViewTabs } from "./chart-ui.jsx";
 import OwnerList from "./AeonLedgerOwners.jsx";
 import { OWNER_SORTS } from "./aeon-ledger-pos.js";
-import { loadMe } from "./members.js";
 
 const INK = "var(--ch-ink,#fff)", BODY = "var(--ch-body,#e2e9f2)", MUT = "var(--ch-mut,#d0d9e6)", DIM = "var(--ch-dim,#b1bccc)";
 const LINE = "rgba(148,163,184,0.28)";
@@ -124,15 +122,10 @@ export default function AeonLedger({ isMobile }) {
   const [d, setD] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("holds");
-  const [me, setMe] = useState(null);
-  useEffect(() => { loadMe().then(setMe); }, []);
   useEffect(() => {
     let off = false;
-    // A members answer that isn't a ledger (e.g. an unconfigured auth store replying {ok:false}) falls back
-    // to the public file, so the page never goes blank for a signed-in visitor.
-    fetchPrivate("aeon-ledger", "/aeon-ledger.json", { publicSafe: true })
-      .then(x => (x && Array.isArray(x.owners) ? x : fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null)))
-      .then(x => { if (!off) setD(x || { empty: true }); });
+    fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null)
+      .then(x => { if (!off) setD(x && Array.isArray(x.owners) ? x : { empty: true }); });
     return () => { off = true; };
   }, []);
 
@@ -146,7 +139,6 @@ export default function AeonLedger({ isMobile }) {
   if (d.empty || !d.owners) return <div style={{ textAlign: "center", fontFamily: SANS, color: MUT, padding: 60 }}>The ledger is being rebuilt.</div>;
 
   const t = d.totals, s = d.scope, h = d.holding;
-  const members = d.owners.some(o => Array.isArray(o.wallets));
   const years = Object.entries(d.years || {}).sort(([a], [b]) => a.localeCompare(b));
   const vCount = ORDER.map(k => ({ k, ...(d.byVerdict[k] || { households: 0, holds: 0 }) }));
   const totalHH = vCount.reduce((a, v) => a + v.households, 0) || 1;
@@ -222,10 +214,8 @@ export default function AeonLedger({ isMobile }) {
         </div>
       </Section>
 
-      <Section title={members ? "Every owner" : `The ${d.owners.length} largest owners`} sub={members
-        ? "Members view: tap an owner for every buy and sale on the SPX price, and the wallets behind it."
-        : "Ranked by SPX held today. Each owner's picture is the rarest AEON they hold; tap it for all their pieces. P&L is SPX trading only, at average cost; per-owner figures are rounded to three significant figures. The totals above cover every owner."}>
-        {members && <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />}
+      <Section title="Every owner" sub="Each owner's picture is the rarest AEON they hold; tap it for all their pieces. Tap an owner for every buy and sale on the SPX price, realized P&L over time and the wallets behind it. P&L is SPX trading only, at average cost.">
+        <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "12px 0 16px", fontFamily: SANS, fontSize: 14, color: MUT }}>
           Sort by
           {OWNER_SORTS.map(([k, l]) => (
@@ -233,8 +223,7 @@ export default function AeonLedger({ isMobile }) {
               background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
           ))}
         </div>
-        <OwnerList key={filter + sort} rows={rows} me={me} spot={d.spot} isMobile={isMobile}
-          walled={members ? 0 : Math.max(0, (d.ownersTotal || d.owners.length) - d.owners.length)} />
+        <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} />
       </Section>
 
       <Section title="How this is built, and what it can't tell you">

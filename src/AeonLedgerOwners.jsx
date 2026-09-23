@@ -4,9 +4,10 @@
 //            unrealized P&L · last buy · last sale. Sharp and wide on desktop, a two-by-two card on phones.
 //   PICTURE  tapping it opens the gallery: that piece large (traits, rank, OpenSea) and every other AEON
 //            the owner holds, rarest first.
-//   ROW TAP  opens the owner sheet. The trade-by-trade chart (buys and sells on the SPX price, realized
-//            P&L over time — the case-study view, via the shared PositionDetail) is for Deep Field
-//            members; everyone else sees the owner's public figures and a login.
+//   ROW TAP  opens the owner sheet: the trade-by-trade chart (buys and sells on the SPX price, realized
+//            P&L over time — the case-study view, via the shared PositionDetail) and the wallets. All public
+//            (owner, 2026-09-23: it is public chain data, the ledger only reconstructs it). The trade lists
+//            live in public/aeon-ledger-trades.json, fetched the first time a sheet opens.
 //
 // Figures are SPX trading only (average cost, landscape/export.mjs pnlOf); AEON trading is not in them.
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
@@ -65,14 +66,6 @@ html[data-theme="light"] .al{--al-cex:#b45309;--al-up:#047857;--al-dn:#be123c;--
 .al-strip .al-thumb{flex:0 0 76px}
 .al-tiles{display:flex;flex-wrap:wrap;gap:18px 32px;margin:18px 0}
 @media (prefers-reduced-motion:reduce){.al-row{transition:none}}
-.al-wall{position:relative}
-.al-ghosts{opacity:.38;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent)}
-.al-ghost{cursor:default}
-.al-bar{display:inline-block;height:14px;border-radius:3px;background:var(--ch-dim);opacity:.55}
-.al-gpfp{display:block;width:52px;height:52px;border-radius:50%;background:var(--ch-dim);opacity:.45}
-.al-lock{position:absolute;left:50%;top:44px;transform:translateX(-50%);width:min(560px,calc(100% - 8px));text-align:center;
-  background:var(--bg,#08090b);border:1px solid var(--al-acc);padding:20px 22px 22px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
-.al-lockk{font:700 12px ${MONO};letter-spacing:.14em;text-transform:uppercase;color:var(--al-acc)}
 `;
 
 const VCOL = { "never-sold": "#34d399", holding: "#38bdf8", trimming: "#fbbf24", exited: "#fb7185" };
@@ -259,14 +252,23 @@ function Tile({ k, v, cls = "", sub }) {
   return <div><div className="al-k">{k}</div><div className={"al-v " + cls} style={{ fontSize: 22 }}>{v}</div>{sub && <div className="al-s">{sub}</div>}</div>;
 }
 
-export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
+let tradesPromise = null;
+const loadTrades = () => (tradesPromise ||= fetch("/aeon-ledger-trades.json", { cache: "no-cache" })
+  .then(r => (r.ok ? r.json() : null)).catch(() => null));
+
+export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
   const rar = useRarity(true);
   const [px, setPx] = useState(null);
-  const member = !!(me && me.loggedIn && (me.member || me.owner));
-  const hasTrades = Array.isArray(o.trades);
-  useEffect(() => { if (hasTrades) loadPriceHistory().then(setPx); }, [hasTrades]);
+  const [tr, setTr] = useState(undefined);
+  useEffect(() => {
+    let off = false;
+    loadPriceHistory().then(x => { if (!off) setPx(x); });
+    loadTrades().then(x => { if (!off) setTr(x); });
+    return () => { off = true; };
+  }, []);
+  const trades = o.trades || tr?.owners?.[o.n] || null;
   const p = o.pnl || {};
-  const pos = hasTrades && px ? positionFromTrades(o.trades, priceLookup(px), o.holds) : null;
+  const pos = trades && px ? positionFromTrades(trades, priceLookup(px), o.holds) : null;
   const pub = (
     <div className="al-tiles">
       <Tile k="SPX held" v={big(o.holds)} sub={spot ? usd(o.holds * spot) + " today" : ""} />
@@ -326,14 +328,8 @@ export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
       ) : (
         <>
           {pub}
-          <div style={{ border: "1px solid var(--al-line)", padding: "18px 20px", marginTop: 6 }}>
-            <div style={{ font: `700 17px ${SANS}`, color: "var(--ch-ink)" }}>
-              {hasTrades ? "Loading the trade history…" : member ? "The trade-by-trade chart arrives with the next ledger refresh." : "The trade-by-trade chart is for Deep Field members."}
-            </div>
-            {!hasTrades && <p className="al-s" style={{ whiteSpace: "normal", fontSize: 15, lineHeight: 1.6, margin: "8px 0 0", maxWidth: 720 }}>
-              Every buy and sale this owner made, on the SPX price, with realized P&amp;L over time and the wallets behind it — the same view as our case studies.
-            </p>}
-            {!member && <a className="al-btn acc" style={{ marginTop: 14 }} href="/api/auth?action=login">Log in with X →</a>}
+          <div className="al-s" style={{ whiteSpace: "normal", fontSize: 15, margin: "6px 0 0" }}>
+            {tr === null || (tr && !trades) ? "The trade history could not be loaded." : "Loading the trade history…"}
           </div>
         </>
       )}
@@ -341,52 +337,9 @@ export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
   );
 }
 
-/**
- * The public page lists only the largest owners. The rest stay ON the page, dimmed and marked members-only,
- * so a visitor sees the ledger goes on and signs in to read it (owner, 2026-09-23). The public FILE does
- * not carry them, so these rows are placeholders — owner numbers and blank bars, never invented figures.
- */
-function MembersWall({ n, from, me }) {
-  const member = !!(me && me.loggedIn && (me.member || me.owner));
-  const ghosts = Array.from({ length: Math.min(n, 8) }, (_, i) => from + i);
-  const bar = w => <span className="al-bar" style={{ width: w }} />;
-  return (
-    <div className="al-wall">
-      <div className="al-ghosts" aria-hidden="true">
-        {ghosts.map(k => (
-          <div key={k} className="al-row al-ghost">
-            <div className="al-wide">
-              <span className="al-gpfp" />
-              <div><div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{k}</div><div className="al-s">Members only</div></div>
-              <div className="r">{bar(64)}</div><div className="r">{bar(72)}</div><div className="r">{bar(72)}</div>
-              <div className="r">{bar(96)}</div><div className="r">{bar(96)}</div><span />
-            </div>
-            <div className="al-card">
-              <div className="al-top"><span className="al-gpfp" /><div>
-                <div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{k}</div>
-                <div className="al-s">Members only</div></div><span /></div>
-              <div className="al-grid">{bar(80)}{bar(80)}{bar(96)}{bar(96)}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="al-lock" role="note">
-        <div className="al-lockk">Members only</div>
-        <div style={{ font: `700 19px/1.3 ${SANS}`, color: "var(--ch-ink)", marginTop: 6 }}>
-          {member ? `The other ${n.toLocaleString()} owners arrive with the next ledger refresh.` : `${n.toLocaleString()} more owners. Sign in to see them all.`}
-        </div>
-        <p className="al-s" style={{ whiteSpace: "normal", fontSize: 15, lineHeight: 1.55, margin: "8px auto 0", maxWidth: 520 }}>
-          Every owner with their AEON, P&amp;L, last buy and last sale — and each one&apos;s full trade chart and wallets.
-        </p>
-        {!member && <a className="al-btn acc" style={{ marginTop: 14 }} href="/api/auth?action=login">Sign in with X →</a>}
-      </div>
-    </div>
-  );
-}
-
 const PAGE = 25;
 
-export default function OwnerList({ rows, me, spot, isMobile, walled = 0 }) {
+export default function OwnerList({ rows, spot, isMobile }) {
   const [sheet, setSheet] = useState(null);
   const [gal, setGal] = useState(null);
   const [shown, setShown] = useState(PAGE);
@@ -404,8 +357,7 @@ export default function OwnerList({ rows, me, spot, isMobile, walled = 0 }) {
           Show more ({(rows.length - shown).toLocaleString()} left)
         </button>
       )}
-      {walled > 0 && <MembersWall n={walled} from={rows.length + 1} me={me} />}
-      {sheet && <OwnerSheet o={sheet} me={me} spot={spot} isMobile={isMobile} onClose={() => setSheet(null)} onGallery={(x, id) => setGal({ o: x, id })} />}
+      {sheet && <OwnerSheet o={sheet} spot={spot} isMobile={isMobile} onClose={() => setSheet(null)} onGallery={(x, id) => setGal({ o: x, id })} />}
       {gal && <Gallery o={gal.o} start={gal.id} onClose={() => setGal(null)} />}
     </div>
   );

@@ -18,7 +18,7 @@ before(async () => {
   rawContext = browser.newContext.bind(browser);
   browser.newContext = async o => {
     const c = await rawContext(o);
-    await c.addInitScript(() => { try { sessionStorage.setItem("spx-new-account-seen", "1"); } catch { /* ok */ } });
+    await c.addInitScript(() => { try { sessionStorage.setItem("spx-new-account-seen", "1"); localStorage.setItem("spx-newchart-aeonledger", "1"); } catch { /* ok */ } });
     return c;
   };
 });
@@ -649,9 +649,27 @@ test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both
   await page.getByRole("dialog").waitFor();
   const panel = await geom(page, ".al-panel");
   assert.ok(panel.l >= 0 && panel.r <= panel.vw + 1, `sheet inside the viewport (${panel.l}..${panel.r})`);
-  assert.ok(await page.getByText(/Deep Field members|next ledger refresh/).count(), "the chart is behind the members wall");
+  await page.getByText("WHERE IT BOUGHT").waitFor({ timeout: 15000 });   // the trade chart, public
   await page.getByRole("button", { name: "Close ✕" }).tap();
-  assert.equal(await page.locator(".al-row:not(.al-ghost)").count(), 10, "the public list stops at the top 10");
-  assert.ok(await page.locator(".al-lock").isVisible(), "the rest is shown dimmed, members only");
+  assert.ok((await page.locator(".al-row").count()) >= 25, "every owner is listed, 25 at a time");
+  await ctx.close();
+});
+
+test("390px: after the new-account popup, a 'new chart' card announces the AEON Ledger and opens it", async () => {
+  const ctx = await rawContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  assert.equal(await page.locator(".nc").count(), 0, "not stacked on top of the popup");
+  await page.locator(".xn-later").scrollIntoViewIfNeeded();
+  await page.locator(".xn-later").tap();
+  await page.locator(".nc").waitFor({ timeout: 5000 });
+  const box = await geom(page, ".nc");
+  assert.ok(box.l >= 0 && box.r <= box.vw, "card inside the viewport");
+  await page.getByRole("button", { name: "Open the ledger →" }).tap();
+  await page.waitForURL(/chart=aeonledger/);
+  assert.equal(await page.locator(".nc").count(), 0, "gone once opened");
+  await page.reload({ waitUntil: "networkidle" });
+  await page.waitForTimeout(1600);
+  assert.equal(await page.locator(".nc").count(), 0, "shown once per browser");
   await ctx.close();
 });

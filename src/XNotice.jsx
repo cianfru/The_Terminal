@@ -76,7 +76,12 @@ export default function XNotice() {
     return () => { document.body.style.overflow = prev; };
   }, [open]);
 
-  const close = () => { try { sessionStorage.setItem(SEEN_KEY, "1"); } catch { /* fine */ } setOpen(false); };
+  // The "new chart" card (NewChartNotice) waits for this event so the two never stack.
+  const close = () => {
+    try { sessionStorage.setItem(SEEN_KEY, "1"); } catch { /* fine */ }
+    setOpen(false);
+    window.dispatchEvent(new Event("spx:xnotice-closed"));
+  };
 
   if (!open) return null;
   return (
