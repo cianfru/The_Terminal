@@ -387,6 +387,18 @@
 - **Pipeline:** `research/pfp-forensics/landscape/` — `build-households.mjs` (phase 2) → `classify.mjs` (phase 3, `--fresh` caches
   only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (dispatch-only, ~1h, BigQuery table +
   Alchemy tail → KV + commit + deploy)**; sanity gate refuses <500 owners or >5% unreconciled. Feed audit cadence 35d.
+- **✅ OWNER LIST REDESIGN (owner brief 2026-09-23) — `src/AeonLedgerOwners.jsx` + pure `src/aeon-ledger-pos.js`.** Each owner is a
+  wide row: a ROUND picture of its RAREST held AEON (count badge, verdict-coloured ring) · Owner #N · SPX held · realized P&L ·
+  unrealized P&L · last buy · last sale; a two-by-two card under 1000px. P&L = **SPX trading only**, average cost (`export.mjs pnlOf`;
+  the sheet's client replay `positionFromTrades` is unit-tested to match it). **Picture tap → gallery** (piece large + traits + rank +
+  OpenSea, every held AEON rarest first). **Row tap → owner sheet**: public figures for everyone; the case-study chart (shared
+  `PositionDetail` in `bare` mode — buy orbs / sell triangles on the SPX price + realized-P&L curve + wallets) for **members only**,
+  drawn from the members file's `trades`. Overlays are PORTALLED to `.tzone` (the chart page is its own stacking context — the
+  favorites tab drew over them at any z-index). Thumbnails from Alchemy's Cloudinary `thumbnailv2` (~50KB vs ~535KB originals).
+  **Ownership = `aeon-owners.mjs` (`ownerOf` on the contract, 3,333 tokens, public RPC)** — matched our transfer replay for all
+  1,178 wallets 2026-09-23; now a step in `aeon-ledger.yml` feeding `export.mjs --owners`.
+  **⚠ KNOWN TRADE-OFF (flagged to owner):** a public picture/piece id lets anyone look the token up on OpenSea/Etherscan and read the
+  owning wallet, so for AEON-holding owners the "addresses members-only" layer is a convenience, not secrecy.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

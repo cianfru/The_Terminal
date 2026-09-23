@@ -27,8 +27,9 @@ function Tile({ label, value, color, sub }) {
 
 // pos = { bag, avgCost, realized, roi, buys:[[t,price,qty]], sells:[[t,price,qty,realized]] }
 // head = { seed (for gradient), title, cmd, links:[{label,href}], meta (jsx under the title) }
+// bare = drop the back link, prompt line and title (the AEON Ledger's owner sheet draws its own header)
 // px   = the price-history array [{date, price}]
-export default function PositionDetail({ pos, head, px, price, isMobile, footer }) {
+export default function PositionDetail({ pos, head, px, price, isMobile, footer, bare }) {
   const model = useMemo(() => {
     if (!pos || !px) return null;
     const buys = (pos.buys || []).map(([t, p, q]) => ({ t, price: p, qty: q }));
@@ -40,13 +41,16 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer 
     const pMin = Math.max(0.0005, Math.min(...pxs) * 0.8), pMax = Math.max(...pxs) * 1.2;
     let cum = 0; const pnl = [{ t: t0, cum: 0 }];
     [...sells].sort((a, b) => a.t - b.t).forEach(s => { cum += s.realized; pnl.push({ t: s.t, cum }); });
+    // Carry the booked total on to today, so a wallet that stopped selling doesn't read as a line that ends.
+    const tLast = priceSeries.at(-1)?.t;
+    if (tLast && tLast > pnl.at(-1).t) pnl.push({ t: tLast, cum });
     // Month/quarter x-ticks across the shown range, so the timeline is unmistakable — bare YEAR labels
     // made a year-long span (a buy in Aug '25, the pump in Aug '26) look like recent/today's price.
     const tStart = priceSeries[0]?.t, tEnd = priceSeries.at(-1)?.t;
     const xTicks = [];
     if (tStart && tEnd) {
       const months = (tEnd - tStart) / (30 * 864e5);
-      const step = months > 20 ? 3 : months > 9 ? 2 : 1;   // months between ticks
+      const step = months > 20 ? (isMobile ? 6 : 3) : months > 9 ? (isMobile ? 3 : 2) : 1;   // months between ticks (wider on a phone)
       const m = new Date(Date.UTC(new Date(tStart).getUTCFullYear(), new Date(tStart).getUTCMonth(), 1));
       for (; m.getTime() <= tEnd; m.setUTCMonth(m.getUTCMonth() + step)) if (m.getTime() >= tStart) xTicks.push(m.getTime());
     }
@@ -55,7 +59,7 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer 
     // the view off at the last trade (e.g. this owner stopped in Sep '25, so the line vanished there).
     const xDomain = (tStart && tEnd) ? [tStart, tEnd] : ["dataMin", "dataMax"];
     return { buys, sells, priceSeries, pMin, pMax, pnl, realized: cum, xTicks, xDomain };
-  }, [pos, px]);
+  }, [pos, px, isMobile]);
   // "Aug '25" — month + apostrophe-year is unambiguous on an axis and shows the true span.
   const fTick = t => { const d = new Date(t); return d.toLocaleDateString("en-US", { month: "short" }) + " '" + String(d.getUTCFullYear()).slice(2); };
 
@@ -69,6 +73,7 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer 
 
   return (
     <div className="tchart" style={{ maxWidth: MAX_W, margin: "0 auto", fontFamily: "var(--sans)" }}>
+      {!bare && <>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
         <a href="/deepfield" style={{ fontFamily: "var(--mono)", fontSize: 12, letterSpacing: ".1em", textTransform: "uppercase", color: "var(--dim)", textDecoration: "none" }}>← Deep Field</a>
         {head.links?.length > 0 && (
@@ -86,6 +91,7 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer 
         {head.meta}
       </div>
       <div style={{ height: 3, borderRadius: 2, background: "var(--rainbow)", maxWidth: 620, margin: "13px 0 18px" }} />
+      </>}
 
       <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap", margin: "0 0 18px" }}>
         <Tile label="holds now" value={fM(bag) + " SPX"} sub={fUsd(bag * live)} />
