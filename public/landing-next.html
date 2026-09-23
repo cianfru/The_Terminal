@@ -180,6 +180,12 @@
   .mtop-deepfield:hover > .mhead{ background:var(--live); color:var(--bg); }
   .mtop-deepfield:hover > .mhead .ml-term, .mtop-deepfield:hover > .mhead .ml-site, .mtop-deepfield:hover > .mhead .cur{ color:var(--bg); }
   :root[data-variant="site"] .mtop-deepfield{ display:block; --acc:var(--live); }
+  /* AEON Ledger tab — the Deep Field tab's build, in the ledger's teal */
+  .mtop-ledger{ --ledger:#2dd4bf; }
+  :root[data-theme="light"] .mtop-ledger{ --ledger:#0f766e; }
+  .mtop-ledger .ml-term, .mtop-ledger .ml-site, .mtop-ledger .cur{ color:var(--ledger); }
+  .mtop-ledger:hover > .mhead{ background:var(--ledger); color:var(--bg); }
+  .mtop-ledger:hover > .mhead .ml-term, .mtop-ledger:hover > .mhead .ml-site, .mtop-ledger:hover > .mhead .cur{ color:var(--bg); }
   .drop,.subdrop{ display:none; position:absolute; z-index:30; min-width:210px; background:var(--bg); border:1px solid var(--line2); padding:4px; box-shadow:0 12px 34px rgba(0,0,0,.6); }
   .drop{ top:100%; left:0; } .mtop:hover > .drop{ display:block; }
   .subdrop{ left:calc(100% + 8px); top:-5px; z-index:31; }
@@ -477,6 +483,7 @@
     .mmall{ color:var(--live); }
     .mmlink .mml{ background:linear-gradient(90deg,#f87171,#fb923c,#fbbf24,#4ade80,#38bdf8,#a78bfa); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
     .mmlink-df .mml{ background:none; -webkit-text-fill-color:var(--live); color:var(--live); }
+    .mmlink-ledger .mml{ -webkit-text-fill-color:#2dd4bf; color:#2dd4bf; }
     .mmdf-tag{ font-family:var(--label); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
   }
   /* ── MOBILE SPRINGBOARD — app-launcher nav (prototype) ── */
@@ -1063,9 +1070,17 @@
     const dfm=document.createElement('div'); dfm.className='mtop mtop-deepfield';
     dfm.innerHTML=`<div class="mhead" data-deepfield="1"><span class="lw"><span class="ml-term">DEEP_FIELD</span><span class="ml-site">Deep Field</span><span class="cur">_</span></span></div>`;
     m.appendChild(dfm); wireTypeRow(dfm.querySelector('.mhead'));
+    // AEON Ledger — every AEON owner's SPX record; its own tab (owner, 2026-09-23), also listed in Project Aeon.
+    const lgm=document.createElement('div'); lgm.className='mtop mtop-deepfield mtop-ledger';
+    lgm.innerHTML=`<div class="mhead" data-ledger="1"><span class="lw"><span class="ml-term">AEON_LEDGER</span><span class="ml-site">AEON Ledger</span><span class="cur">_</span></span></div>`;
+    m.appendChild(lgm); wireTypeRow(lgm.querySelector('.mhead'));
     if(withFresh){ const _nf=document.createElement('div'); _nf.className='navfresh'; _nf.id='fresh'; m.appendChild(_nf); }
-    m.addEventListener('click',e=>{ if(e.target.closest('[data-rainbow]')){ go('/?view=rainbow'); return; }
-      if(e.target.closest('[data-deepfield]')){ go('/deepfield'); return; }
+    // top-level navigation (the page is an iframe under the app). No shared go() is in scope here — the
+    // go() helpers live in the later script blocks — so the Rainbow / Deep Field tabs threw on click.
+    const goTop=u=>{ (window.top||window).location.href=u; };
+    m.addEventListener('click',e=>{ if(e.target.closest('[data-rainbow]')){ goTop('/?view=rainbow'); return; }
+      if(e.target.closest('[data-deepfield]')){ goTop('/deepfield'); return; }
+      if(e.target.closest('[data-ledger]')){ goTop('/?chart=aeonledger'); return; }
       if(e.target.closest('[data-home]')){ window.scrollTo({top:0,behavior:'smooth'}); return; }
       const _all=e.target.closest('.mitem[data-all]'); if(_all){ openGallery(_all.dataset.all); return; }
       const _grp=e.target.closest('.mitem[data-ggrp]'); if(_grp){ openGallery(_grp.dataset.gtop,_grp.dataset.ggrp); return; } // click a GROUP → that group's charts only
@@ -1079,7 +1094,8 @@
     const leafHref=(sec,it)=>{ const id=(window.__LEAFID||{})[sec+'|'+it]; return id?(id.charAt(0)==='@'?id.slice(1):('/?chart='+id)):'#'; };
     const chev='<span class="mmchev">▾</span>';
     let h=`<button class="mmitem mmlink" data-go="/?view=rainbow"><span class="mml">Rainbow</span></button>`
-      +`<button class="mmitem mmlink mmlink-df" data-go="/deepfield"><span class="mml">Deep Field</span><span class="mmdf-tag">members</span></button>`;
+      +`<button class="mmitem mmlink mmlink-df" data-go="/deepfield"><span class="mml">Deep Field</span><span class="mmdf-tag">members</span></button>`
+      +`<button class="mmitem mmlink mmlink-df mmlink-ledger" data-go="/?chart=aeonledger"><span class="mml">AEON Ledger</span><span class="mmdf-tag">every owner</span></button>`;
     NAV.forEach(sec=>{
       h+=`<div class="mmsec"><button class="mmitem mmsec-h" data-toggle><span class="mml">${esc(sec.label.replace(/_/g,' '))}</span>${chev}</button><div class="mmsub">`;
       if(sec.groups.length===1){
@@ -1426,6 +1442,7 @@
         NAV.forEach((sec,i)=>{ const d=SEC_DESC[sec.label]; const sub=d?d(sec):chartCount(sec)+' charts';
           tiles+=secQuad(sec.label, sec.label, NAV_DISP[sec.label]||sec.label, sub, SEC_COL[sec.label]||GCOL[i%GCOL.length], 'sec'); });
         tiles+=secQuad('/deepfield','deepfield','Deep Field','the deep layer','#4ee79a','nav');
+        tiles+=secQuad('/?chart=aeonledger','aeonledger','AEON Ledger',"every owner's SPX",'#2dd4bf','nav');
       } else if(view.t==='groups'){ const sec=NAV.find(s=>s.label===view.sec); title=NAV_DISP[sec.label]||sec.label;
         sec.groups.forEach((g,i)=>{ tiles+=grpTile(sec.label, g.g, g.items.length+' charts', GCOL[i%GCOL.length]); });
       } else if(view.t==='charts'){ const sec=NAV.find(s=>s.label===view.sec), g=sec.groups.find(x=>x.g===view.grp); title=view.grp;

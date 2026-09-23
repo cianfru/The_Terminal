@@ -64,6 +64,14 @@ html[data-theme="light"] .al{--al-up:#047857;--al-dn:#be123c;--al-line:rgba(30,4
 .al-strip .al-thumb{flex:0 0 76px}
 .al-tiles{display:flex;flex-wrap:wrap;gap:18px 32px;margin:18px 0}
 @media (prefers-reduced-motion:reduce){.al-row{transition:none}}
+.al-wall{position:relative}
+.al-ghosts{opacity:.38;pointer-events:none;user-select:none;-webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent)}
+.al-ghost{cursor:default}
+.al-bar{display:inline-block;height:14px;border-radius:3px;background:var(--ch-dim);opacity:.55}
+.al-gpfp{display:block;width:52px;height:52px;border-radius:50%;background:var(--ch-dim);opacity:.45}
+.al-lock{position:absolute;left:50%;top:44px;transform:translateX(-50%);width:min(560px,calc(100% - 8px));text-align:center;
+  background:var(--bg,#08090b);border:1px solid var(--al-acc);padding:20px 22px 22px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.al-lockk{font:700 12px ${MONO};letter-spacing:.14em;text-transform:uppercase;color:var(--al-acc)}
 `;
 
 const VCOL = { "never-sold": "#34d399", holding: "#38bdf8", trimming: "#fbbf24", exited: "#fb7185" };
@@ -322,9 +330,52 @@ export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
   );
 }
 
+/**
+ * The public page lists only the largest owners. The rest stay ON the page, dimmed and marked members-only,
+ * so a visitor sees the ledger goes on and signs in to read it (owner, 2026-09-23). The public FILE does
+ * not carry them, so these rows are placeholders — owner numbers and blank bars, never invented figures.
+ */
+function MembersWall({ n, from, me }) {
+  const member = !!(me && me.loggedIn && (me.member || me.owner));
+  const ghosts = Array.from({ length: Math.min(n, 8) }, (_, i) => from + i);
+  const bar = w => <span className="al-bar" style={{ width: w }} />;
+  return (
+    <div className="al-wall">
+      <div className="al-ghosts" aria-hidden="true">
+        {ghosts.map(k => (
+          <div key={k} className="al-row al-ghost">
+            <div className="al-wide">
+              <span className="al-gpfp" />
+              <div><div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{k}</div><div className="al-s">Members only</div></div>
+              <div className="r">{bar(64)}</div><div className="r">{bar(72)}</div><div className="r">{bar(72)}</div>
+              <div className="r">{bar(96)}</div><div className="r">{bar(96)}</div><span />
+            </div>
+            <div className="al-card">
+              <div className="al-top"><span className="al-gpfp" /><div>
+                <div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{k}</div>
+                <div className="al-s">Members only</div></div><span /></div>
+              <div className="al-grid">{bar(80)}{bar(80)}{bar(96)}{bar(96)}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="al-lock" role="note">
+        <div className="al-lockk">Members only</div>
+        <div style={{ font: `700 19px/1.3 ${SANS}`, color: "var(--ch-ink)", marginTop: 6 }}>
+          {member ? `The other ${n.toLocaleString()} owners arrive with the next ledger refresh.` : `${n.toLocaleString()} more owners. Sign in to see them all.`}
+        </div>
+        <p className="al-s" style={{ whiteSpace: "normal", fontSize: 15, lineHeight: 1.55, margin: "8px auto 0", maxWidth: 520 }}>
+          Every owner with their AEON, P&amp;L, last buy and last sale — and each one&apos;s full trade chart and wallets.
+        </p>
+        {!member && <a className="al-btn acc" style={{ marginTop: 14 }} href="/api/auth?action=login">Sign in with X →</a>}
+      </div>
+    </div>
+  );
+}
+
 const PAGE = 25;
 
-export default function OwnerList({ rows, me, spot, isMobile }) {
+export default function OwnerList({ rows, me, spot, isMobile, walled = 0 }) {
   const [sheet, setSheet] = useState(null);
   const [gal, setGal] = useState(null);
   const [shown, setShown] = useState(PAGE);
@@ -342,6 +393,7 @@ export default function OwnerList({ rows, me, spot, isMobile }) {
           Show more ({(rows.length - shown).toLocaleString()} left)
         </button>
       )}
+      {walled > 0 && <MembersWall n={walled} from={rows.length + 1} me={me} />}
       {sheet && <OwnerSheet o={sheet} me={me} spot={spot} isMobile={isMobile} onClose={() => setSheet(null)} onGallery={(x, id) => setGal({ o: x, id })} />}
       {gal && <Gallery o={gal.o} start={gal.id} onClose={() => setGal(null)} />}
     </div>

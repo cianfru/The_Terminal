@@ -98,6 +98,11 @@ html[data-theme="light"] .tzone .dfdrop{ box-shadow:0 12px 34px rgba(20,30,50,.1
 .tzone .mtop-deepfield:hover .dfcur{ animation:tcurblink 1.05s steps(1,end) infinite; }
 .tzone .mtop-deepfield:hover > .mhead{ background:var(--live); color:var(--bg); }
 .tzone .mtop-deepfield:hover > .mhead .dfword, .tzone .mtop-deepfield:hover > .mhead .dfcur{ color:var(--bg); }
+/* AEON Ledger tab — same build as Deep Field, in the ledger's own teal */
+.tzone .mtop-ledger{ --ledger:#2dd4bf; }
+html[data-theme="light"] .tzone .mtop-ledger{ --ledger:#0f766e; }
+.tzone .mtop-ledger .dfword, .tzone .mtop-ledger .dfcur{ color:var(--ledger); }
+.tzone .mtop-ledger:hover > .mhead{ background:var(--ledger); color:var(--bg); }
 
 .tzone .drop,.tzone .subdrop{ display:none; position:absolute; z-index:30; min-width:212px; background:var(--bg); border:1px solid var(--line2); padding:4px; box-shadow:0 12px 34px rgba(0,0,0,.6); }
 .tzone .drop{ top:100%; left:0; } .tzone .mtop:hover > .drop{ display:block; }
