@@ -129,6 +129,9 @@ import FavoritesLauncher from "./FavoritesLauncher.jsx";
 import { gcolFor } from "./terminal-colors.js";
 import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
+const CasesPage = lazy(() => import("./CasesPage.jsx"));
+const PostsPage = lazy(() => import("./PostsPage.jsx"));
+import XNotice from "./XNotice.jsx";
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
 const RallyChart = lazy(() => import("./RallyChart.jsx"));
@@ -757,6 +760,8 @@ export default function App() {
     else if (r === "aeon") params.set("view", "aeon");
     // the manual carries its page in ?p= so any page in the book is directly linkable
     else if (r === "docs") { params.set("view", "docs"); if (id) params.set("p", id); }
+    else if (r === "cases") params.set("view", "cases");
+    else if (r === "posts") params.set("view", "posts");
     else if (r === "next") params.set("view", "next");
     else if (r === "rainbow") params.set("view", "rainbow");
     else if (r === "chart" && id) {
@@ -783,6 +788,7 @@ export default function App() {
   const openDeepField = () => { setRoute("terminal"); syncUrl("terminal"); window.scrollTo({ top: 0, behavior: "smooth" }); };
   // the 3D city opens into a mode via /city?m=spx|aeon|both (deep-linked from the SPX City menu sub-views)
   const cityMode = (() => { const m = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("m") : null; return m === "aeon" || m === "both" ? m : "spx"; })();
+  const openPosts = () => { setRoute("posts"); syncUrl("posts"); window.scrollTo({ top: 0 }); };
   const openDocs = (slug = "index") => { setDocSlug(slug); setRoute("docs"); syncUrl("docs", slug); window.scrollTo({ top: 0, behavior: "smooth" }); };
   // goChart(id) opens a chart at its default view; goChart(id, view) deep-links a sub-view.
   // relative keeps its own `rel` asset param (view values BTC/ETH/SOL/BASKET); every other
@@ -838,6 +844,8 @@ export default function App() {
       else if (p.get("view") === "story") { setRoute("story"); setStoryWallet(p.get("wallet") || ""); }
       else if (p.get("view") === "wallet") { setRoute("wallet"); setWalletAddr(p.get("addr") || ""); }
       else if (p.get("view") === "cluster") { setRoute("cluster"); setClusterId(p.get("id") || ""); }
+      else if (p.get("view") === "cases") setRoute("cases");
+      else if (p.get("view") === "posts") setRoute("posts");
       else if (p.get("view") === "next") setRoute("next");
       // SPX City left the gallery for its own /city tab. Old shared links (?chart=whalewatch /
       // spxcity / aeonskyline) still resolve, send them to the city instead of dropping to home.
@@ -1186,6 +1194,21 @@ export default function App() {
       {route === "docs" && (
         <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
           <DocsPage isMobile={isMobile} slug={docSlug} onNavigate={openDocs} />
+        </Suspense>
+      )}
+
+      {/* The proof surface for the PFP forensics posts — every case with its wallet
+          addresses, linked out, so a reader can check the claim instead of trusting it. */}
+      {route === "cases" && (
+        <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
+          <CasesPage isMobile={isMobile} />
+        </Suspense>
+      )}
+
+      {/* The daily posts, on the site — the X account was suspended 2026-09-23. */}
+      {route === "posts" && (
+        <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
+          <PostsPage isMobile={isMobile} />
         </Suspense>
       )}
 
@@ -1569,6 +1592,8 @@ export default function App() {
       )}
       </div>{/* end content */}
 
+      {/* X suspended 2026-09-23 — one-time popup pointing to the posts page + comms handle */}
+      <XNotice route={route} onOpenPosts={openPosts} />
     </div>
   );
 }

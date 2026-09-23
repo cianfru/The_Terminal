@@ -90,7 +90,9 @@ jobs:
       - name: Build + post
         if: steps.gate.outputs.proceed == 'true'
         run: |
-          if [ "$(date -u +%d)" = "01" ] && [ -z "${DRY_RUN}${BOT_CHECK}${BOT_VERIFY_MEDIA}${BOT_NO_MEDIA}${BOT_POST}${BOT_FORCE}" ]; then
+          # The recap posts straight to X, so it is skipped while X is off (BOT_SITE_ONLY=1);
+          # the daily post still goes to the site feed that day.
+          if [ "$(date -u +%d)" = "01" ] && [ "${BOT_SITE_ONLY}" != "1" ] && [ -z "${DRY_RUN}${BOT_CHECK}${BOT_VERIFY_MEDIA}${BOT_NO_MEDIA}${BOT_POST}${BOT_FORCE}" ]; then
             echo "== 1st of the month → posting the monthly recap (not the daily rotation) =="
             node scripts/bot/recap-run.mjs --post
           else
@@ -105,6 +107,9 @@ jobs:
           # (the guard exists to stop the scheduled cron from double-posting).
           BOT_FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
           BOT_POST: ${{ (github.event_name == 'workflow_dispatch' && inputs.post_id != 'auto') && inputs.post_id || '' }}
+          # X suspended 2026-09-23: the daily post goes to the site feed (?view=posts) only.
+          # Set repo var BOT_SITE_ONLY=0 once the account is back to resume posting to X too.
+          BOT_SITE_ONLY: ${{ vars.BOT_SITE_ONLY || '1' }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
@@ -113,10 +118,10 @@ jobs:
       - name: Commit post state (queue consume + once-per-day guard)
         if: always() && steps.gate.outputs.proceed == 'true'
         run: |
-          if [[ -n "$(git status --porcelain public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json)" ]]; then
+          if [[ -n "$(git status --porcelain public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json public/site-feed.json public/feed)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json
+            git add public/next-post.json public/post-state.json public/daily-band-state.json public/recap-pending.json public/site-feed.json public/feed
             git commit -m "chore: post state $(date -u +%F)"
             # The tweet has ALREADY been posted by now; only the state commit remains. main is a busy
             # branch (crons + edits), so a bare push loses the race and reports a red ❌ for a post that

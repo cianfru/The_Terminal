@@ -1,0 +1,352 @@
+#!/usr/bin/env node
+// ============================================================================
+// CLUSTER-PFP — wallet clustering for PFP forensics.
+// ============================================================================
+//   node scripts/cluster-pfp.mjs --addr=0x... [--token=14] [--json=out.json]
+//
+// This is NOT clusterEntities and must not be swapped for it. That engine exists to keep
+// CONCENTRATION honest, so it errs toward not-merging and gates FUND at 50,000 SPX. Both
+// choices are wrong here:
+//
+//   * the 50,000 floor is a TOKEN count. SPX has moved ~1,000x since launch, so in 2023 it
+//     was a $108 tip — and the community passed round 69,420 / 111,111 / 123,456 constantly.
+//     Run from a 2023 wallet it over-merges into the dozens (63 wallets on case #14).
+//   * and it UNDER-merges for the wallets this work is about. An influencer can be loud and
+//     hold nothing: #2559 holds 8,558 SPX, #3062's trader keeps 138. A 50,000 floor cannot
+//     see them. Here small IS the finding, so self-moves have NO minimum.
+//
+// Structure over size. A link needs one of:
+//   GAS    - A paid B's gas, and A funds few enough wallets to not be a service.
+//   DRAIN  - A emptied >=90% of its balance into B, and B held nothing before. Any size.
+//   NFT    - the token's own custody chain (handled by the caller; recorded for completeness).
+// Never through a tagged CEX / LP / contract. Never a partial send between two live wallets.
+// ============================================================================
+import { readFileSync, writeFileSync } from "node:fs";
+
+const SPX = "0xE0f63A424a4439cBE457d80e4f4b51ad25b2c56C";
+const BS = "https://eth.blockscout.com/api/v2";
+const RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org", "https://rpc.flashbots.net"];
+
+// A gas funder is only evidence if it funds a HANDFUL of wallets. One funder on case #14 fed
+// 42 distinct addresses — a service, worth nothing. The production engine's hub guard is 8.
+export const MAX_FUNDED = 8;
+
+// The same guard has to apply to DRAINS, or the tool over-merges on a payout wallet. A drain
+// EMPTIES the sender, so a person migrating can only do it once per refill; a wallet that
+// repeatedly empties itself into different fresh wallets is distributing, not migrating.
+// Tighter than MAX_FUNDED because drain-into-empty is otherwise the stronger claim of the two.
+export const MAX_DRAINED = 4;
+
+// A VAULT: a wallet that was empty, received a chunk, still holds most of it, and has NEVER
+// sent SPX anywhere. This is NOT the "partial send between two live wallets" the production
+// engine rightly refuses — that refusal exists because a payment recipient is a counterparty.
+// A vault is not a counterparty: it never spends. It is storage.
+//
+// This rule is why the tool missed case #2451's 401,900-SPX vault on the first pass: the
+// trader funded it with a partial send (no drain) and it has never transacted (no gas link),
+// so it was invisible to both rules. Vaults are the single most common structure in this
+// work — #2451 has one, #3062 has seven — so missing them missed the point.
+export const VAULT_KEEP = 0.90;
+
+// A CONSOLIDATION: several wallets each emptying themselves into ONE address that held
+// nothing before, inside a short window. That is a person gathering their wallets into a
+// new one, and it is the pattern the 1-to-1 drain rule structurally cannot see.
+//
+// Case #14 is the reason this exists. 0x98E97737 drained 1,630,000 into 0xc41e7f22 at
+// 23:03:35; 0xCE9a1739 drained 2,000,000 into the same address 72 SECONDS later. The
+// target was empty before the first. The 1-to-1 rule rejected the second because by then
+// the target held 1.63M — so the link failed on the ORDER of two transactions a minute
+// apart. Had they arrived the other way round it would have matched.
+//
+// The production engine already knows this shape (scanSelfMoves detects "consolidations,
+// N emptying into 1 fresh"); this tool simply did not implement it.
+export const CONSOLIDATION_WINDOW_H = 24;
+export const CONSOLIDATION_MIN = 2;
+export const DRAIN_FRAC = 0.90;
+export const MAX_DEPTH = 3;
+
+const j = async u => { try { const r = await fetch(u, { headers: { accept: "application/json" } }); return r.ok ? r.json() : null; } catch { return null; } };
+const rpc = async (m, p) => {
+  for (let i = 0; i < 9; i++) {
+    try {
+      const r = await (await fetch(RPCS[i % RPCS.length], { method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: m, params: p }) })).json();
+      if (r?.result != null) return r.result;
+    } catch {}
+    await new Promise(x => setTimeout(x, 250 * (i + 1)));
+  }
+  return null;
+};
+
+async function pages(path, max = 40) {
+  let items = [], p = null;
+  for (let i = 0; i < max; i++) {
+    const u = BS + path + (p ? (path.includes("?") ? "&" : "?") + new URLSearchParams(p) : "");
+    const d = await j(u); if (!d) break;
+    items.push(...(d.items || []));
+    if (!d.next_page_params) break;
+    p = d.next_page_params;
+  }
+  return items;
+}
+
+/** Tagged infrastructure, read from the FIFO engine so the two can never drift. */
+export function loadTags(src = readFileSync(new URL("./build-onchain-local.mjs", import.meta.url), "utf8")) {
+  const tags = {};
+  for (const m of src.matchAll(/"(0x[0-9a-f]{40})":\s*\{\s*name:\s*"([^"]+)",\s*kind:\s*"([^"]+)"/g))
+    tags[m[1]] = { name: m[2], kind: m[3] };
+  return tags;
+}
+
+/** Code beginning 0xef0100 is an EIP-7702 delegation designator: an EOA that opted into a smart
+ *  account. Pectra shipped May 2025, so code TODAY says nothing about 2023-24 history. Treating
+ *  it as a contract retroactively erases every link through that wallet. */
+export const isDelegatedEoa = code => typeof code === "string" && code.toLowerCase().startsWith("0xef0100");
+export const codeIsContract = code => !!(code && code !== "0x" && !isDelegatedEoa(code));
+
+/** Running balance before each transfer — the only way to tell a drain from an ordinary payment. */
+export function withBalances(rows) {
+  let bal = 0;
+  return rows.slice().sort((a, b) => a.ts.localeCompare(b.ts)).map(r => {
+    const balBefore = bal; bal += r.dir === "IN" ? r.qty : -r.qty;
+    return { ...r, balBefore, balAfter: bal };
+  });
+}
+
+/** A vault link: B held nothing, received `qty` from A, never sent SPX, and still holds
+ *  at least VAULT_KEEP of what it got. Size-free, like every rule here. */
+export function isVault(recvIn, recvRows, keep = VAULT_KEEP) {
+  if (!recvIn || recvIn.balBefore >= 1) return false;
+  if (recvRows.some(r => r.dir === "OUT")) return false;   // it spends => not a vault
+  const held = recvRows.reduce((b, r) => b + (r.dir === "IN" ? r.qty : -r.qty), 0);
+  return held >= recvIn.qty * keep;
+}
+
+/** The consolidation event a given inbound transfer belongs to, or null.
+ *
+ *  `targetRows` is the TARGET's ledger (withBalances). `drained(sender, tx)` answers whether
+ *  that sender emptied >=frac of its own balance in that transaction. Pure; unit-tested.
+ *
+ *  Conditions, all required:
+ *    - the target held nothing before the FIRST transfer of the group
+ *    - at least CONSOLIDATION_MIN distinct senders
+ *    - every one of them emptied itself
+ *    - all inside CONSOLIDATION_WINDOW_H hours
+ *  Size-free, like every rule here. */
+export function consolidationOf(tx, targetRows, drained, {
+  windowH = CONSOLIDATION_WINDOW_H, min = CONSOLIDATION_MIN,
+} = {}) {
+  const ins = targetRows.filter(r => r.dir === "IN").sort((a, b) => a.ts.localeCompare(b.ts));
+  const seed = ins.find(r => r.tx === tx);
+  if (!seed) return null;
+  // the group is anchored on the first inbound that found the target empty
+  const start = [...ins].reverse().find(r => r.balBefore < 1 && r.ts <= seed.ts);
+  if (!start) return null;
+  const limit = Date.parse(start.ts) + windowH * 3600e3;
+  const group = ins.filter(r => r.ts >= start.ts && Date.parse(r.ts) <= limit && drained(r.cp, r.tx));
+  if (!group.some(r => r.tx === tx)) return null;
+  const senders = [...new Set(group.map(r => r.cp).filter(Boolean))];
+  return senders.length >= min ? { senders, group } : null;
+}
+
+/** A drain-into-empty: A emptied itself into B, and B was empty. Both, at any size. */
+export function isDrainIntoEmpty(senderOut, recvIn, frac = DRAIN_FRAC) {
+  if (!senderOut || !recvIn) return false;
+  return senderOut.balBefore > 0 && senderOut.qty >= senderOut.balBefore * frac && recvIn.balBefore < 1;
+}
+
+const code = {};
+async function contract(a) { if (!(a in code)) code[a] = codeIsContract(await rpc("eth_getCode", [a, "latest"])); return code[a]; }
+
+const led = {};
+async function ledger(a) {
+  if (led[a]) return led[a];
+  const tf = (await pages(`/addresses/${a}/token-transfers?token=${SPX}`))
+    // ⚠ a wallet sending to itself moves nothing, but it lists once and reads as an inflow,
+    // inflating the balance-before that drain detection divides by — enough to hide a drain.
+    .filter(t => t.from?.hash?.toLowerCase() !== t.to?.hash?.toLowerCase());
+  led[a] = withBalances(tf.map(t => ({
+    ts: t.timestamp, dir: t.to?.hash?.toLowerCase() === a ? "IN" : "OUT",
+    qty: Number(t.total?.value) / 1e8,
+    cp: (t.to?.hash?.toLowerCase() === a ? t.from : t.to)?.hash?.toLowerCase(),
+    tx: t.transaction_hash,
+  })));
+  return led[a];
+}
+
+/** How many distinct wallets A has DRAINED ITSELF INTO. Not how many it has ever paid.
+ *
+ *  ⚠ Counting every recipient was wrong twice. It silenced case #2451, whose "recipients"
+ *  were mostly Uniswap pools (fixed by excluding infrastructure). Then it silenced case
+ *  #14's funding chain: 0x9f7e2f5e drained 100% of its balance — 2,142,133 of 2,142,133 —
+ *  into an empty wallet, a textbook migration, but it had earlier made partial payments to
+ *  12 addresses and so read as a distributor.
+ *
+ *  Those are different behaviours. A distributor makes many PARTIAL payments. A migrator
+ *  drains itself, and can only do that once per refill. So count the drains, not the
+ *  payments: paying twelve people does not make a single complete self-drain a payout. */
+export async function drainFanOut(a, rows, skip = async () => false) {
+  const r = rows ?? await ledger(a);
+  const targets = new Set();
+  for (const x of r) {
+    if (x.dir !== "OUT" || !x.cp || await skip(x.cp)) continue;
+    if (x.balBefore > 0 && x.qty >= x.balBefore * DRAIN_FRAC) targets.add(x.cp);
+  }
+  return targets.size;
+}
+
+/** Every PLAIN WALLET A ever paid gas to. Few = evidence; many = a service. ETH sent to a
+ *  contract is a transaction fee or a swap, never "funding someone's wallet", so it is not
+ *  counted and its link is not offered. */
+async function gasOut(a, skip = async () => false) {
+  const txs = await pages(`/addresses/${a}/transactions`, 4);
+  const sends = [];
+  for (const t of txs) {
+    if (t.from?.hash?.toLowerCase() !== a || !(Number(t.value || 0) > 0)) continue;
+    const to = t.to?.hash?.toLowerCase();
+    if (!to || await skip(to)) continue;
+    sends.push(t);
+  }
+  const dests = new Set(sends.map(t => t.to.hash.toLowerCase()));
+  return { dests, service: dests.size > MAX_FUNDED, sends };
+}
+
+export async function clusterPfp(seed, { maxDepth = MAX_DEPTH, tags = loadTags() } = {}) {
+  seed = seed.toLowerCase();
+  const depth = { [seed]: 0 }, seen = new Set(), queue = [seed], links = [], services = new Set();
+  const skip = async a => !!tags[a] || await contract(a);
+
+  while (queue.length) {
+    const a = queue.shift();
+    if (seen.has(a)) continue;
+    seen.add(a);
+    if (await skip(a) || depth[a] >= maxDepth) continue;
+
+    const { dests, service, sends } = await gasOut(a, skip);
+    if (service) { services.add(a); process.stderr.write(`  ${a}: funds ${dests.size} wallets — service, gas links dropped\n`); }
+    else for (const t of sends) {
+      const b = t.to?.hash?.toLowerCase();
+      if (!b || await skip(b)) continue;
+      links.push({ rule: "GAS", from: a, to: b, eth: Number(t.value) / 1e18, ts: t.timestamp.slice(0, 19), tx: t.hash });
+      if (!(b in depth)) { depth[b] = depth[a] + 1; queue.push(b); }
+    }
+
+    const rows = await ledger(a);
+    const myFanOut = await drainFanOut(a, rows, skip);
+    if (myFanOut > MAX_DRAINED) process.stderr.write(`  ${a}: sends SPX to ${myFanOut} wallets — distributor, outbound drains dropped\n`);
+
+    for (const r of rows) {
+      if (!r.cp || await skip(r.cp)) continue;
+      const other = r.dir === "OUT" ? r.cp : a, from = r.dir === "OUT" ? a : r.cp;
+
+      const sOut = (await ledger(from)).find(x => x.tx === r.tx && x.dir === "OUT");
+      const rIn  = (await ledger(r.dir === "OUT" ? r.cp : a)).find(x => x.tx === r.tx && x.dir === "IN");
+      const to = r.dir === "OUT" ? r.cp : a;
+      // The distributor guard applies to DRAIN only. A vault operator funds many vaults BY
+      // DEFINITION — case #3062 has seven — so fan-out cannot disqualify a vault. A vault
+      // link is self-validating anyway: the recipient has never spent, so it is not a
+      // customer being paid. Blocking it on fan-out is what left #3062 at one wallet.
+      const drains = isDrainIntoEmpty(sOut, rIn) && await drainFanOut(from, null, skip) <= MAX_DRAINED;
+      let rule = drains ? "DRAIN" : isVault(rIn, await ledger(to)) ? "VAULT" : null;
+
+      // N-to-1: several wallets emptying into one address that was empty first. The 1-to-1
+      // rule misses this whenever our transfer is not the one that arrived first.
+      if (!rule && r.dir === "OUT") {
+        const trows = await ledger(to);
+        const drainedBy = async (sender, tx) => {
+          if (!sender || await skip(sender)) return false;
+          const so = (await ledger(sender)).find(x => x.tx === tx && x.dir === "OUT");
+          return !!so && so.balBefore > 0 && so.qty >= so.balBefore * DRAIN_FRAC;
+        };
+        // resolve the async predicate up front so consolidationOf can stay pure
+        const ok = {};
+        for (const x of trows.filter(v => v.dir === "IN")) ok[x.tx + x.cp] = await drainedBy(x.cp, x.tx);
+        const con = consolidationOf(r.tx, trows, (sender, tx) => ok[tx + sender]);
+        if (con) {
+          rule = "CONSOLIDATION";
+          for (const sender of con.senders) {
+            if (sender === from || await skip(sender)) continue;
+            links.push({ rule: "CONSOLIDATION", from: sender, to, qty: con.group.find(g => g.cp === sender)?.qty ?? 0,
+              ts: con.group.find(g => g.cp === sender)?.ts.slice(0, 19) ?? r.ts.slice(0, 19),
+              tx: con.group.find(g => g.cp === sender)?.tx ?? r.tx });
+            if (!(sender in depth)) { depth[sender] = depth[a] + 1; queue.push(sender); }
+          }
+        }
+      }
+      if (!rule) continue;
+      links.push({ rule, from, to, qty: r.qty, ts: r.ts.slice(0, 19), tx: r.tx });
+      const nb = from === a ? other : from;
+      if (!(nb in depth)) { depth[nb] = depth[a] + 1; queue.push(nb); }
+    }
+  }
+
+  // One transfer, one link. A transfer can satisfy two rules at once — case #14's
+  // 1,630,000 arrived first, so it drained into an empty wallet AND anchored the
+  // consolidation — and keying the dedupe on the RULE emitted it twice. Membership and
+  // balances were unaffected, but duplicated evidence rows read as carelessness and a
+  // card counting links would double-count. Key on the transfer; prefer the rule that
+  // explains the most.
+  const RANK = { CONSOLIDATION: 0, DRAIN: 1, VAULT: 2, GAS: 3 };
+  const best = new Map();
+  for (const l of links) {
+    const k = `${l.tx}|${l.from}|${l.to}`;
+    const cur = best.get(k);
+    if (!cur || RANK[l.rule] < RANK[cur.rule]) best.set(k, l);
+  }
+  const uniq = [...best.values()].sort((x, y) => x.ts.localeCompare(y.ts));
+  // The SEED is always a member, links or not. A case with no qualifying links is a real
+  // answer ("this wallet stands alone"); reporting an EMPTY cluster instead prints
+  // "holds 0 SPX" for a wallet that holds plenty, which is worse than the bar it replaced.
+  // A service can be a gas DESTINATION, which made it a member on the first pass — one of
+  // them funds 42 unrelated wallets. It is never part of anyone's household.
+  //
+  // ⚠ The service flag kills GAS links ONLY. It is derived from gas fan-out, so it says
+  // nothing about SPX flow — and a vault operator trips it BY DEFINITION, because funding
+  // ten vaults is what makes him one. Filtering all his links discarded every structural
+  // vault link case #3062 had, leaving a household of eight at one wallet.
+  const kept = uniq.filter(l => l.rule !== "GAS" || (!services.has(l.from) && !services.has(l.to)));
+
+  // TWO TIERS, NEVER SUMMED. A VAULT/DRAIN link is structural: it is SPX flow into a wallet
+  // that provably never spent, or a wallet emptying itself. A GAS link is circumstantial —
+  // someone paid someone's fee. On case #2451 the vault tier reproduced the hand-built
+  // cluster exactly (410,623 vs 410,591, the difference three dust vaults) while the gas
+  // tier dragged in a 42-wallet service and bridged into an unrelated case. Both are worth
+  // reporting — gas was the ONLY evidence on case #14 — but the headline is the core.
+  const core = [...new Set([seed, ...kept.filter(l => l.rule !== "GAS").flatMap(l => [l.from, l.to])])];
+  const coreSet = new Set(core);
+  const gasLinked = [...new Set(kept.filter(l => l.rule === "GAS").flatMap(l => [l.from, l.to]))]
+    .filter(a => !coreSet.has(a));
+  return { seed, core, gasLinked, members: [...core, ...gasLinked], links: kept, depth, services: [...services] };
+}
+
+/** Current SPX balance — small is a finding here, never a reason to drop a wallet. */
+export async function balances(addrs) {
+  const out = {};
+  for (const a of addrs) {
+    const b = await j(`${BS}/addresses/${a}/token-balances`);
+    const s = (b || []).find(x => (x.token?.address_hash || x.token?.address || "").toLowerCase() === SPX.toLowerCase());
+    out[a] = s ? Number(s.value) / 1e8 : 0;
+  }
+  return out;
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) {
+  const arg = k => (process.argv.find(a => a.startsWith(`--${k}=`)) || "").split("=")[1];
+  const seed = arg("addr");
+  if (!seed) { console.error("usage: node scripts/cluster-pfp.mjs --addr=0x... [--json=out.json]"); process.exit(1); }
+  const res = await clusterPfp(seed);
+  const bal = await balances(res.members);
+  const f = n => Math.round(n).toLocaleString();
+  const sum = list => list.reduce((s, a) => s + (bal[a] || 0), 0);
+  console.log(`\nCLUSTER of ${seed}`);
+  console.log(`\n  CORE — vault / drain links (structural). ${res.core.length} wallets, ${f(sum(res.core))} SPX`);
+  for (const l of res.links.filter(l => l.rule !== "GAS"))
+    console.log(`    ${l.ts.slice(0, 10)}  ${l.rule.padEnd(5)} ${f(l.qty).padStart(9)} SPX   ${l.from} -> ${l.to}`);
+  for (const a of res.core) console.log(`    ${a}  ${f(bal[a]).padStart(12)}`);
+  console.log(`\n  SUPPORTING — gas-funding only (circumstantial, do NOT add to the headline).`);
+  console.log(`  ${res.gasLinked.length} wallets, ${f(sum(res.gasLinked))} SPX`);
+  for (const a of res.gasLinked) console.log(`    ${a}  ${f(bal[a]).padStart(12)}`);
+  const tot = sum(res.members);
+  const out = arg("json");
+  if (out) { writeFileSync(out, JSON.stringify({ ...res, balances: bal, total: tot }, null, 1)); console.log(`\n-> ${out}`); }
+}

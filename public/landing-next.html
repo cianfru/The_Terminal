@@ -720,6 +720,17 @@
   /* CALM: a touch of Departure Mono on the wordmark only — a pixel "logo" for character, everything you read stays Geist.
      Applied to the home top-bar wordmark AND the subpage breadcrumb wordmark so the brand is consistent everywhere. */
   :root[data-variant="calm"] .bar .l b, :root[data-variant="calm"] .pphome b, :root[data-variant="calm"] .bcur{ font-family:'DepartureMono', ui-monospace, monospace; -webkit-font-smoothing:none; font-smooth:never; }
+
+  /* X-suspension notice (2026-09-23): squared, mono label, one line — same family as the terminal alerts. */
+  .xnotice{display:flex;align-items:center;gap:14px;margin:14px 0 6px;padding:12px 16px;border:1px solid #fbbf24;
+    background:rgba(251,191,36,.08);color:var(--tx);text-decoration:none;font-family:var(--sans);font-size:15px;line-height:1.45}
+  .xnotice:hover,.xnotice:focus-visible{background:rgba(251,191,36,.16)}
+  .xnotice:focus-visible{outline:2px solid #fbbf24;outline-offset:2px}
+  .xnotice .xtag{font-family:var(--label);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#fbbf24;white-space:nowrap}
+  .xnotice .xmsg{flex:1;min-width:0}
+  .xnotice .xmsg b{font-weight:700}
+  .xnotice .xgo{font-family:var(--label);font-size:13px;color:#fbbf24;white-space:nowrap}
+  @media (max-width:760px){.xnotice{flex-wrap:wrap;gap:6px 12px;font-size:14px}.xnotice .xmsg{flex-basis:100%;order:2}.xnotice .xgo{order:3}}
 </style>
 
 <div class="aurora" aria-hidden="true"></div>
@@ -734,6 +745,12 @@
 </div>
 
 <div class="wrap">
+
+  <a class="xnotice" href="/?view=posts" target="_top" aria-label="Our X account has been suspended. Follow our posts here.">
+    <span class="xtag">Notice</span>
+    <span class="xmsg"><b>Our X account has been suspended.</b> We're working to reactivate it. In the meantime, follow our posts here. Uncensored.</span>
+    <span class="xgo">Read the posts &rarr;</span>
+  </a>
 
   <!-- the look/theme switches moved out of the top (tidier header); the theme switch now lives in the footer -->
 

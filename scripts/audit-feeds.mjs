@@ -174,7 +174,7 @@ export const FEEDS = [
 // Runtime state and owner-edited config: written by the bot or the control panel,
 // not by a data feed. Present so nothing is silently unaccounted for.
 export const STATE = new Set([
-  "post-state.json", "band-state.json", "daily-band-state.json", "milestone-state.json",
+  "post-state.json", "site-feed.json", "band-state.json", "daily-band-state.json", "milestone-state.json",
   "next-post.json", "post-copy.json", "card-ar.json", "rotation-excludes.json", "binned-cards.json",
   "deepfield-releases.json",                          // owner-controlled Deep Field drip: {released:[chartId,…]}
   "recap-pending.json", "aeon-sale-state.json", "aeon-sweep-state.json", "aeon-firesale.json", "aeon-firesale-state.json", "whale-state.json",

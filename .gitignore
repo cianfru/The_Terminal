@@ -55,15 +55,16 @@ aeon-sweep-preview.png
 # PUBLIC — SPX City is a public showpiece — so they are NOT ignored.)
 public/entities.json
 
-# ── INCIDENT RECORD — NEVER COMMITTED ─────────────────────────────────────────
+# ── INCIDENT RECORD — NEVER COMMITTED ──
 # tools/incident/ holds the working file for a platform appeal: third-party handles,
-# screenshots and timestamps. This repo is PUBLIC. A dossier on named individuals must not
-# be published by accident, so the whole directory is ignored — the generator in
-# scripts/incident-report.mjs reads and writes only in there.
+# screenshots and timestamps. This repo is PUBLIC. Nothing in it may be published.
 tools/incident/
 
-# The AEON visual index (tools/nft-id/out/aeon-index.npz) is ~100 MB of ORB descriptors rebuilt
-# from the collection's public images by tools/nft-id/build_index.py — derived data, never committed.
+# NFT identification index: a ~395 MB npz of ORB descriptors rebuilt from public
+# metadata in seconds, plus Python bytecode. Regenerate, never commit.
 tools/nft-id/out/
 __pycache__/
 *.pyc
+
+# Watcher preview cards, rendered on every dry run. Scratch, never served.
+kol-sale-preview.png

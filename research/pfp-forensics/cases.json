@@ -1,0 +1,435 @@
+{
+  "what": "Case registry for PFP forensics: X profiles using Project AEON NFTs, traced to the SPX6900 behaviour of the wallets behind them.",
+  "thesis": "An AEON profile picture reads as conviction in SPX6900. Traced on-chain, not one of the cases so far is a buy-and-hold or DCA holder.",
+  "contract": "0xc374a204334d4Edd4C6a62f0867C752d65E9579c",
+  "spxContract": "0xE0f63A424a4439cBE457d80e4f4b51ad25b2c56C",
+  "updated": "2026-09-22",
+  "bandMeasure": "share of USD traded in band index >= 5 ('Bubble?' or hotter) on the frozen rainbow; model never re-fitted",
+  "priceAsOf": {
+    "date": "2026-09-21",
+    "spot": 0.4834
+  },
+  "handlesPolicy": "X handles are deliberately NOT stored. A profile picture does not prove wallet ownership, and the repo is public. Cases are keyed by token id and address, both public chain data.",
+  "cases": [
+    {
+      "token": 2451,
+      "identifiedBy": "eye, later confirmed",
+      "nftHolder": "0x655048fd3301fb9d767071772ddc055ae30a94da",
+      "nftHolderRole": "shelf wallet, nonce 0",
+      "trader": "0x9c968da4e5fd7b6a4709b993cc21c8ef0eb26f6e",
+      "clusterWallets": 6,
+      "clusterNote": "6 wallets by scripts/cluster-pfp.mjs (core tier: vault/drain links only) — trader 0x9c968da4 (8,001) + vault 0x210ccbd5 (401,900, received it in Nov-2024 and has never moved a token) + PFP shelf 0x655048fd (690) + three dust vaults holding 32 between them. Reproduces the hand-built cluster exactly; the 32 SPX is the only difference. A further 20 wallets holding 2,670 SPX are gas-linked only — circumstantial, NOT added to the headline, and that tier includes a 42-wallet service hub and bridges into case #14.",
+      "buys": {
+        "n": 23,
+        "qty": 1092436,
+        "usd": 64095,
+        "avgPrice": 0.0587,
+        "pctUsdBubblePlus": 57
+      },
+      "sells": {
+        "n": 23,
+        "qty": 836673,
+        "usd": 247593,
+        "avgPrice": 0.2959,
+        "pctUsdBubblePlus": 80
+      },
+      "firstBuy": {
+        "date": "2023-10-25",
+        "price": 0.02659,
+        "band": "Max Bubble"
+      },
+      "holdsNow": 410623,
+      "archetype": "sold into strength",
+      "verdict": "Recovered 3.9x cost by selling 80% of dollars into 'Bubble?' or hotter, including $109,304 at Max Bubble. Also bought $33,110 at Max Bubble. Still holds 410,623 SPX, most of it vaulted. The best-timed of the four, and still not a DCA holder.",
+      "charts": [
+        "2451-nft-timeline.png",
+        "2451-buys-and-sells.png",
+        "2451-rainbow.png",
+        "2451-cluster.png"
+      ],
+      "holdsNowNote": "410,623 across the core tier; 8,001 in the trader wallet itself. The vault is 98% of the household and is invisible to any rule with a size floor or a drain requirement — it was funded by a partial send and has never transacted.",
+      "wallets": [
+        "0x9c968da4e5fd7b6a4709b993cc21c8ef0eb26f6e",
+        "0x210ccbd54e277267123e3c173f8626feefa2fb5b",
+        "0x655048fd3301fb9d767071772ddc055ae30a94da",
+        "0xd0eb20581641e421e750947e71c6b32411bbb094",
+        "0x47a0e728cdc6b0da7bb69fb365dbdb77aada6677",
+        "0x2719d392e418f2e93d8ebd2b830a8bf5e30f7d69"
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 34,
+          "usd": 64179,
+          "pctUsdBubblePlus": 57,
+          "qty": 1092500,
+          "avgPrice": 0.05875
+        },
+        "sells": {
+          "n": 23,
+          "usd": 247636,
+          "pctUsdBubblePlus": 80,
+          "qty": 836673,
+          "avgPrice": 0.29598
+        },
+        "recomputed": "2026-09-21",
+        "note": "Reconciles with the trader-scope figures to within rounding on DOLLARS ($64,179 vs $64,095 bought, $247,636 vs $247,593 sold) and identically on the percentages. The extra 11 buys at cluster scope are dust from the smaller members. The 80% sell figure already published holds."
+      },
+      "study": 1,
+      "status": "posted"
+    },
+    {
+      "token": 3062,
+      "identifiedBy": "trait intersection (ORB ranked the wrong token first: it reads greyscale, and the discriminator was a red cross)",
+      "nftHolder": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
+      "nftHolderRole": "the trader holds it directly",
+      "trader": "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
+      "clusterWallets": 5,
+      "clusterNote": "5 wallets by scripts/cluster-pfp.mjs (core tier) — the trader 0xa76e3bec, which keeps only 138 SPX, plus four vaults holding 11,018 / 10,100 / 9,509 / 5,877. All four have ZERO outbound transfers in their full history; the trader funded them and they have never moved a token.",
+      "buys": {
+        "n": 13,
+        "qty": 22982,
+        "usd": 18048,
+        "avgPrice": 0.7853,
+        "pctUsdBubblePlus": 83
+      },
+      "sells": {
+        "n": 1,
+        "qty": 3333,
+        "usd": 2026,
+        "avgPrice": 0.608,
+        "pctUsdBubblePlus": 0
+      },
+      "firstBuy": {
+        "date": "2025-01-06",
+        "price": 1.5515,
+        "band": "Max Bubble"
+      },
+      "holdsNow": 36642,
+      "archetype": "bought the top, sold the dip",
+      "verdict": "The mirror image of #2451. Every dollar spent went in at 'Bubble?' or hotter — not one buy outside those bands — and the selling came later and lower: 5 sales at an average of $0.71 against an average cost of $1.20. The trader wallet itself keeps 138 SPX; everything else sits in four vaults that have never traded.",
+      "charts": [
+        "3062-eyepatch-card.png",
+        "3062-trades-card.png",
+        "3062-custody-chain.png",
+        "3062-flow.png",
+        "3062-cluster.png"
+      ],
+      "holdsNowNote": "36,642 across the core tier; 138 in the wallet that holds the NFT. CORRECTS an earlier hand read of 8 wallets / 58,918, which was too permissive: it counted 'never sends back to the trader' as a vault, but 0xe4f350fc (4,392) has spent twice and 0x01b1fd71 (3,200) once, so both are ordinary wallets. The third excluded, 0x083cc187 (14,684), IS inert — zero outbound ever — but the only link to the trader is a 1-SPX dust send made while it already held 2,683, which is not evidence of common ownership. It stays out; if it belongs, the proof has to come from somewhere else.",
+      "wallets": [
+        "0xa76e3bec2dd6382d16626f35de8c68f3fa49cd34",
+        "0x7dd7c1936db6b71650befa12f1d97e17ccbc407f",
+        "0x2520343cc425f5c4c88324eaf5f6b0d639db9487",
+        "0xea95f1e4799dc01313bb358fecd10f24760c1b61",
+        "0x8b84931a7e78b539071b8ae4e4a2bf2e7b124ad7"
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 12,
+          "usd": 14952,
+          "pctUsdBubblePlus": 100,
+          "qty": 12443,
+          "avgPrice": 1.20165
+        },
+        "sells": {
+          "n": 5,
+          "usd": 7629,
+          "pctUsdBubblePlus": 44,
+          "qty": 10761,
+          "avgPrice": 0.70896
+        },
+        "recomputed": "2026-09-21",
+        "correction": "SUPERSEDES the trader-scope figures above, which are STALE. Those were built before the CoW counterparty fix and read 13 buys / 1 sell / 83%. Recomputed: 12 buys, 5 sells, and 100% of buy dollars at 'Bubble?' or hotter — not one buy outside those bands. Going from 1 sell to 5 is the exact signature of that bug, which lost aggregator sells routing through settlement contracts. All 12 buys and 5 sells belong to the trader wallet alone; the four vaults have never made a market trade.",
+        "firstBuy": {
+          "date": "2025-01-06",
+          "price": 1.5515,
+          "band": "Max Bubble"
+        },
+        "lastBuy": {
+          "date": "2025-09-11",
+          "price": 1.4683
+        },
+        "verifiedLive": "2026-09-22: balances re-read from the chain, 36,642 across the five wallets, matching the registry exactly."
+      },
+      "study": 2,
+      "status": "queued",
+      "sellStaircase": [
+        {
+          "date": "2025-07-01",
+          "qty": 2700,
+          "price": 1.0929,
+          "band": "Bubble?"
+        },
+        {
+          "date": "2025-10-05",
+          "qty": 261,
+          "price": 1.5748,
+          "band": "Bubble?"
+        },
+        {
+          "date": "2025-10-22",
+          "qty": 2000,
+          "price": 0.8939,
+          "band": "HODL!"
+        },
+        {
+          "date": "2025-11-25",
+          "qty": 800,
+          "price": 0.6168,
+          "band": "Still Cheap"
+        },
+        {
+          "date": "2026-07-05",
+          "qty": 5000,
+          "price": 0.3972,
+          "band": "BUY!"
+        }
+      ],
+      "retiredCharts": [
+        {
+          "file": "3062-rainbow.png",
+          "why": "pre-CoW-fix render: states 83% of buy dollars in bubble bands, $18,048 spent at an average of $0.7853, and a single sale in Still Cheap at $0.6080. The recomputed truth is 100%, $14,952 at $1.2016, and five sales ending at $0.3972 in BUY!. Superseded by 3062-trades-card.png, which derives every figure at render time."
+        }
+      ]
+    },
+    {
+      "token": 2559,
+      "identifiedBy": "traits (goggles + black heart); 960 inliers vs 62 after the trait filter, and the keypoint path still refused to call it — by design",
+      "nftHolder": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
+      "nftHolderRole": "holds it directly",
+      "trader": "0x3de73aec76602bab50fe9499d6f230b653e9d619",
+      "clusterWallets": 4,
+      "clusterNote": "4 wallets by scripts/cluster-pfp.mjs (core tier). The holder 0x3de73aec (8,558 SPX), 0xf87fb68d (28,921 — more than the NFT holder itself), and two now-empty wallets 0x619a6035 and 0x8114c302. On 2025-07-20 those two BOTH emptied into 0x3de73aec (876 + 156 + 120 SPX) — a consolidation, not the lone drain recorded earlier; a second wallet gathering on the same day is stronger evidence than one. 0x619a6035 later drained its last 98 SPX into 0xf87fb68d. Every link is far below the production engine's 50,000 floor, which is why that engine reported a single wallet.",
+      "buys": {
+        "n": 10,
+        "qty": 2617,
+        "usd": 4936,
+        "avgPrice": 1.8861,
+        "pctUsdBubblePlus": 100
+      },
+      "sells": {
+        "n": 0,
+        "qty": 0,
+        "usd": 0,
+        "avgPrice": null,
+        "pctUsdBubblePlus": 0
+      },
+      "firstBuy": {
+        "date": "2025-07-07",
+        "price": 1.2613,
+        "band": "Bubble?"
+      },
+      "holdsNow": 37479,
+      "archetype": "FOMO, then diamond hands",
+      "verdict": "99% of the dollars went in at 'Bubble?' or hotter, the largest buy three days before the all-time high. Has never sold. Down about 74%. The only genuine holder of the four, and he bought exactly wrong.",
+      "charts": [
+        "2559-rainbow.png"
+      ],
+      "holdsNowNote": "37,479 across the core tier; 8,558 in the wallet that holds the NFT. CORRECTS an earlier 5-wallet / 38,618 reading that counted 0x7e4d2336 (1,139 SPX) in the headline. Re-run 2026-09-22 under the consolidation and drain-fan-out fixes, its ONLY links to this household are ETH gas — 0.497 ETH in from 0x7e4d2336 to 0x8114c302, 0.005 back from the holder — and no SPX structural link at all. By our own two-tier rule that is circumstantial, so it belongs in the supporting tier, not the headline.",
+      "wallets": [
+        "0x3de73aec76602bab50fe9499d6f230b653e9d619",
+        "0xf87fb68dabc9b552f6245fa6b8d17e9fdabd15de",
+        "0x619a60351d23c9ad08e3a3b8fdf9a714a22490f3",
+        "0x8114c302232c8db065a8e1be1594253c388c0c1d"
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "buys": {
+          "n": 23,
+          "qty": 3753,
+          "usd": 6758,
+          "avgPrice": 1.80067,
+          "pctUsdBubblePlus": 99
+        },
+        "sells": {
+          "n": 0,
+          "qty": 0,
+          "usd": 0,
+          "avgPrice": null,
+          "pctUsdBubblePlus": 0
+        },
+        "firstBuy": "2025-07-07",
+        "lastBuy": "2025-12-17",
+        "recomputed": "2026-09-22",
+        "note": "SUPERSEDES 14 buys / $5,662. The dropped buy ($347) belonged to 0x7e4d2336, which left the core tier. The finding is untouched: every dollar went in at 'Bubble?' or hotter and nothing has ever been sold.",
+        "reconciles": true
+      },
+      "gasLinkedNote": "4 wallets hold 1,139 SPX on gas evidence alone, all of it in 0x7e4d2336. Recorded, never summed into the core.",
+      "study": null,
+      "status": "traced"
+    },
+    {
+      "token": 14,
+      "identifiedBy": "trait intersection; the keypoint path tied #1060 at 284 inliers against #14 at 282 because every top candidate shared the same background and hairstyle",
+      "nftHolder": "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
+      "nftHolderRole": "cold shelf: holds the NFT, 0.0003 ETH, and has never touched SPX",
+      "trader": "0xce9a173965d13dbf7b509c94f314695363acada7",
+      "clusterWallets": 5,
+      "clusterNote": "5 wallets by scripts/cluster-pfp.mjs. A chain of complete self-drains ending in a two-wallet gather: 0x5b403e9a drains 2,795,456 into 0x9f7e2f5e, which drains 2,142,133 into 0xce9a1739; then on 2024-07-08, 0x98e97737 empties 1,630,000 into a fresh 0xc41e7f22 at 23:03:35 and 0xce9a1739 empties 2,000,000 into the same address 72 SECONDS later.",
+      "buys": {
+        "n": 2,
+        "qty": 2843333,
+        "usd": 17864,
+        "avgPrice": 0.00628,
+        "pctUsdBubblePlus": 0
+      },
+      "sells": {
+        "n": 7,
+        "qty": 839674,
+        "usd": 7299,
+        "avgPrice": 0.00869,
+        "pctUsdBubblePlus": 43
+      },
+      "firstBuy": {
+        "date": "2024-03-02",
+        "price": 0.00609,
+        "band": "Still Cheap"
+      },
+      "holdsNow": 384955,
+      "archetype": "early, sold big, still holding",
+      "verdict": "Bought 10,256,465 SPX for $51,278 starting two weeks after launch, not one dollar of it in a bubble band. Sold 5,515,542 for $1,396,562, and rotated a further 1,395,045 into WOJAK, ASTEROID and STONK rather than into cash. Consolidated the remainder into a fresh wallet and still holds 384,955.",
+      "evidence": "case-14-evidence.md",
+      "charts": [
+        "14-earlybird-card.png",
+        "14-trades-card.png",
+        "14-rainbow.png",
+        "14-outflow.png"
+      ],
+      "wallets": [
+        "0x5b403e9a31edbc845473e1fcfafb2ba0feb9ead6",
+        "0x9f7e2f5e0266e5d69189a570a129a07e044b28c1",
+        "0xce9a173965d13dbf7b509c94f314695363acada7",
+        "0x98e97737b5c4f48893c41e715c910eb2db3f34eb",
+        "0xc41e7f2230200c7d1bb96a70343e3e0461714464"
+      ],
+      "clusterTrades": {
+        "scope": "cluster",
+        "recomputed": "2026-09-22",
+        "buys": {
+          "n": 24,
+          "qty": 10256465,
+          "usd": 51278,
+          "avgPrice": 0.005,
+          "pctUsdBubblePlus": 0
+        },
+        "sells": {
+          "n": 22,
+          "qty": 5515542,
+          "usd": 1396562,
+          "avgPrice": 0.2532,
+          "pctUsdBubblePlus": 90
+        },
+        "movedOut": 3140994,
+        "firstBuy": "2023-09-02",
+        "lastMarketTrade": "2026-05-05",
+        "note": "SUPERSEDES the earlier 7,206,588 bought / 2,249,039 sold / $12,758. Those were the pre-consolidation cluster, which could not see 0x98e97737 — a wallet that bought its own SPX on the open market and sold 3.7M into the 2024-25 highs.",
+        "rotation": {
+          "n": 6,
+          "qty": 1395045,
+          "usd": 502435,
+          "avgPrice": 0.36016,
+          "pctUsdBubblePlus": 0,
+          "note": "SPX disposed through the pools whose proceeds came back as another memecoin, not as money. Counted apart from sells: nothing was taken out. Destinations verified from the receipts — WOJAK 0x8de39b05, ASTEROID, STONK 0xb60fde5d.",
+          "into": [
+            {
+              "token": "WOJAK",
+              "qty": 639045,
+              "trades": 4
+            },
+            {
+              "token": "ASTEROID",
+              "qty": 680000,
+              "trades": 1
+            },
+            {
+              "token": "STONK",
+              "qty": 76000,
+              "trades": 1
+            }
+          ]
+        },
+        "reconciles": true
+      },
+      "secondHop": {
+        "ran": "2026-09-21",
+        "recipients": 35,
+        "soldIntoPool": 28,
+        "openedLp": 0,
+        "sentToTaggedExchange": 1,
+        "exchangeNote": "the single hit is an MEV bot, not an exchange",
+        "passedOnward": 22,
+        "stillHoldAny": 2,
+        "finding": "They sold it, on-chain, into Uniswap. No exchange deposits and not one V3 liquidity position. The timeline forces it: this cluster emptied by 2024-07-08 and tagged exchanges held ZERO SPX until 2024-09-29, so a CEX deposit was impossible and the DEX was the only liquid venue.",
+        "caveat": "COUNTS, NEVER SUMS. A fungible token cannot be tainted — once SPX lands in a wallet holding its own, no on-chain fact says which coins later left. A first pass that summed each recipient's whole history reported 68.9M of 'fate' against 4.96M actually sent, because one recipient is the Wormhole BRIDGE and another is case #1's trader. Tagged infrastructure is excluded and each row carries what share of that address's total inflow came from this cluster; several read 0%."
+      },
+      "nftCustody": [
+        "0x640bfef7bcdd64675f9ebc98b157f5386424dac5",
+        "0xc30fb77378d54dd5161bdaf28f99aaecd44cc7e4",
+        "0x3542f155502840cc20b1255ad76054546717e89c"
+      ],
+      "nftCustodyNote": "These hold the NFT, not SPX — none has ever moved a single token, so SPX-flow clustering cannot see them. They are linked by the token's custody chain and by ETH gas, and they contribute nothing to any trading figure.",
+      "holdsNowNote": "384,955 SPX (~$204,232), all in 0xc41e7f22, still being sold into Uniswap as recently as 2026. CORRECTS an earlier reading of 0 — the consolidation was invisible to a 1-to-1 drain rule, which rejected the second gather because by then the target was no longer empty. ⚠ 0xc41e7f22 also received 2,000,000 in July 2025 from a Banana Gun-style router, so part of this balance may be trade proceeds rather than the original stack.",
+      "study": 3,
+      "status": "draft",
+      "counterfactual": {
+        "computed": "2026-09-22",
+        "spot": 0.530534895710278,
+        "soldQty": 5515542,
+        "soldUsd": 1396562,
+        "soldAtSpot": 2926187,
+        "leftOnTable": 1529625,
+        "cashOutPlusHeld": 1600794,
+        "ifNeverSold": 5441413,
+        "rotatedQty": 1395045,
+        "note": "At spot, never at the ATH. The 1,395,045 SPX rotated into WOJAK, ASTEROID and STONK is excluded from both sides: disposed at market, but the proceeds never became money, so it is neither cash taken out nor valuable at the SPX price. The 3,140,994 that left for other addresses is excluded too — a fungible token cannot be followed."
+      }
+    }
+  ],
+  "sharedCharts": [
+    {
+      "file": "method-identification.png",
+      "what": "from a fragment of a picture to a named token"
+    },
+    {
+      "file": "method-structure.png",
+      "what": "from a picture to the structure behind it"
+    },
+    {
+      "file": "aeon-ownership.png",
+      "what": "who actually owns Project AEON: 1,173 wallets, 1,158 owners"
+    },
+    {
+      "file": "wallet-archetypes.png",
+      "what": "of 400 wallets with genuine two-way SPX activity, twelve are net accumulating"
+    }
+  ],
+  "walletsNote": "Full member addresses, machine-readable. The bot reads THIS, not the prose note — clusterNote writes addresses short for readability and a regex over it found 2 of 6 wallets.",
+  "scopeNote": "TWO SCOPES, both true of different things. buys/sells below are TRADER-scope, from the original hand-built datasets. clusterTrades is CLUSTER-scope, recomputed with the validated classifier in scripts/bot/kol-cluster.mjs — the one that reproduces #2451's case study exactly. Cards and the watcher use CLUSTER scope and compute their captions from the trades they draw; never quote one scope over a picture of the other.",
+  "detectorBenchmark": {
+    "ran": "2026-09-21",
+    "harness": "tools/nft-id/calibrate.py --n=25 (seed 69, deterministic)",
+    "fragmentRankedFirst": "11/25",
+    "fragmentConfidentlyIdentified": "0/25",
+    "confidentlyWrong": "0/25",
+    "trueInliers": {
+      "min": 57,
+      "p10": 65,
+      "median": 149,
+      "max": 447
+    },
+    "wrongInliers": {
+      "median": 83,
+      "p90": 136,
+      "max": 139
+    },
+    "note": "A previously recorded '10 of 24' was WRONG and had been unreproducible since the trait filter renamed identify()'s return key and silently broke the harness. Reproduced figure is 11/25. Ranked-first is NOT the same as identified: on the fragment path the tool never claims confidence, by design, because in a trait-generated collection a crop genuinely belongs to many tokens. The number worth publishing is confidently-wrong = 0, not an accuracy percentage."
+  },
+  "rerun": {
+    "ran": "2026-09-22",
+    "what": "All four cases re-clustered after the consolidation rule, the drain-fan-out fix and the one-transfer-one-link dedupe, because those three changed case #14 materially.",
+    "result": "#2451 unchanged (6 core / 410,623). #3062 unchanged (5 core / 36,642), and its trades reproduce to the dollar. #14 is the corrected five-wallet core already recorded. Only #2559 moved, losing one gas-only wallet from the headline."
+  },
+  "studyNote": "study = the order cases were published as posts, which is not token order. status: posted | queued | draft | traced (traced = reconstructed but never published as a numbered study).",
+  "classifierNote": "Trades are classified by venue first, then UPGRADED by transaction shape: a transfer with value coming back in the same transaction is a sale even when the settler is unknown to us. An external audit found two such sales (220,000 SPX) filed as transfers. Every case now reconciles: buys + in + lpNet - sells - rotation - out == the balance the chain reports."
+}
