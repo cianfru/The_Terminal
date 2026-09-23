@@ -1,4 +1,9 @@
-// The proof surface for the PFP forensics posts (?view=cases).
+// The PFP forensics case file (?view=cases) — MEMBERS ONLY.
+//
+// ⚠⚠ INTERNAL SINCE 2026-09-23, AT A SUBJECT'S REQUEST. A wallet we tracked asked not to
+// be followed. The watcher was disarmed and this page moved behind the members key rather
+// than deleted: the work is kept, the broadcasting is not. Do not un-gate it without a
+// reason better than wanting the reach.
 //
 // A post is one picture and one number, and a reader has no way to check either. That is
 // the failure mode the project exists to avoid: the moment a claim stops being
@@ -16,9 +21,40 @@
 // Styling follows DocsPage/MethodsPage: one column, rules instead of boxes, no pills or
 // gradients. Numbers are mono, copy is sans, and everything a reader has to READ clears
 // 14px — this page is nothing but readable detail.
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import REG from "../research/pfp-forensics/cases.json";
 import { SANS, MONO } from "./chart-ui.jsx";
+import { TERMINAL_KEY, isValidAccess } from "./terminal-gate-key.js";
+import { CITY_KEY } from "./city-gate-key.js";
+
+const fnv = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+
+/** The same members key that opens Deep Field. One key, one members area. */
+function Gate({ onPass }) {
+  const [pw, setPw] = useState(""), [bad, setBad] = useState("");
+  return (
+    <div style={{ maxWidth: 520, margin: "0 auto", padding: "80px 20px", fontFamily: SANS }}>
+      <h1 style={{ fontSize: 26, color: TEXT, fontWeight: 700, margin: "0 0 10px" }}>Members only</h1>
+      <p style={{ fontSize: 15, lineHeight: 1.7, color: BODY, margin: "0 0 18px" }}>
+        The profile-picture case file is internal. It was public; a wallet we had been tracking
+        asked not to be followed, so the watcher was switched off and this moved behind the
+        members key. The research is kept, it is simply no longer broadcast.
+      </p>
+      <form onSubmit={e => { e.preventDefault();
+        if (isValidAccess(fnv(pw.trim().toLowerCase()))) {
+          try { localStorage.setItem(TERMINAL_KEY, "1"); localStorage.setItem(CITY_KEY, "1"); } catch { /* private mode */ }
+          onPass();
+        } else setBad("Not that one.");
+      }}>
+        <input type="password" value={pw} autoFocus onChange={e => { setPw(e.target.value); setBad(""); }}
+          placeholder="members key"
+          style={{ width: "100%", padding: "12px 14px", fontFamily: MONO, fontSize: 15, color: TEXT,
+                   background: "rgba(255,255,255,0.04)", border: `1px solid ${HEADRULE}`, borderRadius: 8, minHeight: 44 }} />
+        {bad && <div style={{ color: WARN, fontSize: 14, marginTop: 8 }}>{bad}</div>}
+      </form>
+    </div>
+  );
+}
 
 const DIM = "#7c8a9e", BODY = "#9aa7bb", NEAR = "#cbd5e1", TEXT = "#f1f5f9";
 const RULE = "#1c1c21", HEADRULE = "#2a2a31", ACCENT = "#5eead4", WARN = "#fbbf24";
@@ -147,6 +183,13 @@ function Case({ c, isMobile }) {
 }
 
 export default function CasesPage({ isMobile }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => { try { setOpen(localStorage.getItem(TERMINAL_KEY) === "1"); } catch { /* private mode */ } }, []);
+  if (!open) return <Gate onPass={() => setOpen(true)} />;
+  return <CaseFile isMobile={isMobile} />;
+}
+
+function CaseFile({ isMobile }) {
   // ⚠ ORDER BY PUBLISHING ORDER, NOT TOKEN ID. Sorting by token put #14 last — the newest
   // study, whose own card reads "Case study #3" — beneath the oldest case, so a reader
   // arriving from that post scrolled past three older ones to reach it.
@@ -160,12 +203,13 @@ export default function CasesPage({ isMobile }) {
   return (
     <div style={{ maxWidth: 820, margin: "0 auto", padding: isMobile ? "26px 16px 90px" : "40px 24px 120px" }}>
       <h1 style={{ fontFamily: SANS, fontSize: isMobile ? 27 : 34, color: TEXT, fontWeight: 700, margin: "0 0 10px", letterSpacing: "-0.015em" }}>
-        Check the cases yourself
+        The case file
       </h1>
       <p style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7, color: BODY, margin: "0 0 14px" }}>
-        Every profile-picture case we post is listed here with the wallet addresses it was built
-        from. {cases.length} cases, {wallets} addresses, all linked to Etherscan. Nothing on this page
-        asks you to take our word for it.
+        {cases.length} cases, {wallets} addresses, all linked to Etherscan. Internal since
+        2026-09-23: a wallet we tracked asked not to be followed, so the watcher was disarmed
+        and this file moved behind the members key. Treat what is here as working notes, not
+        as something to circulate.
       </p>
       <p style={{ fontFamily: SANS, fontSize: 15.5, lineHeight: 1.7, color: BODY, margin: "0 0 14px" }}>
         The method runs in one direction: chain first. A picture points at a wallet; the wallet's
