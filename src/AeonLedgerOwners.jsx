@@ -339,8 +339,8 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
 
 const PAGE = 25;
 
-export default function OwnerList({ rows, spot, isMobile }) {
-  const [sheet, setSheet] = useState(null);
+export default function OwnerList({ rows, spot, isMobile, openN = null }) {
+  const [sheet, setSheet] = useState(() => (openN ? rows.find(o => o.n === openN) || null : null));
   const [gal, setGal] = useState(null);
   const [shown, setShown] = useState(PAGE);
   const withUsd = o => ({ ...o, holdsUsd: spot ? o.holds * spot : 0 });

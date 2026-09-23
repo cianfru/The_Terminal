@@ -673,3 +673,19 @@ test("390px: after the new-account popup, a 'new chart' card announces the AEON 
   assert.equal(await page.locator(".nc").count(), 0, "shown once per browser");
   await ctx.close();
 });
+
+test("390px Find an AEON: three visible traits narrow 3,333 pieces to one, linked to its owner", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=aeonfind", { waitUntil: "networkidle" });
+  const sel = k => page.locator("label", { hasText: k }).locator("select");
+  await sel("Hairstyle").selectOption("Space-Buns");
+  await sel("Face").selectOption("Cross");
+  await sel("Background").selectOption("Sunset");
+  await page.getByText("AEON #2904", { exact: true }).waitFor();
+  const o = await overflow(page);
+  assert.ok(o.sw <= o.cw, `no sideways scroll (${o.sw} > ${o.cw})`);
+  const open = page.getByRole("link", { name: /Open Owner #\d+/ });
+  assert.equal(await open.count(), 1, "links to the owner's ledger record");
+  await ctx.close();
+});
