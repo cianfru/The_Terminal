@@ -88,3 +88,24 @@ test("tradeHistory refuses a ledger that runs past the page cap", async () => {
   await assert.rejects(() => tradeHistory(["0x" + "2".repeat(40)], { fetchImpl: endless }), /truncated/);
   assert.equal(calls, LEDGER_MAX_PAGES);
 });
+
+test("report verdicts are exhaustive and measured by quantity", async () => {
+  const { verdict, aggregate } = await import("../research/pfp-forensics/landscape/report.mjs");
+  const base = { reconciles: true, wallets: ["0xa"], buys: { qty: 0 }, sells: { qty: 0 }, rotation: { qty: 0 }, received: 0, movedOut: 0 };
+  assert.equal(verdict({ ...base, buys: { qty: 100 }, holds: 100 }).verdict, "never-sold");
+  assert.equal(verdict({ ...base, buys: { qty: 100 }, sells: { qty: 40 }, holds: 60 }).verdict, "holding");
+  assert.equal(verdict({ ...base, buys: { qty: 100 }, rotation: { qty: 80 }, holds: 20 }).verdict, "trimming");
+  assert.equal(verdict({ ...base, buys: { qty: 100 }, sells: { qty: 100 }, holds: 0.2 }).verdict, "exited");
+  // one big seller outweighs many small buyers — quantity, not count
+  const rows = [
+    ...Array.from({ length: 40 }, (_, i) => ({ ...base, key: "b" + i, buys: { qty: 10 }, holds: 10 })),
+    { ...base, key: "s", buys: { qty: 1000 }, sells: { qty: 2000 }, received: 1000, holds: 0 },
+    { key: "x", wallets: ["0xb"], failed: "blockscout unreachable" },
+  ];
+  const a = aggregate(rows);
+  assert.equal(a.totals.households, 41);
+  assert.equal(a.excluded.length, 1);
+  assert.equal(a.totals.bought, 1400);
+  assert.equal(a.totals.soldAll, 2000);
+  assert.equal(a.sellersFor80pct, 1);
+});

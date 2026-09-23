@@ -47,16 +47,25 @@ export function summarise(rows, balance) {
   const date = a => a.length ? a.map(r => r.ts).sort() : [];
   const bd = date(B), sd = date(S.concat(R));
   const ledgerSum = rows.reduce((s, r) => s + (r.dir === "IN" ? r.qty : -r.qty), 0);
+  // Per calendar year, qty AND usd: SPX units alone let launch week dominate (tens of millions of
+  // coins for a few thousand dollars in Aug 2023), so "who is selling NOW" needs its own split.
+  const byYear = {};
+  for (const r of rows) {
+    const k = r.kind === "buy" ? "buy" : r.kind === "sell" || r.kind === "rotation" ? "sell" : null;
+    if (!k) continue;
+    const y = r.ts.slice(0, 4), b = byYear[y] ||= { buyQty: 0, buyUsd: 0, sellQty: 0, sellUsd: 0 };
+    b[k + "Qty"] += r.qty; b[k + "Usd"] += r.qty * (priceOn(r.ts.slice(0, 10)) || 0);
+  }
   return {
     buys: { n: B.length, qty: q(B), usd: usd(B), hotUsd: usd(hot(B)) },
     sells: { n: S.length, qty: q(S), usd: usd(S), hotUsd: usd(hot(S)) },
-    rotation: { n: R.length, qty: q(R) },
+    rotation: { n: R.length, qty: q(R), usd: usd(R) },
     received: vals.filter(v => v > 0).reduce((a, b) => a + b, 0),
     movedOut: -vals.filter(v => v < 0).reduce((a, b) => a + b, 0),
     lpNet: q(by("lpIn")) - q(by("lpOut")),
     firstBuy: bd[0] || null, lastBuy: bd.at(-1) || null,
     firstSell: sd[0] || null, lastSell: sd.at(-1) || null,
-    holds: balance, ledgerSum, reconciles: Math.abs(ledgerSum - balance) < 1,
+    holds: balance, ledgerSum, reconciles: Math.abs(ledgerSum - balance) < 1, byYear,
   };
 }
 
