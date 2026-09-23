@@ -137,24 +137,30 @@ export function classify({ dir, cp, txTo, txToName = "", txMethod = "" }) {
   return venue ? (dir === "IN" ? "buy" : "sell") : (dir === "IN" ? "in" : "out");
 }
 
-async function pages(path, max = 40, f = fetch) {
+// ⚠ `strict` THROWS when the page cap is hit with pages still to come. Without it the pager
+// returns the first `max` pages as if they were everything: at 50 transfers a page, a wallet with
+// 5,489 SPX transfers came back with 1,893 and its household "held" −537,445 SPX. A ledger is
+// complete or it is an error — a silently truncated one gets classified with confidence.
+async function pages(path, max = 40, f = fetch, { strict = false } = {}) {
   let items = [], p = null;
   for (let i = 0; i < max; i++) {
     const u = BS + path + (p ? (path.includes("?") ? "&" : "?") + new URLSearchParams(p) : "");
     const d = await j(u, f); if (!d) break;
     items.push(...(d.items || []));
-    if (!d.next_page_params) break;
+    if (!d.next_page_params) return items;
     p = d.next_page_params;
   }
+  if (strict && p) throw new Error(`ledger truncated at ${max} pages (${items.length} rows): ${path.slice(0, 80)}`);
   return items;
 }
+export const LEDGER_MAX_PAGES = 400;   // 20,000 transfers per wallet; beyond that, refuse rather than guess
 
 /** Every SPX trade the household ever made, oldest first. Internal hops are not trades. */
 export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = null } = {}) {
   const set = new Set(wallets.map(a => a.toLowerCase()));
   const raw = [];
   for (const a of set) {
-    for (const t of await pages(`/addresses/${a}/token-transfers?token=${SPX}`, 40, fetchImpl)) {
+    for (const t of await pages(`/addresses/${a}/token-transfers?token=${SPX}`, LEDGER_MAX_PAGES, fetchImpl, { strict: true })) {
       const to = t.to?.hash?.toLowerCase(), from = t.from?.hash?.toLowerCase();
       if (set.has(to) && set.has(from)) continue;                 // internal hop
       raw.push({ wallet: a, ts: t.timestamp, tx: t.transaction_hash,

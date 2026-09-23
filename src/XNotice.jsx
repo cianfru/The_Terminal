@@ -3,7 +3,7 @@
 // The account was suspended and the automatic daily cards are paused. This points visitors at the
 // posts page (?view=posts — owner-written posts, published from /control) and says how to reach us.
 // Styled as the terminal landing: black panel, squared, rainbow hairline, DepartureMono
-// micro-labels, Space Grotesk copy, the green CTA. Not shown on the notice page (?view=posts) itself.
+// micro-labels, Geist copy (the site's one text face — e2e pins it), the green CTA. Not shown on the notice page (?view=posts) itself.
 //
 // To retire it when X is back: drop <XNotice/> from App.jsx and the .xnotice banner from
 // public/landing-next.html.
@@ -31,9 +31,9 @@ const CSS = `
 .xn-tag{ font-family:'DepartureMono',ui-monospace,monospace; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#fbbf24;
   display:flex; align-items:center; gap:10px; }
 .xn-tag i{ width:8px; height:8px; background:#fbbf24; display:inline-block; }
-.xn h2{ font-family:'Space Grotesk','SpaceGrotesk',system-ui,sans-serif; font-size:32px; line-height:1.1; font-weight:700; letter-spacing:-.01em;
+.xn h2{ font-family:'Geist',system-ui,sans-serif; font-size:32px; line-height:1.1; font-weight:700; letter-spacing:-.01em;
   color:#f5f7fb; margin:14px 0 12px; text-wrap:balance; }
-.xn p{ font-family:'Space Grotesk','SpaceGrotesk',system-ui,sans-serif; font-size:17px; line-height:1.6; color:#c3ccda; margin:0; }
+.xn p{ font-family:'Geist',system-ui,sans-serif; font-size:17px; line-height:1.6; color:#c3ccda; margin:0; }
 .xn p b{ color:#37f7a0; font-weight:700; }
 .xn-comms{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:22px 0 0; padding:14px 0; border-top:1px solid #182031; border-bottom:1px solid #182031; }
 .xn-comms span{ font-family:'DepartureMono',ui-monospace,monospace; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#a2adbe; }
