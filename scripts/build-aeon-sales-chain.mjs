@@ -93,7 +93,8 @@ export function decodeSales(txHash, tx, legs, internal = []) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function get(path) {
   for (let i = 0; i < 8; i++) {
-    try { const r = await fetch(BS + path, { headers: { accept: "application/json" } }); if (r.ok) return r.json(); if (r.status === 404) return null; }
+    // 20 s per attempt: a request that never answers must fail and retry, not hang the whole run
+    try { const r = await fetch(BS + path, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(20000) }); if (r.ok) return await r.json(); if (r.status === 404) return null; }
     catch { /* retry */ }
     await sleep(Math.min(12000, 600 * 2 ** i));
   }
