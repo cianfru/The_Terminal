@@ -190,11 +190,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`  Dune:  ${tN} sales · ${tV.toFixed(2)} ETH`);
     console.log(`  chain: ${sales.length} sales · ${oV.toFixed(2)} ETH`);
     const trades = (truth.trades || []).filter(t => t.d > since && t.d < until);
-    const key = (id, d) => `${id}|${d}`;
-    const mine = new Map(sales.map(s => [key(s.id, s.time.slice(0, 10)), s]));
+    // token + day + BUYER: a piece can sell twice in a day (a bid filled, then flipped), and matching on
+    // token + day alone paired the wrong sale of the two — four false "price off" reports on 2026-09-23.
+    const key = (id, d, buyer) => `${id}|${d}|${buyer}`;
+    const mine = new Map(sales.map(s => [key(s.id, s.time.slice(0, 10), s.buyer), s]));
     let hit = 0, close = 0; const miss = [], off = [];
     for (const t of trades) {
-      const s = mine.get(key(t.token, t.d));
+      const s = mine.get(key(t.token, t.d, String(t.to || "").toLowerCase()));
       if (!s) { miss.push(t); continue; }
       hit++;
       if (Math.abs(s.price - t.eth) <= Math.max(0.005, 0.02 * t.eth)) close++; else off.push({ id: t.token, d: t.d, dune: t.eth, chain: s.price, mkt: s.market });
