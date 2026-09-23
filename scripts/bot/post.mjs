@@ -198,8 +198,11 @@ try {
   const img = `feed/${today}-${post.id}.png`;
   writeFileSync(join(ROOT, "public", img), png);
   const feed = readJson(FEED_FILE, { posts: [] });
-  const posts = [{ date: today, id: post.id, text: post.text, img }, ...(feed.posts || []).filter(p => p.date !== today)]
-    .sort((a, b) => b.date.localeCompare(a.date)).slice(0, FEED_KEEP);
+  // `auto` marks the bot's entry so a rerun replaces only ITS post for the day — never one the owner
+  // wrote by hand in the control panel (/control → ✍ Site posts), which shares this file.
+  const posts = [{ id: `auto-${today}`, ts: new Date().toISOString(), date: today, card: post.id, text: post.text, img, auto: true },
+    ...(feed.posts || []).filter(p => !(p.auto && p.date === today))]
+    .sort((a, b) => String(b.ts || b.date).localeCompare(String(a.ts || a.date))).slice(0, FEED_KEEP);
   writeFileSync(FEED_FILE, JSON.stringify({ updated: new Date().toISOString(), posts }, null, 2) + "\n");
   console.log(`Site feed ✓ "${post.id}" → public/${img}`);
 } catch (e) {

@@ -1022,7 +1022,8 @@ export default function App() {
   const isSub = ["gallery", "chart", "aeon", "city", "docs", "rainbow", "terminal", "wallet", "cluster"].includes(route);
   // the full-bleed landing iframe paints over the React shell — everything beneath it must be inert
   // (no tab stops, no screen-reader duplicates of the nav) while it is on screen.
-  const landingCovers = route === "next" || (route === "home" && HOME_IS_LANDING);
+  // (the posts page is full-bleed over the shell too — see PostsPage.jsx)
+  const landingCovers = route === "next" || route === "posts" || (route === "home" && HOME_IS_LANDING);
 
   return (
     <div className={isSub ? "tzone" : undefined} style={{
@@ -1205,10 +1206,10 @@ export default function App() {
         </Suspense>
       )}
 
-      {/* The daily posts, on the site — the X account was suspended 2026-09-23. */}
+      {/* The X-suspension notice + owner-written posts, full-bleed in the landing style (2026-09-23). */}
       {route === "posts" && (
         <Suspense fallback={<div style={{ textAlign: "center", fontFamily: SANS, color: "#64748b", padding: 60 }}>Loading…</div>}>
-          <PostsPage isMobile={isMobile} />
+          <PostsPage onHome={goHome} onExplore={openGallery} />
         </Suspense>
       )}
 
@@ -1593,7 +1594,7 @@ export default function App() {
       </div>{/* end content */}
 
       {/* X suspended 2026-09-23 — one-time popup pointing to the posts page + comms handle */}
-      <XNotice route={route} onOpenPosts={openPosts} />
+      <XNotice route={route} onOpen={openPosts} />
     </div>
   );
 }
