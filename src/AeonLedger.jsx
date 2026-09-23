@@ -11,7 +11,7 @@
 //
 // Built by landscape/export.mjs → public/aeon-ledger.json; refreshed by aeon-ledger.yml (dispatch).
 import { useEffect, useMemo, useState } from "react";
-import { SANS, MONO, MAX_W, Metric, Explain, ViewTabs } from "./chart-ui.jsx";
+import { SANS, MONO, MAX_W, ViewTabs } from "./chart-ui.jsx";
 import OwnerList from "./AeonLedgerOwners.jsx";
 import { OWNER_SORTS } from "./aeon-ledger-pos.js";
 
@@ -58,10 +58,7 @@ function ExchangeFlows({ c, isMobile }) {
   return (
     <div style={{ marginTop: 26, borderTop: `1px solid ${LINE}`, paddingTop: 18 }}>
       <div style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: INK, fontWeight: 600 }}>Sent to exchanges · likely sold</div>
-      <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: MUT, margin: "4px 0 14px", maxWidth: 760 }}>
-        Not counted as sold above: a deposit can still sit on the exchange or come back. {c.owners} owners sent SPX to exchanges;
-        {" "}{pct(c.viaDeposit / (c.sent || 1))} of it through deposit addresses we infer, the rest straight to a tagged exchange wallet.
-      </p>
+      <p style={{ fontFamily: SANS, fontSize: 14, color: MUT, margin: "4px 0 12px" }}>{c.owners} owners · a deposit can still come back, so this is not counted as sold.</p>
       <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? "14px 22px" : "14px 40px" }}>
         {cell("Sent", big(c.sent) + " SPX", usd(c.sentUsd) + " at the time")}
         {cell("Withdrawn back", big(c.back) + " SPX", "from exchange wallets")}
@@ -76,7 +73,7 @@ function ExchangeFlows({ c, isMobile }) {
               <span style={{ fontFamily: MONO, fontSize: 14, color: INK, textAlign: "right" }}>{big(q)}</span>
             </div>
           ))}
-          <div style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Sent, by venue (SPX, before withdrawals).</div>
+          <div style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Sent by venue, before withdrawals</div>
         </div>
       )}
     </div>
@@ -143,30 +140,47 @@ export default function AeonLedger({ isMobile }) {
   const vCount = ORDER.map(k => ({ k, ...(d.byVerdict[k] || { households: 0, holds: 0 }) }));
   const totalHH = vCount.reduce((a, v) => a + v.households, 0) || 1;
 
+  const exited = d.byVerdict.exited?.households || 0;
+  const stat = (v, l, c = INK) => (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 7, whiteSpace: "nowrap" }}>
+      <span style={{ fontFamily: MONO, fontSize: isMobile ? 18 : 20, fontWeight: 700, color: c }}>{v}</span>
+      <span style={{ fontFamily: SANS, fontSize: 14, color: MUT }}>{l}</span>
+    </div>
+  );
   return (
     <div style={{ maxWidth: Math.min(MAX_W, 1100), margin: "0 auto" }}>
-      <Explain q="Are AEON holders holding their SPX, or selling it?" accent="#2dd4bf">
-        Every wallet that holds an AEON, grouped with the wallets it provably controls (drains, vaults, consolidations) into one{" "}
-        <strong style={{ color: INK }}>owner</strong>. Each owner&apos;s full SPX history on Ethereum is rebuilt trade by trade and{" "}
-        <strong style={{ color: INK }}>checked against its balance on the chain</strong> before it counts. {s.reconciled} of {s.withSpx} reconciled.
-      </Explain>
-
-      <div style={{ display: "flex", gap: isMobile ? 14 : 30, justifyContent: "center", flexWrap: "wrap", margin: "6px 0 4px" }}>
-        <Metric label="owners with SPX" value={s.withSpx.toLocaleString()} color="#2dd4bf" sub={`of ${s.households.toLocaleString()} AEON owners`} />
-        <Metric label="still hold SPX" value={h.owners.toLocaleString()} color="#38bdf8" sub={pct(h.owners / s.withSpx)} />
-        <Metric label="SPX held today" value={big(t.holds)} color="#34d399" />
-        <Metric label="exited" value={(d.byVerdict.exited?.households || 0).toLocaleString()} color="#fb7185" sub={pct((d.byVerdict.exited?.households || 0) / s.withSpx)} />
+      {/* the owners come first; everything else is below the list */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)", justifyContent: isMobile ? "stretch" : "center",
+        gap: isMobile ? "8px 14px" : "10px 34px", margin: "4px 0 16px" }}>
+        {stat(s.withSpx.toLocaleString(), "owners")}
+        {stat(pct(h.owners / s.withSpx), "still hold SPX", "#38bdf8")}
+        {stat(pct(exited / s.withSpx), "exited", "#fb7185")}
+        {d.cex ? stat(big(d.cex.net), "SPX to exchanges", "#fbbf24") : stat(big(t.holds), "SPX held", "#34d399")}
       </div>
+      <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />
+      <div style={{ display: "flex", alignItems: "center", justifyContent: isMobile ? "flex-start" : "center", gap: 8, margin: "10px 0 12px", fontFamily: SANS, fontSize: 14, color: MUT,
+        overflowX: "auto", whiteSpace: "nowrap", paddingBottom: 2 }}>
+        Sort
+        {OWNER_SORTS.map(([k, l]) => (
+          <button key={k} type="button" onClick={() => setSort(k)} aria-pressed={sort === k} style={{ minHeight: 40, padding: "0 12px", cursor: "pointer", fontFamily: SANS, fontSize: 14, flex: "none",
+            background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
+        ))}
+      </div>
+      <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} />
 
-      <Section title="Bought vs sold" sub="In coins, buying leads, because most coins came in during the launch months when tens of millions of SPX cost a few thousand dollars. In dollars, these owners have taken out more than they put in.">
+      <Section title="The collection">
         <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 22 : 40 }}>
           <Versus label="SPX (coins)" a={t.bought} b={t.soldAll} fmt={big} />
           <Versus label="US dollars at the time" a={t.boughtUsd} b={t.soldUsd} fmt={usd} />
         </div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? "8px 18px" : "8px 34px", marginTop: 18 }}>
+          {stat(pct(h.top10), "of what's held sits with the top 10")}
+          {stat(d.sellersFor80pct, "owners did 80% of the selling")}
+        </div>
         {d.cex && <ExchangeFlows c={d.cex} isMobile={isMobile} />}
       </Section>
 
-      <Section title="Year by year" sub="Who is selling now, not in 2023. Dollars are the SPX price on the day of each trade.">
+      <Section title="Year by year">
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead><tr>
             <th style={{ ...th, textAlign: "left" }}>Year</th>
@@ -179,7 +193,7 @@ export default function AeonLedger({ isMobile }) {
             const two = (u, q) => <td style={td}>{usd(u)}<div style={{ fontSize: 12, color: DIM }}>{big(q)} SPX</div></td>;
             return (
               <tr key={y}>
-                <td style={{ ...td, textAlign: "left", fontWeight: 700 }}>{y}{y === d.updated.slice(0, 4) ? (isMobile ? "*" : " (so far)") : ""}</td>
+                <td style={{ ...td, textAlign: "left", fontWeight: 700 }}>{y}{y === d.updated.slice(0, 4) ? "*" : ""}</td>
                 {isMobile ? <>{two(b.buyUsd, b.buyQty)}{two(b.sellUsd, b.sellQty)}</>
                   : <><td style={td}>{big(b.buyQty)}</td><td style={td}>{usd(b.buyUsd)}</td><td style={td}>{big(b.sellQty)}</td><td style={td}>{usd(b.sellUsd)}</td></>}
                 <td style={{ ...td, color: net >= 0 ? "#34d399" : "#fb7185", fontWeight: 700 }}>{(net >= 0 ? "+" : "−") + usd(Math.abs(net))}</td>
@@ -187,55 +201,33 @@ export default function AeonLedger({ isMobile }) {
             );
           })}</tbody>
         </table>
-        {isMobile && <div style={{ fontFamily: SANS, fontSize: 13, color: DIM, marginTop: 6 }}>* so far this year. Negative = more sold than bought.</div>}
+        <div style={{ fontFamily: SANS, fontSize: 13, color: DIM, marginTop: 6 }}>* so far this year</div>
       </Section>
 
-      <Section title="Held or sold, owner by owner" sub={`Each of the ${s.withSpx} owners gets one verdict from what they did with their SPX.`}>
-        <div style={{ display: "flex", height: 26, width: "100%", marginBottom: 12 }}>
+      <Section title="Held or sold">
+        <div style={{ display: "flex", height: 22, width: "100%", marginBottom: 10 }}>
           {vCount.map(v => <div key={v.k} title={V[v.k].label} style={{ width: `${(v.households / totalHH) * 100}%`, background: V[v.k].color }} />)}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "10px 30px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? "8px 18px" : "8px 30px" }}>
           {vCount.map(v => (
-            <div key={v.k} style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: 10, alignItems: "baseline" }}>
-              <Chip v={v.k} />
-              <div style={{ fontFamily: SANS, fontSize: 14, color: BODY, lineHeight: 1.5 }}>
-                <strong style={{ color: INK, fontFamily: MONO }}>{v.households}</strong> owners · hold <strong style={{ color: INK, fontFamily: MONO }}>{big(v.holds)}</strong> SPX
-                <div style={{ color: DIM, fontSize: 13 }}>{V[v.k].def}</div>
-              </div>
+            <div key={v.k} style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: SANS, fontSize: 14, color: BODY }}>
+              <Chip v={v.k} /><strong style={{ color: INK, fontFamily: MONO }}>{v.households}</strong>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section title="Who holds, who sold" sub="A few owners hold most of what's left, and a few did most of the selling.">
-        <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 16 : 36, fontFamily: SANS, fontSize: 15, color: BODY, lineHeight: 1.6 }}>
-          <div>The top <strong style={{ color: INK }}>10</strong> owners hold <strong style={{ color: INK, fontFamily: MONO }}>{pct(h.top10)}</strong> of the SPX still held; the top <strong style={{ color: INK }}>50</strong> hold <strong style={{ color: INK, fontFamily: MONO }}>{pct(h.top50)}</strong>.</div>
-          <div><strong style={{ color: INK, fontFamily: MONO }}>{d.sellersFor80pct}</strong> owners account for <strong style={{ color: INK }}>80%</strong> of all SPX sold.</div>
-        </div>
-      </Section>
-
-      <Section title="Every owner" sub="Each owner's picture is the rarest AEON they hold; tap it for all their pieces. Tap an owner for every buy and sale on the SPX price, realized P&L over time and the wallets behind it. P&L is SPX trading only, at average cost.">
-        <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, margin: "12px 0 16px", fontFamily: SANS, fontSize: 14, color: MUT }}>
-          Sort by
-          {OWNER_SORTS.map(([k, l]) => (
-            <button key={k} type="button" onClick={() => setSort(k)} aria-pressed={sort === k} style={{ minHeight: 40, padding: "0 12px", cursor: "pointer", fontFamily: SANS, fontSize: 14,
-              background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
-          ))}
-        </div>
-        <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} />
-      </Section>
-
-      <Section title="How this is built, and what it can't tell you">
-        <ul style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: BODY, margin: 0, paddingLeft: 20, maxWidth: 820 }}>
-          <li><strong style={{ color: INK }}>Owners, not wallets.</strong> Wallets are grouped only by structural links on SPX itself: one wallet emptying into another, a fresh wallet funded and never spent from, several wallets consolidating into one. Shared gas funding is not used. A service that links to hundreds of wallets is flagged and cut, not merged.</li>
-          <li><strong style={{ color: INK }}>Bought and sold</strong> mean trades through a DEX pool or router, including sales settled in another token (counted as sold). Plain transfers to other wallets are counted separately, never as trades.</li>
-          <li><strong style={{ color: INK }}>Exchange sales look like transfers.</strong> Selling on an exchange means sending SPX to a deposit address, which on-chain is a transfer, so &quot;sold&quot; counts DEX trades only and is a floor. Transfers into the exchange wallets we tag{d.cex ? ` (${d.cex.exchanges})` : ""}, or into a deposit address that passed nearly everything it received on to one{d.cex ? ` (${d.cex.deposits.toLocaleString()} inferred)` : ""}, are shown separately as sent to exchanges, net of what came back out. Likely sold, never proven. Of the {big(t.movedOut)} SPX these owners moved out, the rest went to other wallets.</li>
-          <li><strong style={{ color: INK }}>Ethereum only.</strong> SPX held on Base or Solana is not included.</li>
-          <li><strong style={{ color: INK }}>Checked, not estimated.</strong> An owner counts only if its rebuilt ledger sums to its real balance. {s.excluded ? `${s.excluded} did not and are left out.` : "Every owner did."} {s.neverTouchedSpx.toLocaleString()} AEON owners never held SPX on Ethereum.</li>
-          <li><strong style={{ color: INK }}>A snapshot.</strong> As of {d.updated}. A verdict describes what an owner did, not who they are, and a profile picture never proves who owns a wallet.</li>
+      <details style={{ marginTop: 34, borderTop: `1px solid ${LINE}`, paddingTop: 14 }}>
+        <summary style={{ cursor: "pointer", minHeight: 40, display: "flex", alignItems: "center", fontFamily: MONO, fontSize: 13, letterSpacing: "0.12em",
+          textTransform: "uppercase", color: INK, fontWeight: 600 }}>How this is built</summary>
+        <ul style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: BODY, margin: "8px 0 0", paddingLeft: 20, maxWidth: 820 }}>
+          <li><strong style={{ color: INK }}>Owners, not wallets.</strong> Every AEON holder is grouped with the wallets it provably controls on SPX: one emptying into another, a fresh wallet funded and never spent from, several consolidating into one. Services that link to hundreds of wallets are cut, not merged.</li>
+          <li><strong style={{ color: INK }}>Checked, not estimated.</strong> Each owner&apos;s SPX history is rebuilt trade by trade and counts only if it sums to the real balance ({s.reconciled} of {s.withSpx}). {s.neverTouchedSpx.toLocaleString()} AEON owners never held SPX on Ethereum.</li>
+          <li><strong style={{ color: INK }}>Sold</strong> = trades through a DEX pool or router. <strong style={{ color: INK }}>Sent to exchanges</strong> = transfers into {d.cex ? `${d.cex.exchanges} tagged exchange wallets or ${d.cex.deposits.toLocaleString()} inferred deposit addresses` : "tagged exchange wallets"}, net of withdrawals: likely sold, not proven.</li>
+          <li><strong style={{ color: INK }}>Verdicts:</strong> {ORDER.map(k => `${V[k].label}: ${V[k].def.replace(/\.$/, "")}`).join(" · ")}.</li>
+          <li><strong style={{ color: INK }}>P&amp;L</strong> is SPX trading only, at average cost. Ethereum only. A snapshot as of {d.updated}; a picture never proves who owns a wallet.</li>
         </ul>
-      </Section>
+      </details>
     </div>
   );
 }
