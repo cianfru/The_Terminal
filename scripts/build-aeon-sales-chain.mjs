@@ -16,8 +16,11 @@
 //   • accepted bid   — WETH or Blur Pool ETH moved FROM the buyer (the bidder). Gross = everything the
 //                      buyer sent in that token (seller proceeds + fees + royalty), split across the NFTs
 //                      that buyer received in the tx.
-//   • bought outright — the buyer sent the transaction with ETH attached. Gross = tx value split across
-//                      every NFT that buyer received in the tx (a sweep pays for all of them).
+//   • bought outright — the buyer sent the transaction with ETH attached. Gross = tx value MINUS any ETH
+//                      the marketplace refunded to the buyer inside the tx (Seaport returns overpayment),
+//                      split across every NFT that buyer received in the tx (a sweep pays for all of them).
+//   • smart wallet    — an ERC-4337 account buys through a relayer (EntryPoint.handleOps), so no ETH is
+//                      attached; the payment is ETH the buyer's own wallet sends inside the tx.
 //   No payment from the buyer → a gift or a wallet move, never a sale.
 // Heuristic, not a marketplace ABI decoder: a sweep that mixes prices gets the average, and an aggregator
 // buying on someone else's behalf is caught only through the ETH path. --validate measures the gap.
@@ -59,7 +62,7 @@ const NFT_TYPES = /ERC-721|ERC-1155|ERC-404/;
  * @param legs Blockscout token-transfer items for the tx: {from, to, token, type, value, id}
  * @returns [{time, id, price, currency, market, buyer, seller, tx}]
  */
-export function decodeSales(txHash, tx, legs) {
+export function decodeSales(txHash, tx, legs, internal = []) {
   const aeon = legs.filter(l => l.token === AEON && l.from !== ZERO && NFT_TYPES.test(l.type));
   if (!aeon.length) return [];
   const nftsTo = new Map();
@@ -74,7 +77,13 @@ export function decodeSales(txHash, tx, legs) {
     const weth = erc20From(l.to, WETH), pool = erc20From(l.to, BLUR_POOL);
     if (weth > 0) { price = weth / n; currency = "WETH"; }
     else if (pool > 0) { price = pool / n; currency = "ETH"; }
-    else if (txEth > 0 && tx.from === l.to) price = txEth / n;
+    else if (txEth > 0 && tx.from === l.to) {
+      const refund = internal.filter(i => i.to === l.to).reduce((a, i) => a + i.eth, 0);
+      price = Math.max(0, txEth - refund) / n;
+    } else {
+      const sent = internal.filter(i => i.from === l.to).reduce((a, i) => a + i.eth, 0);   // smart wallet
+      if (sent > 0) price = sent / n;
+    }
     if (!(price > 0)) continue;                                     // no payment by the buyer: not a sale
     out.push({ time: tx.ts, id: l.id, price: +price.toFixed(6), currency, market, buyer: l.to, seller: l.from, tx: txHash });
   }
@@ -121,8 +130,21 @@ async function decodeTx(hash, ts) {
     if (!d?.next_page_params) break;
     p = d.next_page_params;
   }
-  return decodeSales(hash, { from: lc(tx?.from?.hash), to: lc(tx?.to?.hash), toName: tx?.to?.name || "", value: tx?.value || "0",
-    ts: ts }, legs);
+  // Internal ETH movements, only when the ETH path needs them: refunds to a buyer who attached ETH,
+  // or a smart wallet paying from inside the transaction. Most bid sales never need this call.
+  const from = lc(tx?.from?.hash), aeonTo = new Set(legs.filter(l => l.token === AEON).map(l => l.to));
+  const paidInToken = [...aeonTo].some(b => legs.some(l => (l.token === WETH || l.token === BLUR_POOL) && l.from === b));
+  let internal = [];
+  if (!paidInToken && (BigInt(tx?.value || "0") > 0n || ![...aeonTo].includes(from))) {
+    let q = null;
+    for (let i = 0; i < 10; i++) {
+      const d = await get(`/transactions/${hash}/internal-transactions` + (q ? "?" + new URLSearchParams(q) : ""));
+      internal.push(...(d?.items || []).map(x => ({ from: lc(x.from?.hash), to: lc(x.to?.hash), eth: Number(BigInt(x.value || "0")) / 1e18 })));
+      if (!d?.next_page_params) break;
+      q = d.next_page_params;
+    }
+  }
+  return decodeSales(hash, { from, to: lc(tx?.to?.hash), toName: tx?.to?.name || "", value: tx?.value || "0", ts }, legs, internal);
 }
 
 async function ethCloses() {

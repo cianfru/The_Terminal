@@ -57,3 +57,14 @@ test("venue from the router address, then the contract name", () => {
   assert.equal(venueOf("0x" + "1".repeat(40), "LSSVMPair"), "sudoswap");
   assert.equal(venueOf("0x" + "1".repeat(40), ""), "other");
 });
+
+test("ETH the marketplace refunds to the buyer is not part of the price", () => {
+  const [s] = decodeSales("0x9", tx(B, SEAPORT, 0.635), [nft(A, B, 2202)], [{ from: SEAPORT, to: B, eth: 0.108 }, { from: SEAPORT, to: A, eth: 0.5 }]);
+  assert.equal(s.price, 0.527);
+});
+
+test("a smart wallet buying through a relayer pays from inside the transaction", () => {
+  const RELAYER = "0x" + "e".repeat(40);
+  const [s] = decodeSales("0xa", tx(RELAYER, "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789", 0), [nft(A, B, 1645)], [{ from: B, to: SEAPORT, eth: 0.983 }]);
+  assert.equal(s.price, 0.983); assert.equal(s.buyer, B);
+});
