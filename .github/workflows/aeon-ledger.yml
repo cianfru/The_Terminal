@@ -9,6 +9,7 @@ name: AEON Ledger refresh
 #   2. households  every AEON holder grouped with the wallets it structurally controls (build-households.mjs)
 #   3. ledgers     each owner's trades, classified and reconciled to its balance (classify.mjs --fresh:
 #                  only immutable transaction pages come from the cache; every address ledger is re-read)
+#   3b. exchanges  SPX each owner sent to exchanges, net of withdrawals (cex-out.mjs, offline over transfers.csv)
 #   4. ownership   ownerOf on the AEON contract for all 3,333 tokens (aeon-owners.mjs) → each owner's exact
 #                  pieces, the rarest as its picture; --check fails loudly in the log if it disagrees with our replay
 #   5. export      aeon-ledger.full.json (with wallet addresses) → KV, members only (feed "aeon-ledger")
@@ -90,13 +91,18 @@ jobs:
           node --max-old-space-size=6144 $LAND/classify.mjs --households=households.json
           --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh
 
+      - name: Exchange flows — SPX each owner sent to exchanges (tagged wallets + inferred deposit addresses)
+        run: >
+          node --max-old-space-size=6144 $LAND/cex-out.mjs --results=results.jsonl --transfers=transfers.csv
+          --out=cex-out.json
+
       - name: AEON ownership — ownerOf on the contract, checked against our transfer replay
         run: node $LAND/aeon-owners.mjs --out=aeon-owners.json --check=public/aeon-onchain.json
 
       - name: Report + export
         run: |
           node $LAND/report.mjs --results=results.jsonl
-          node $LAND/export.mjs --results=results.jsonl --households=households.json --owners=aeon-owners.json \
+          node $LAND/export.mjs --results=results.jsonl --households=households.json --owners=aeon-owners.json --cex=cex-out.json \
             --full=aeon-ledger.full.json --public=public/aeon-ledger.json
           # sanity gate: a thin or badly-reconciled run must not replace a good snapshot
           node -e '

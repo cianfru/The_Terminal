@@ -406,6 +406,17 @@
   **Its own nav tab: `AEON_LEDGER` after `DEEP_FIELD`** (landing `.mtop-ledger` + TerminalNav + both phone menus), teal. While wiring
   it, found the landing's desktop RAINBOW / DEEP_FIELD tabs threw `go is not defined` on click (the `go()` helpers live in later
   script blocks) — now a local `goTop`.
+  **✅ SENT TO EXCHANGES (owner idea, 2026-09-23: "we have the CEX tags — SPX that goes to an exchange is sold, not just moved").**
+  `landscape/cex-out.mjs` — an OFFLINE pass over the full transfer archive (15s, $0): exchange wallets = EXCLUDE_LABELS kind cex
+  MINUS market makers / MEV bot (`NOT_AN_EXCHANGE`; they're tagged cex for the supply charts, but SPX sent to them is a trade);
+  **deposit addresses INFERRED** (untagged, ≥90% of what it sent went to tagged exchange wallets, sent ≥90% of what it received,
+  holds <1%; household wallets never qualify) → 10,847 found, and 78% of exchange-bound SPX went through them (people rarely send
+  to a hot wallet directly). Per owner: sent · withdrawn back (from tagged hot wallets) · **NET** (sent − back, floored 0 — a
+  deposit later withdrawn was not sold). Transfers the classifier already called a sale are skipped. 2026-09-23: 61 owners sent
+  59.6M, withdrew 29.2M → **31.5M net (~$24.4M at the time)**; Gate.io 19.9M · KuCoin 17.3M · Bitvavo 12.5M lead. Checked: net ≤
+  "moved out" for every owner, and 59.6M of it had been classified plain "out" (only 0.06M overlapped a sale). **NEVER merged into
+  "sold"** — shown as its own "Sent to exchanges · likely sold" block, an amber "→ exchanges" row tag, an owner-record tile, and a
+  "To exchanges" sort. Step in `aeon-ledger.yml`; `export.mjs --cex=`. Tested (`test/cex-out.test.mjs`).
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

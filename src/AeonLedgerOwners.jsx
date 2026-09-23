@@ -18,8 +18,8 @@ import { aeonThumb, openseaUrl, priceLookup, positionFromTrades } from "./aeon-l
 const PositionDetail = lazy(() => import("./PositionDetail.jsx"));
 
 const CSS = `
-.al{--al-up:#34d399;--al-dn:#fb7185;--al-line:rgba(148,163,184,.26);--al-hover:rgba(148,163,184,.08);--al-acc:#2dd4bf}
-html[data-theme="light"] .al{--al-up:#047857;--al-dn:#be123c;--al-line:rgba(30,41,59,.2);--al-hover:rgba(30,41,59,.05);--al-acc:#0f766e}
+.al{--al-cex:#fbbf24;--al-up:#34d399;--al-dn:#fb7185;--al-line:rgba(148,163,184,.26);--al-hover:rgba(148,163,184,.08);--al-acc:#2dd4bf}
+html[data-theme="light"] .al{--al-cex:#b45309;--al-up:#047857;--al-dn:#be123c;--al-line:rgba(30,41,59,.2);--al-hover:rgba(30,41,59,.05);--al-acc:#0f766e}
 .al-head,.al-wide{display:grid;grid-template-columns:64px minmax(190px,1.5fr) repeat(3,minmax(112px,1fr)) repeat(2,minmax(128px,1.1fr)) 18px;column-gap:18px;align-items:center}
 .al-head{padding:0 14px 10px;border-bottom:1px solid var(--al-line)}
 .al-head span{font:600 12px/1.2 ${MONO};letter-spacing:.09em;text-transform:uppercase;color:var(--ch-mut)}
@@ -32,6 +32,7 @@ html[data-theme="light"] .al{--al-up:#047857;--al-dn:#be123c;--al-line:rgba(30,4
 .al-s{font:400 13px/1.35 ${SANS};color:var(--ch-dim);white-space:nowrap;margin-top:3px;font-variant-numeric:tabular-nums}
 .al-k{font:600 11px/1.2 ${MONO};letter-spacing:.09em;text-transform:uppercase;color:var(--ch-mut);margin-bottom:4px}
 .al-up{color:var(--al-up)}.al-dn{color:var(--al-dn)}
+.al-cex{display:inline-block;font:600 12px ${MONO};color:var(--al-cex);border:1px solid var(--al-cex);padding:1px 6px;white-space:nowrap}
 .al-chev{font:400 22px/1 ${SANS};color:var(--ch-dim)}
 .al-pfp{position:relative;padding:0;border:0;background:none;cursor:zoom-in;border-radius:50%;flex:none}
 .al-pfp img,.al-pfp .al-mono{display:block;border-radius:50%;object-fit:cover;background:#05050e}
@@ -115,6 +116,12 @@ function Avatar({ o, size, onOpen }) {
   );
 }
 
+/** "→ exchanges 1.2M": this owner sent SPX to exchanges (net of withdrawals) — likely sold, not proven. */
+function CexTag({ o }) {
+  if (!(o.cex?.net >= 1)) return null;
+  return <span className="al-cex" title={`Sent ${big(o.cex.sent)} SPX to exchanges, ${big(o.cex.back)} withdrawn back. Likely sold, not proven.`}>→ exchanges {big(o.cex.net)}</span>;
+}
+
 function Leg({ x, none }) {
   if (!x) return <><div className="al-v" style={{ color: "var(--ch-dim)" }}>—</div><div className="al-s">{none}</div></>;
   return <><div className="al-v">{day(x.d)}</div><div className="al-s">{big(x.qty)} SPX · {usd(x.usd)}</div></>;
@@ -132,6 +139,7 @@ function Row({ o, onOpen, onGallery }) {
         <div style={{ minWidth: 0 }}>
           <div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{o.n}</div>
           <div className="al-s" style={{ display: "flex", gap: 10, alignItems: "center" }}><Chip v={o.verdict} /><span>{o.aeon} AEON · {o.walletCount} wallet{o.walletCount === 1 ? "" : "s"}</span></div>
+          {o.cex?.net >= 1 && <div style={{ marginTop: 5 }}><CexTag o={o} /></div>}
         </div>
         <div className="r"><div className="al-v">{big(o.holds)}</div><div className="al-s">{o.holdsUsd ? usd(o.holdsUsd) : "SPX"}</div></div>
         <div className="r"><div className={"al-v " + tone(p.realized)}>{signed(p.realized || 0)}</div><div className="al-s">{p.proceeds ? `on ${usd(p.proceeds)} sold` : "nothing sold"}</div></div>
@@ -147,6 +155,7 @@ function Row({ o, onOpen, onGallery }) {
           <div style={{ minWidth: 0 }}>
             <div className="al-v" style={{ fontFamily: SANS, fontWeight: 700, fontSize: 18 }}>Owner #{o.n}</div>
             <div className="al-s" style={{ whiteSpace: "normal" }}><Chip v={o.verdict} /> · {o.aeon} AEON · {big(o.holds)} SPX</div>
+            {o.cex?.net >= 1 && <div style={{ marginTop: 5 }}><CexTag o={o} /></div>}
           </div>
           <span className="al-chev" aria-hidden="true">›</span>
         </div>
@@ -265,6 +274,7 @@ export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
       <Tile k="Realized" v={signed(p.realized || 0)} cls={tone(p.realized)} sub={p.proceeds ? `on ${usd(p.proceeds)} sold` : "nothing sold"} />
       <Tile k="Unrealized" v={signed(p.unrealized || 0)} cls={tone(p.unrealized)} sub="on what is held today" />
       <Tile k="Put in" v={usd(p.invested)} sub="SPX bought, at the time" />
+      {o.cex && <Tile k="To exchanges (net)" v={big(o.cex.net) + " SPX"} sub={`${usd(o.cex.netUsd)} · likely sold`} />}
       <Tile k="Last buy" v={day(p.lastBuy?.d)} sub={p.lastBuy ? `${big(p.lastBuy.qty)} SPX · ${usd(p.lastBuy.usd)}` : "never bought"} />
       <Tile k="Last sale" v={day(p.lastSell?.d)} sub={p.lastSell ? `${big(p.lastSell.qty)} SPX · ${usd(p.lastSell.usd)}` : "never sold"} />
     </div>
@@ -299,7 +309,8 @@ export function OwnerSheet({ o, me, spot, isMobile, onClose, onGallery }) {
                 <div style={{ marginTop: 22 }}>
                   <p className="al-s" style={{ whiteSpace: "normal", fontSize: 14, lineHeight: 1.6, maxWidth: 780 }}>
                     Green orbs are SPX bought through a pool or router; red triangles are SPX sold, including sales settled in another token.
-                    Also received {big(pos.received)} SPX from other wallets (entered at that day&apos;s price) and sent {big(pos.sentOut)} out (left at average cost, no gain or loss booked — an exchange deposit looks the same on-chain).
+                    Also received {big(pos.received)} SPX from other wallets (entered at that day&apos;s price) and sent {big(pos.sentOut)} out (left at average cost, no gain or loss booked).
+                    {o.cex ? ` Of what went out, ${big(o.cex.sent)} SPX went to exchanges (${Object.keys(o.cex.venues || {}).join(", ")}) and ${big(o.cex.back)} came back: ${big(o.cex.net)} net, likely sold, not proven.` : ""}
                   </p>
                   {o.wallets?.length > 0 && <>
                     <div className="al-k" style={{ marginTop: 16 }}>Wallets · {o.wallets.length}</div>

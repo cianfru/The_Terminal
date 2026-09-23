@@ -46,6 +46,45 @@ function Chip({ v }) {
   );
 }
 
+/** SPX sent to exchanges: tagged exchange wallets + inferred deposit addresses, net of withdrawals (cex-out.mjs). */
+function ExchangeFlows({ c, isMobile }) {
+  const venues = Object.entries(c.venues || {}).filter(([, q]) => q >= 1).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const top = venues[0]?.[1] || 1;
+  const cell = (label, value, sub, color = INK) => (
+    <div style={{ minWidth: 130 }}>
+      <div style={{ fontFamily: MONO, fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: MUT }}>{label}</div>
+      <div style={{ fontFamily: MONO, fontSize: 22, fontWeight: 700, color, marginTop: 2 }}>{value}</div>
+      {sub && <div style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>{sub}</div>}
+    </div>
+  );
+  return (
+    <div style={{ marginTop: 26, borderTop: `1px solid ${LINE}`, paddingTop: 18 }}>
+      <div style={{ fontFamily: MONO, fontSize: 13, letterSpacing: "0.12em", textTransform: "uppercase", color: INK, fontWeight: 600 }}>Sent to exchanges · likely sold</div>
+      <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.6, color: MUT, margin: "4px 0 14px", maxWidth: 760 }}>
+        Not counted as sold above: a deposit can still sit on the exchange or come back. {c.owners} owners sent SPX to exchanges;
+        {" "}{pct(c.viaDeposit / (c.sent || 1))} of it through deposit addresses we infer, the rest straight to a tagged exchange wallet.
+      </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? "14px 22px" : "14px 40px" }}>
+        {cell("Sent", big(c.sent) + " SPX", usd(c.sentUsd) + " at the time")}
+        {cell("Withdrawn back", big(c.back) + " SPX", "from exchange wallets")}
+        {cell("Net to exchanges", big(c.net) + " SPX", usd(c.netUsd) + " at the time", "#fbbf24")}
+      </div>
+      {venues.length > 0 && (
+        <div style={{ marginTop: 16, display: "grid", gap: 6, maxWidth: 560 }}>
+          {venues.map(([v, q]) => (
+            <div key={v} style={{ display: "grid", gridTemplateColumns: "96px 1fr 70px", gap: 10, alignItems: "center" }}>
+              <span style={{ fontFamily: SANS, fontSize: 14, color: BODY }}>{v}</span>
+              <div style={{ height: 12, background: "rgba(148,163,184,0.12)" }}><div style={{ width: `${(q / top) * 100}%`, height: "100%", background: "#fbbf24" }} /></div>
+              <span style={{ fontFamily: MONO, fontSize: 14, color: INK, textAlign: "right" }}>{big(q)}</span>
+            </div>
+          ))}
+          <div style={{ fontFamily: SANS, fontSize: 13, color: DIM }}>Sent, by venue (SPX, before withdrawals).</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Section({ title, sub, children }) {
   return (
     <section style={{ marginTop: 34 }}>
@@ -132,6 +171,7 @@ export default function AeonLedger({ isMobile }) {
           <Versus label="SPX (coins)" a={t.bought} b={t.soldAll} fmt={big} />
           <Versus label="US dollars at the time" a={t.boughtUsd} b={t.soldUsd} fmt={usd} />
         </div>
+        {d.cex && <ExchangeFlows c={d.cex} isMobile={isMobile} />}
       </Section>
 
       <Section title="Year by year" sub="Who is selling now, not in 2023. Dollars are the SPX price on the day of each trade.">
@@ -201,7 +241,7 @@ export default function AeonLedger({ isMobile }) {
         <ul style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: BODY, margin: 0, paddingLeft: 20, maxWidth: 820 }}>
           <li><strong style={{ color: INK }}>Owners, not wallets.</strong> Wallets are grouped only by structural links on SPX itself: one wallet emptying into another, a fresh wallet funded and never spent from, several wallets consolidating into one. Shared gas funding is not used. A service that links to hundreds of wallets is flagged and cut, not merged.</li>
           <li><strong style={{ color: INK }}>Bought and sold</strong> mean trades through a DEX pool or router, including sales settled in another token (counted as sold). Plain transfers to other wallets are counted separately, never as trades.</li>
-          <li><strong style={{ color: INK }}>Exchange sales look like transfers.</strong> Selling on an exchange means sending SPX to a deposit address, which on-chain is a transfer. So &quot;sold&quot; is a floor: these owners also sent {big(t.movedOut)} SPX out to other wallets, some of it to exchanges.</li>
+          <li><strong style={{ color: INK }}>Exchange sales look like transfers.</strong> Selling on an exchange means sending SPX to a deposit address, which on-chain is a transfer, so &quot;sold&quot; counts DEX trades only and is a floor. Transfers into the exchange wallets we tag{d.cex ? ` (${d.cex.exchanges})` : ""}, or into a deposit address that passed nearly everything it received on to one{d.cex ? ` (${d.cex.deposits.toLocaleString()} inferred)` : ""}, are shown separately as sent to exchanges, net of what came back out. Likely sold, never proven. Of the {big(t.movedOut)} SPX these owners moved out, the rest went to other wallets.</li>
           <li><strong style={{ color: INK }}>Ethereum only.</strong> SPX held on Base or Solana is not included.</li>
           <li><strong style={{ color: INK }}>Checked, not estimated.</strong> An owner counts only if its rebuilt ledger sums to its real balance. {s.excluded ? `${s.excluded} did not and are left out.` : "Every owner did."} {s.neverTouchedSpx.toLocaleString()} AEON owners never held SPX on Ethereum.</li>
           <li><strong style={{ color: INK }}>A snapshot.</strong> As of {d.updated}. A verdict describes what an owner did, not who they are, and a profile picture never proves who owns a wallet.</li>

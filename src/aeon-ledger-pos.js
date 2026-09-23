@@ -55,5 +55,6 @@ export const OWNER_SORTS = [
   ["realized", "Realized P&L", o => o.pnl?.realized || 0],
   ["unrealized", "Unrealized P&L", o => o.pnl?.unrealized || 0],
   ["aeon", "Most AEON", o => o.aeon || 0],
+  ["cex", "To exchanges", o => o.cex?.net || 0],
   ["recent", "Latest trade", o => Date.parse(recent(o) || "1970-01-01")],
 ];
