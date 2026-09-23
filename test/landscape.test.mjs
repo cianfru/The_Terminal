@@ -53,3 +53,23 @@ test("a wallet first reached at the depth limit is still expanded when a later s
   const gs = groups.find(g => g.includes("s"));
   assert.ok(gs.includes("o"), "o is two hops from seed s through m, well inside the depth limit");
 });
+
+// ⚠ The collection sweep read V2 liquidity as "rotation" and a 1,000,000-SPX sale for sUSDe as
+// a swap into another token. Both would have been wrong in the direction of "not selling".
+test("a V2 liquidity deposit is not a rotation, and a withdrawal is not a buy", async () => {
+  const { upgradeKind, isLpToken } = await import("../scripts/bot/kol-cluster.mjs");
+  assert.equal(isLpToken("0x52c77b0cb827afbad022e6d6caf2c44452edbc39"), true, "the SPX/WETH pair is its own LP token");
+  assert.equal(isLpToken("0xeb01e59e18136859e21a7179e982bc4247df8a33", "UNI-V2"), true);
+  assert.equal(isLpToken("0xaaee1a9723aadb7afa2810263653a34ba2c21c7a", "MOG"), false);
+  assert.equal(upgradeKind("sell", { lpTokenIn: 1 }), "lpOut");
+  assert.equal(upgradeKind("buy", { lpTokenOut: 1, valueIn: 2 }), "lpIn");
+  assert.equal(upgradeKind("sell", { otherIn: 1 }), "rotation", "a genuine swap into MOG is still a rotation");
+});
+
+test("selling SPX for a major stablecoin, staked ETH or BTC is a sale, not a rotation", async () => {
+  const { VALUE_TOKENS } = await import("../scripts/bot/kol-cluster.mjs");
+  for (const [sym, a] of [["sUSDe", "0x9d39a5de30e57443bff2a8307a4256c8797a3497"], ["stETH", "0xae7ab96520de3a18e5e111b5eaab095312d7fe84"],
+                          ["WBTC", "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"], ["PYUSD", "0x6c3ea9036406852006290770bedfcaba0e23a0e8"]])
+    assert.ok(VALUE_TOKENS.has(a), `${sym} must count as money`);
+  assert.ok(!VALUE_TOKENS.has("0xfd03723a9a3abe0562451496a9a394d2c4bad4ab"), "niche stables (DYAD) stay out — conservative");
+});

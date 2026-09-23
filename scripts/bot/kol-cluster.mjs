@@ -52,7 +52,29 @@ export const VALUE_TOKENS = new Set([
   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", // USDC
   "0xdac17f958d2ee523a2206206994597c13d831ec7", // USDT
   "0x6b175474e89094c44da98b954eedeac495271d0f", // DAI
+  // ⚠ MONEY IS NOT ONLY FOUR TOKENS. The collection sweep found 1,000,000 SPX sold for sUSDe
+  // and filed as a "rotation into another token". Selling SPX for a major dollar, a liquid
+  // staked ETH or BTC is cashing out. Each verified on-chain by symbol before adding; niche
+  // stables (DYAD) deliberately stay out — the conservative call is not to count them as cash.
+  "0x4c9edd5852cd905f086c759e8383e09bff1e68b3", // USDe
+  "0x9d39a5de30e57443bff2a8307a4256c8797a3497", // sUSDe
+  "0x83f20f44975d03b1b09e64809b757c47f942beea", // sDAI
+  "0xdc035d45d973e3ec169d2276ddab16f1e407384f", // USDS
+  "0x853d955acef822db058eb8505911ed77f175b99e", // FRAX
+  "0xf939e0a03fb07f59a73314e73794be0e57ac1b4e", // crvUSD
+  "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f", // GHO
+  "0x6c3ea9036406852006290770bedfcaba0e23a0e8", // PYUSD
+  "0x5f98805a4e8be255a32880fdec7f6728c6568ba0", // LUSD
+  "0xae7ab96520de3a18e5e111b5eaab095312d7fe84", // stETH
+  "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0", // wstETH
+  "0xae78736cd615f374d3085123a210448e74fc6393", // rETH
+  "0xbe9895146f7af43049ca1c1ae358b0541ea49704", // cbETH
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
 ]);
+
+/** A V2-style LP token: the pair contract IS the token. SPX out with one of these back is a
+ *  liquidity deposit, SPX in with one sent away is a withdrawal. */
+export const isLpToken = (addr, symbol = "") => POOLS.has(addr) || /^(UNI-V2|SLP|SUSHI-LP|CAKE-LP)$|-LP$/i.test(symbol);
 
 /** Upgrade a venue verdict using the shape of the transaction. Pure; unit-tested.
  *
@@ -67,7 +89,13 @@ export const VALUE_TOKENS = new Set([
  *  and took back 1,100,683,446 ASTEROID. An external audit called it a $212,470 sale; it is
  *  a disposal at market whose proceeds never became money, and counting it would put
  *  $212,470 into a headline that says "taken out". */
-export function upgradeKind(kind, { valueIn = 0, valueOut = 0, otherIn = 0 } = {}) {
+export function upgradeKind(kind, { valueIn = 0, valueOut = 0, otherIn = 0, lpTokenIn = 0, lpTokenOut = 0 } = {}) {
+  // ⚠ LIQUIDITY IS NOT A ROTATION. A V2 deposit sends SPX + WETH to the pair and gets the
+  // pair's own LP token back — which the rotation rule read as "SPX swapped into another
+  // token", and a withdrawal (LP token sent back, SPX returned) read as a buy. V3 goes through
+  // the position NFT and was already handled; V2 never was.
+  if ((kind === "sell" || kind === "out") && lpTokenIn > 0) return "lpOut";
+  if ((kind === "buy" || kind === "in") && lpTokenOut > 0) return "lpIn";
   if (kind === "out" && valueIn > 0) return "sell";
   // A disposal whose proceeds came back as some OTHER token is a rotation, whether the
   // venue path spotted the venue or not — the 680,000-SPX/ASTEROID swap is routed through
@@ -155,13 +183,18 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
     // the run before and the run after both agreed, so nothing looked wrong. A partial read
     // must stop the job, never quietly produce a different answer.
     if (!legs) throw new Error(`token-transfers unavailable for ${tx} — refusing to classify on a partial read`);
-    const shape = { valueIn: 0, valueOut: 0, otherIn: 0 };
+    const shape = { valueIn: 0, valueOut: 0, otherIn: 0, lpTokenIn: 0, lpTokenOut: 0 };
     let unwrapped = 0, spxOut = 0;
     for (const L of legs?.items || []) {
       const addr = (L.token?.address_hash || L.token?.address || "").toLowerCase();
       const from = (L.from?.hash || "").toLowerCase(), to = (L.to?.hash || "").toLowerCase();
       const v = Number(L.total?.value || 0) / 10 ** Number(L.token?.decimals ?? 18);
       const isSpx = addr === SPX.toLowerCase(), isValue = VALUE_TOKENS.has(addr);
+      if (isLpToken(addr, L.token?.symbol)) {                     // never money, never a rotation
+        if (set.has(to)) shape.lpTokenIn += v;
+        if (set.has(from)) shape.lpTokenOut += v;
+        continue;
+      }
       if (isValue && to === ZERO) unwrapped += v;      // unwrap: seller is paid native ETH
       if (set.has(from) && isSpx) spxOut += v;
       if (set.has(to)) { if (isValue) shape.valueIn += v; else if (!isSpx) shape.otherIn += v; }
