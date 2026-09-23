@@ -158,12 +158,16 @@ const toRow = (s, closes) => [csvTime(s.time), s.id, s.price, s.currency, +(s.pr
 
 async function decodeWindow(afterMs, untilMs) {
   const txs = await recentTxs(afterMs, untilMs);
-  const sales = [];
+  const sales = [], todo = [...txs];
   let i = 0;
-  for (const [hash, ts] of txs) {
-    sales.push(...await decodeTx(hash, ts));
-    if (++i % 25 === 0) console.error(`  ${i}/${txs.size} transactions`);
-  }
+  const worker = async () => {                                     // 4 at a time: polite to a free API
+    while (todo.length) {
+      const [hash, ts] = todo.shift();
+      sales.push(...await decodeTx(hash, ts));
+      if (++i % 25 === 0) console.error(`  ${i}/${txs.size} transactions`);
+    }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
   return { txs: txs.size, sales: sales.sort((a, b) => a.time.localeCompare(b.time)) };
 }
 
