@@ -9,7 +9,19 @@ const BASE = process.env.E2E_BASE || "http://localhost:4173";
 const WIDTHS = [320, 360, 390, 430];   // iPhone SE 1st-gen upward
 const ROUTES = ["/?view=charts", "/?chart=hodlwaves", "/?view=docs", "/deepfield"];
 let browser;
-before(async () => { browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined }); });
+let rawContext;
+before(async () => {
+  browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined });
+  // The "follow our new account" popup (src/XNotice.jsx) opens once per browser session and covers the
+  // page, so every test context starts with it already seen. The popup itself is tested at the end,
+  // through rawContext — a fresh session, exactly as a first-time visitor gets it.
+  rawContext = browser.newContext.bind(browser);
+  browser.newContext = async o => {
+    const c = await rawContext(o);
+    await c.addInitScript(() => { try { sessionStorage.setItem("spx-new-account-seen", "1"); } catch { /* ok */ } });
+    return c;
+  };
+});
 after(async () => { await browser?.close(); });
 
 const phone = w => ({ ...devices["iPhone 13"], viewport: { width: w, height: 844 }, hasTouch: true, isMobile: true });
@@ -586,5 +598,30 @@ test("390px: no request leaves the site for a font", async () => {
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   await page.waitForTimeout(1500);
   assert.deepEqual(external.filter(u => /font|gstatic|googleapis/.test(u)), [], "fonts are all first-party");
+  await ctx.close();
+});
+
+test("390px: the new-account popup fits, points at the new handle, and only closes from the bottom", async () => {
+  const ctx = await rawContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  const box = await geom(page, ".xn");
+  assert.ok(box, "popup shows on a first visit");
+  assert.ok(box.l >= 0 && box.r <= box.vw, `popup inside the viewport (${box.l}..${box.r} of ${box.vw})`);
+  assert.equal(await page.locator(".xn-go").getAttribute("href"), "https://x.com/lanternlabsmain");
+  assert.equal(await page.locator(".xn button").count(), 1, "one way out, no corner ×");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator(".xn").count(), 1, "Esc does not dismiss");
+  await page.mouse.click(5, 5);
+  assert.equal(await page.locator(".xn").count(), 1, "clicking outside does not dismiss");
+  const foot = await page.locator(".xn-later").boundingBox();
+  assert.ok(foot.y > 844, `the way out sits below the fold (${Math.round(foot.y)}px)`);
+  assert.ok(foot.height >= 40, "still a real tap target once reached");
+  await page.locator(".xn-later").scrollIntoViewIfNeeded();
+  await page.tap(".xn-later");
+  assert.equal(await page.locator(".xn").count(), 0, "closes from the bottom");
+  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
+  assert.equal(await page.locator(".xn").count(), 0, "does not reopen in the same session");
+  assert.deepEqual(await overflow(page).then(o => o.sw <= o.cw), true, "no horizontal overflow");
   await ctx.close();
 });

@@ -11,17 +11,21 @@
   stop. Every card/chart/article/decision defaults to: show the real numbers, state the method, label the caveats,
   share it freely. When in doubt, MORE transparent.
 
-## ⛔ X ACCOUNT SUSPENDED 2026-09-23 — ALL AUTO-POSTING PAUSED, NOTHING SAID ON THE SITE
+## ⛔ X ACCOUNT SUSPENDED 2026-09-23 — ALL AUTO-POSTING PAUSED; ONE "NEW ACCOUNT" POPUP ON THE SITE
 - **State:** every scheduled card firing is OFF — `post-tweet.yml` schedule commented out, `aeon-sale-watch.yml` schedule off +
   forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed. `BOT_SITE_ONLY` (repo var, defaults on in
   post-tweet.yml) makes any manual run skip X (and skips the 1st-of-month recap). **Owner call: no cards at all for now.**
-- **⚠ THE SITE SAYS NOTHING ABOUT IT (owner, 2026-09-23, final).** A popup + landing bar + `?view=posts` page + owner-written
-  site feed were built and live for a few hours, then REMOVED in full at the owner's request: "people don't know anything and
-  they can just use the charts." Do NOT reintroduce a suspension notice, posts feed or picture unless the owner asks.
+- **THE SITE'S ONLY MESSAGE: a "follow our new account" popup (owner, 2026-09-23, v2).** History: a suspension notice + posts
+  page were built, then removed in full ("people just use the charts"), then the owner asked for ONE popup back with a new
+  message. `src/XNotice.jsx` (mounted at the end of App.jsx), picture `public/new-account.jpg` (deliberately NOT named
+  "suspended"), CTA → **@lanternlabsmain**. **Deliberately hard to dismiss (owner's brief):** no ×, no click-outside, no Esc —
+  the only way out is "Continue to the charts" at the very BOTTOM of the card (below the fold on phones). Once per browser
+  session (`sessionStorage["spx-new-account-seen"]`). e2e seeds that key in every test context and tests the popup itself from
+  a fresh session. **No landing bar, no posts page, no site feed** — don't reintroduce them unless asked.
 - **⚠ DO NOT publish or hint at WHY the account went down.** Owner considers it a coordinated attack (the second one) and keeps
-  that private. Comms handle if ever needed: @lanternlabsmain (owner-provided).
+  that private. The new account is **@lanternlabsmain** (owner-provided).
 - **To resume when X is back:** set repo var `BOT_SITE_ONLY=0`, uncomment the `post-tweet.yml` + `aeon-sale-watch.yml`
-  schedules (restore its DRY_RUN lines to `|| vars.AEON_SALE_DRY_RUN`).
+  schedules (restore its DRY_RUN lines to `|| vars.AEON_SALE_DRY_RUN`); retire the popup by dropping `<XNotice/>`.
 
 ## 🔭 "DEEP FIELD" — MEMBERS AREA (renamed from "the Terminal" 2026-08-22; FREE CLOSED BETA now, paid later)
 - **Owner decided (2026-08-22): rename the Terminal → "Deep Field"** (Bloomberg/ITC both use "Terminal"; needed to differentiate)
