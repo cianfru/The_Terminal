@@ -344,6 +344,20 @@
     .sigact button { width: 100%; padding: 12px; font-size: 14px; }
     .sigdraft .dcopy { width: 100%; padding: 11px; font-size: 13.5px; }
   }
+  .spedit { background:#0b0b18; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:16px; max-width:760px; display:flex; flex-direction:column; gap:12px; }
+  .sphead { font-size:14px; font-weight:700; color:#e2e8f0; }
+  #spText { width:100%; box-sizing:border-box; background:#05050e; border:1px solid rgba(255,255,255,.14); color:#e2e8f0; border-radius:8px; padding:12px; font-size:15px; line-height:1.55; font-family:inherit; resize:vertical; }
+  .sprow { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  .spfile { cursor:pointer; background:#111827; border:1px solid rgba(255,255,255,.14); border-radius:8px; padding:9px 14px; font-size:13px; color:#e2e8f0; }
+  .spghost { background:transparent; }
+  .spmeta { font-size:12.5px; color:#94a3b8; }
+  .spprev { max-width:100%; max-height:320px; object-fit:contain; border-radius:8px; border:1px solid rgba(255,255,255,.1); align-self:flex-start; }
+  .splist { display:flex; flex-direction:column; gap:12px; max-width:760px; }
+  .spitem { background:#0b0b18; border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:14px; }
+  .spitem .spdate { font-size:12.5px; color:#94a3b8; font-family:ui-monospace,Menlo,monospace; margin-bottom:8px; }
+  .spitem .sptext { white-space:pre-wrap; font-size:14px; line-height:1.55; color:#e2e8f0; overflow-wrap:anywhere; }
+  .spitem img { max-width:100%; max-height:220px; border-radius:8px; margin-top:10px; display:block; }
+  .spitem .sprow { margin-top:10px; }
 </style>
 </head>
 <body>
@@ -370,6 +384,7 @@
         <span class="mburger">☰</span><span id="menuCurrent">🗓 Daily posts</span><span class="mcaret">▾</span>
       </button>
       <div id="menuDrop" class="menudrop" hidden>
+        <button class="mitem" data-tab="siteposts">✍ Site posts</button>
         <button class="mitem" data-tab="daily">🗓 SPX6900 · Daily posts</button>
         <button class="mitem" data-tab="recap">📅 SPX6900 · Recap</button>
         <button class="mitem" data-tab="city">🏙 SPX City</button>
@@ -585,6 +600,32 @@
         <span style="margin-left:auto;color:#64748b;font-size:12px">First-party page intel — growth, unique visitors &amp; geography · <a href="/api/intel" target="_blank" rel="noopener" style="color:#7dd3fc">open in its own tab →</a></span>
       </div>
       <iframe id="audFrame" title="Page intel" style="width:100%;height:calc(100vh - 160px);min-height:640px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#08090b;display:block"></iframe>
+    </div>
+
+    <!-- ✍ Site posts — owner-written posts on the site's own feed (?view=posts), while X is suspended -->
+    <div id="sitepostsView" style="display:none">
+      <div class="bar">
+        <button id="spRefresh">↻ Refresh</button>
+        <span style="margin-left:auto;color:#64748b;font-size:12px">Shows at <a href="/?view=posts" target="_blank" rel="noopener" style="color:#7dd3fc">/?view=posts ↗</a> · live within seconds, no deploy</span>
+      </div>
+      <div class="status" id="spStatus">Write a post for the site. Text, an image, or both.</div>
+      <div class="spedit">
+        <div class="sphead" id="spMode">New post</div>
+        <textarea id="spText" rows="7" placeholder="What do you want to say? Line breaks are kept."></textarea>
+        <div class="sprow">
+          <label class="spfile"><input type="file" id="spFile" accept="image/png,image/jpeg,image/webp" hidden />🖼 Add image</label>
+          <span id="spFileName" class="spmeta"></span>
+          <button id="spClearImg" class="spghost" hidden>Remove image</button>
+          <span id="spCount" class="spmeta" style="margin-left:auto"></span>
+        </div>
+        <img id="spPreview" class="spprev" alt="" hidden />
+        <div class="sprow">
+          <button id="spPublish" class="primary">Publish →</button>
+          <button id="spCancel" class="spghost" hidden>Cancel edit</button>
+        </div>
+      </div>
+      <h3 style="margin:26px 0 10px;font-size:15px;color:#e2e8f0">Published <span id="spN" style="color:#64748b;font-weight:400;font-size:12.5px"></span></h3>
+      <div id="spList" class="splist">—</div>
     </div>
 
     <!-- Deep Field members tab — seed invite codes + see who's in (via api/auth, gated by CONTROL_PASSWORD) -->
@@ -1361,6 +1402,7 @@ function recapErr(e) { recapStatus(e.message, "err"); if (e.status === 401) lock
 
 // Hamburger dropdown nav (data-driven so adding a tab is one row here + one <button> in the menu).
 const TABS = {
+  siteposts: { label: "✍ Site posts", view: "sitepostsView" },
   daily:     { label: "🗓 Daily posts", view: "dailyView" },
   recap:     { label: "📅 Recap", view: "recapView" },
   city:      { label: "🏙 SPX City", view: "cityView" },
@@ -1384,6 +1426,100 @@ function showTab(which) {
   if (which === "engage") engageInit();
   if (which === "audience" && !audLoaded) loadAudience();
   if (which === "deepfield") dfInit();
+  if (which === "siteposts") spInit();
+}
+
+// ---- ✍ Site posts — the site's own feed while X is suspended (api/control.js "sitepost-save") ----
+let spReady = false, spPosts = [], spEditId = null, spImage = null, spKeepImg = false;
+const spStatus = t => { $("#spStatus").textContent = t; };
+async function spLoad() {
+  try {
+    const r = await fetch("/api/control?f=public/site-feed.json&t=" + Date.now(), { cache: "no-store" });
+    spPosts = r.ok ? ((await r.json())?.posts || []) : [];
+  } catch { spPosts = []; }
+  spRender();
+}
+const spRaw = p => "https://raw.githubusercontent.com/cianfru/The_Terminal/main/public/" + p;
+function spRender() {
+  $("#spN").textContent = spPosts.length ? `· ${spPosts.length}` : "";
+  $("#spList").innerHTML = spPosts.length ? spPosts.map(p => `
+    <div class="spitem">
+      <div class="spdate">${esc(new Date(p.ts || p.date + "T12:00:00Z").toLocaleString())}${p.edited ? " · edited" : ""}</div>
+      ${p.text ? `<div class="sptext">${esc(p.text)}</div>` : ""}
+      ${p.img ? `<img src="${spRaw(p.img)}" alt="" loading="lazy" />` : ""}
+      <div class="sprow"><button data-sped="${esc(p.id)}">Edit</button><button class="danger" data-spdel="${esc(p.id)}">Delete</button></div>
+    </div>`).join("") : `<div class="spmeta">No posts yet.</div>`;
+  document.querySelectorAll("[data-sped]").forEach(b => b.onclick = () => spEdit(b.dataset.sped));
+  document.querySelectorAll("[data-spdel]").forEach(b => b.onclick = () => spDelete(b.dataset.spdel));
+}
+function spReset() {
+  spEditId = null; spImage = null; spKeepImg = false;
+  $("#spText").value = ""; $("#spFile").value = ""; $("#spFileName").textContent = "";
+  $("#spPreview").hidden = true; $("#spClearImg").hidden = true; $("#spCancel").hidden = true;
+  $("#spMode").textContent = "New post"; $("#spPublish").textContent = "Publish →"; spCount();
+}
+function spCount() { const n = $("#spText").value.trim().length; $("#spCount").textContent = n ? n.toLocaleString() + " characters" : ""; }
+function spEdit(id) {
+  const p = spPosts.find(x => x.id === id); if (!p) return;
+  spReset(); spEditId = id; spKeepImg = !!p.img;
+  $("#spText").value = p.text || ""; spCount();
+  if (p.img) { $("#spPreview").src = spRaw(p.img); $("#spPreview").hidden = false; $("#spClearImg").hidden = false; $("#spFileName").textContent = "current image"; }
+  $("#spMode").textContent = "Editing post"; $("#spPublish").textContent = "Save changes →"; $("#spCancel").hidden = false;
+  $("#spText").focus(); window.scrollTo({ top: 0, behavior: "smooth" });
+}
+async function spDelete(id) {
+  if (!confirm("Delete this post from the site? This can't be undone from the panel.")) return;
+  spStatus("Deleting…");
+  try { await action({ action: "sitepost-save", remove: id }); spStatus("Deleted."); if (spEditId === id) spReset(); await spLoad(); }
+  catch (e) { spStatus("Delete failed: " + e.message); }
+}
+// Downsize big images in the browser so the upload stays well under the function's body limit.
+function spShrink(file) {
+  return new Promise((ok, bad) => {
+    const rd = new FileReader();
+    rd.onerror = () => bad(new Error("couldn't read the file"));
+    rd.onload = () => {
+      const url = rd.result;
+      if (file.size < 1.5e6) return ok(url);
+      const im = new Image();
+      im.onerror = () => bad(new Error("couldn't open the image"));
+      im.onload = () => {
+        const k = Math.min(1, 2000 / Math.max(im.width, im.height));
+        const c = document.createElement("canvas"); c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        ok(c.toDataURL("image/jpeg", 0.88));
+      };
+      im.src = url;
+    };
+    rd.readAsDataURL(file);
+  });
+}
+function spInit() {
+  if (!spReady) {
+    spReady = true;
+    $("#spText").addEventListener("input", spCount);
+    $("#spFile").onchange = async () => {
+      const f = $("#spFile").files[0]; if (!f) return;
+      try { spImage = await spShrink(f); spKeepImg = false;
+        $("#spPreview").src = spImage; $("#spPreview").hidden = false; $("#spClearImg").hidden = false; $("#spFileName").textContent = f.name; }
+      catch (e) { spStatus(e.message); }
+    };
+    $("#spClearImg").onclick = () => { spImage = null; spKeepImg = false; $("#spFile").value = ""; $("#spPreview").hidden = true; $("#spClearImg").hidden = true; $("#spFileName").textContent = ""; };
+    $("#spCancel").onclick = spReset;
+    $("#spRefresh").onclick = spLoad;
+    $("#spPublish").onclick = async () => {
+      const text = $("#spText").value.trim();
+      if (!text && !spImage && !spKeepImg) { spStatus("Write something or add an image."); return; }
+      $("#spPublish").disabled = true; spStatus(spEditId ? "Saving…" : "Publishing…");
+      try {
+        await action({ action: "sitepost-save", post: { id: spEditId || undefined, text, image: spImage || undefined, keepImg: spKeepImg } });
+        spStatus(spEditId ? "Saved. Live on the site now." : "Published. Live on the site now.");
+        spReset(); await spLoad();
+      } catch (e) { spStatus("Failed: " + e.message); }
+      finally { $("#spPublish").disabled = false; }
+    };
+  }
+  spLoad();
 }
 
 // ---- 🎨 Card studio — pick a metric, zoom to a window, add title/subtitle, download a house-style card ----

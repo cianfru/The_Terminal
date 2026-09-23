@@ -1,9 +1,9 @@
 // The X-suspension notice (2026-09-23): a one-time popup, once per browser session.
 //
-// The account was suspended; the daily posts now continue on the site (?view=posts, fed by
-// scripts/bot/post.mjs). This tells a visitor where the posts went and how to reach us.
+// The account was suspended and the automatic daily cards are paused. This points visitors at the
+// posts page (?view=posts — owner-written posts, published from /control) and says how to reach us.
 // Styled as the terminal landing: black panel, squared, rainbow hairline, DepartureMono
-// micro-labels, Space Grotesk copy, the green CTA. Not shown on the posts page itself.
+// micro-labels, Space Grotesk copy, the green CTA. Not shown on the notice page (?view=posts) itself.
 //
 // To retire it when X is back: drop <XNotice/> from App.jsx and the .xnotice banner from
 // public/landing-next.html.
@@ -55,7 +55,7 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){ .xn-back,.xn{ animation:none } }
 `;
 
-export default function XNotice({ route, onOpenPosts }) {
+export default function XNotice({ route, onOpen }) {
   const [open, setOpen] = useState(false);
   const goRef = useRef(null); // the dialog itself takes focus on open (Esc + Tab work, no stray ring)
 
@@ -105,7 +105,7 @@ export default function XNotice({ route, onOpenPosts }) {
             </a>
           </div>
           <div className="xn-act">
-            <button className="xn-go" onClick={() => { close(); onOpenPosts(); }}>&gt; Read the posts</button>
+            <button className="xn-go" onClick={() => { close(); onOpen(); }}>&gt; Read the posts</button>
             <button className="xn-later" onClick={close}>Close</button>
           </div>
         </div>
