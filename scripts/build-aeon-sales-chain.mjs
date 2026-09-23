@@ -159,17 +159,20 @@ const toRow = (s, closes) => [csvTime(s.time), s.id, s.price, s.currency, +(s.pr
 
 async function decodeWindow(afterMs, untilMs) {
   const txs = await recentTxs(afterMs, untilMs);
-  const sales = [], todo = [...txs];
+  // A transaction Blockscout will not serve even after retries is recorded, not fatal: a free API has
+  // outages, and one unreadable transaction must not freeze every sale after it.
+  const sales = [], failed = [], todo = [...txs];
   let i = 0;
   const worker = async () => {                                     // 4 at a time: polite to a free API
     while (todo.length) {
       const [hash, ts] = todo.shift();
-      sales.push(...await decodeTx(hash, ts));
+      try { sales.push(...await decodeTx(hash, ts)); }
+      catch (e) { failed.push({ hash, ts }); console.error(`  could not read ${hash.slice(0, 12)}… (${e.message.slice(0, 40)})`); }
       if (++i % 25 === 0) console.error(`  ${i}/${txs.size} transactions`);
     }
   };
   await Promise.all(Array.from({ length: 4 }, worker));
-  return { txs: txs.size, sales: sales.sort((a, b) => a.time.localeCompare(b.time)) };
+  return { txs: txs.size, failed, sales: sales.sort((a, b) => a.time.localeCompare(b.time)) };
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
@@ -177,7 +180,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     // Diff a window against what Dune reported. Ground truth = the site files built from Dune:
     // aeon-sales.json daily counts + volume, and its per-trade list for the last 30 days.
     const since = arg("since", "2026-07-23"), until = arg("until", "2026-09-23");
-    const { txs, sales } = await decodeWindow(Date.parse(since + "T23:59:59Z"), Date.parse(until + "T00:00:00Z"));
+    const { txs, sales, failed } = await decodeWindow(Date.parse(since + "T23:59:59Z"), Date.parse(until + "T00:00:00Z"));
+    if (failed.length) console.log(`  ⚠ ${failed.length} transaction(s) unreadable after retries — excluded from the comparison`);
     const truth = JSON.parse(readFileSync("public/aeon-sales.json", "utf8"));
     const days = truth.daily.filter(r => r.d > since && r.d < until);
     const tN = days.reduce((a, r) => a + r.sales, 0), tV = days.reduce((a, r) => a + r.volEth, 0);
@@ -209,8 +213,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const seen = new Set(body.map(l => { const c = l.split(","); return c[8] + "|" + c[1]; }));
   try {
     console.error(`aeon-sales-chain: decoding sales after ${new Date(lastMs).toISOString()}…`);
-    const [{ txs, sales }, closes] = await Promise.all([decodeWindow(lastMs), ethCloses()]);
-    const fresh = sales.filter(s => !seen.has(s.tx + "|" + s.id));
+    const [{ txs, sales, failed }, closes] = await Promise.all([decodeWindow(lastMs), ethCloses()]);
+    // If any transaction could not be read, keep only sales OLDER than the earliest failure. The archive's
+    // last timestamp then stops short of it, so the next run starts there and reads it again — a gap
+    // can never be sealed behind a newer sale.
+    const wall = failed.length ? Math.min(...failed.map(f => Date.parse(f.ts))) : Infinity;
+    if (failed.length) console.error(`aeon-sales-chain: ${failed.length} unreadable transaction(s) — holding back sales from ${new Date(wall).toISOString()} on for the next run`);
+    const fresh = sales.filter(s => !seen.has(s.tx + "|" + s.id) && Date.parse(s.time) < wall);
     const all = [...body, ...fresh.map(s => toRow(s, closes))].sort();
     writeFileSync(CSV, [HEADER, ...all].join("\n") + "\n");
     const newest = all.length ? all.at(-1).slice(0, 10) : null;
