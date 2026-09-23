@@ -397,8 +397,15 @@
   favorites tab drew over them at any z-index). Thumbnails from Alchemy's Cloudinary `thumbnailv2` (~50KB vs ~535KB originals).
   **Ownership = `aeon-owners.mjs` (`ownerOf` on the contract, 3,333 tokens, public RPC)** — matched our transfer replay for all
   1,178 wallets 2026-09-23; now a step in `aeon-ledger.yml` feeding `export.mjs --owners`.
-  **⚠ KNOWN TRADE-OFF (flagged to owner):** a public picture/piece id lets anyone look the token up on OpenSea/Etherscan and read the
-  owning wallet, so for AEON-holding owners the "addresses members-only" layer is a convenience, not secrecy.
+  **✅ PUBLIC = TOP 10 ONLY (owner, 2026-09-23: "just show the first 10, the rest is members only").** `export.mjs publicLedger`
+  writes only `PUBLIC_OWNERS = 10` owners (by SPX held) + `ownersTotal` into `public/aeon-ledger.json` (466KB → 10KB); totals /
+  years / verdicts / concentration still cover EVERY owner. The rest are left OUT OF THE FILE (a piece id leads to its wallet via
+  the token's owner, so page-only hiding would leak them). The page shows them as DIMMED PLACEHOLDER rows ("Owner #11 · Members
+  only", blank bars — never invented figures) under a "Members only · sign in" card (`MembersWall`; owner asked for opaque but
+  visible). Non-members also lose the verdict filter tabs. ⚠ Older commits of the public file still hold the full 693 in git history.
+  **Its own nav tab: `AEON_LEDGER` after `DEEP_FIELD`** (landing `.mtop-ledger` + TerminalNav + both phone menus), teal. While wiring
+  it, found the landing's desktop RAINBOW / DEEP_FIELD tabs threw `go is not defined` on click (the `go()` helpers live in later
+  script blocks) — now a local `goTop`.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

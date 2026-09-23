@@ -62,8 +62,8 @@ function MenuRow({ text, color, mark, cls = "", onEnter, onLeave, onClick }) {
 // The DEEP_FIELD tab — a standalone (no-dropdown) section tab that TYPES its label on hover exactly
 // like the other tabs (cursor rides the writing head), with an always-lit flashing "_" hash. Label +
 // cursor live in ONE .lw so the .mhead's flex gap can't separate the hash from the "D".
-function DeepFieldTab({ onClick, title }) {
-  const TXT = "DEEP_FIELD";
+function DeepFieldTab({ onClick, title, text = "DEEP_FIELD", cls = "mtop-deepfield" }) {
+  const TXT = text;
   const [shown, setShown] = useState(TXT);
   const wrapRef = useRef(null);
   const timer = useRef(null);
@@ -78,7 +78,7 @@ function DeepFieldTab({ onClick, title }) {
   };
   const reset = () => { clearTimeout(timer.current); setShown(TXT); };
   return (
-    <div className="mtop mtop-deepfield" onClick={onClick} onMouseEnter={type} onMouseLeave={reset} style={{ cursor: "pointer" }} title={title}>
+    <div className={"mtop " + cls} onClick={onClick} onMouseEnter={type} onMouseLeave={reset} style={{ cursor: "pointer" }} title={title}>
       <div className="mhead">
         <span className="lw" ref={wrapRef}>
           <span className="dfword">{shown}</span>
@@ -457,6 +457,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
     { id: "city", name: "SPX City", groups: CITY_GROUPS, single: true, desc: () => "holders in 3D", color: "#38bdf8", onAll: () => go(openCity) },
     { id: "aeon", name: "Project Aeon", groups: AEON_GROUPS, desc: n => `${n} NFT charts`, color: GCOL[3], onAll: () => go(openAeon) },
     { id: "deepfield", name: "Deep Field", sub: me && me.loggedIn ? "your charts" : "log in with X", color: "#4ee79a", onTap: () => go(onDeepField) },
+    { id: "aeonledger", name: "AEON Ledger", sub: "every owner's SPX", color: "#2dd4bf", onTap: () => go(() => goChart("aeonledger")) },
   ];
 
   let title = "Explore", cmd = "ls ./", grid = "nav", tiles = null;
@@ -709,6 +710,8 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
             Routes to the Deep Field page, which self-gates: members get the charts, everyone else gets
             the branded gate + "log in with X" CTA. */}
         <DeepFieldTab onClick={() => onDeepField()} title={me && me.loggedIn ? "Deep Field — members home" : "Deep Field — log in with X to enter"} />
+        {/* AEON Ledger — every AEON owner's SPX record; its own tab (owner, 2026-09-23), also listed in Project Aeon. */}
+        <DeepFieldTab text="AEON_LEDGER" cls="mtop-deepfield mtop-ledger" onClick={() => goChart("aeonledger")} title="AEON Ledger — every AEON owner's SPX record" />
         {asOfLabel && <div className="tdataas">Data as of {asOfLabel}</div>}
       </div>
       <MobileSpringboard key={mobOpen ? "sb-open" : "sb-shut"} open={mobOpen} onClose={() => setMobOpen(false)} openRainbow={openRainbow} openGallery={openGallery} openAeon={openAeon} openCity={openCity} goChart={goChart} renderPreview={renderPreview} me={me} onDeepField={onDeepField} onLogout={logout} />

@@ -132,6 +132,10 @@ test("AEON Ledger public layer drops every address and rounds only per-owner fig
   assert.equal(pub.owners[0].holds, 1230000);
   assert.equal(pub.totals.bought, 1235067, "totals stay exact");
   assert.equal(pub.owners[0].firstBuy, "2023-08");
+  const top1 = publicLedger(full, 1);
+  assert.equal(top1.owners.length, 1, "only the top owners are published");
+  assert.equal(top1.ownersTotal, 2, "the page can say how many more there are");
+  assert.equal(top1.totals.bought, 1235067, "totals still cover every owner");
 });
 
 test("a refresh re-reads address ledgers and caches only immutable transaction pages", async () => {

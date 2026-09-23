@@ -551,9 +551,10 @@ test("390px: the launcher is a balanced grid, all reachable without scrolling", 
     return { cells, strip: !!document.querySelector(".tsbdf"), vh: innerHeight,
       sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth };
   });
-  // Five, not six: the Manual tile was removed — it is the SPX City manual, so top level was
-  // the wrong home for it.
-  assert.equal(g.cells.length, 5, "five destinations");
+  // Six: the Manual tile was removed (it is the SPX City manual, so top level was the wrong home for it)
+  // and the AEON Ledger got its own tile (owner, 2026-09-23) — an even 2×3 grid.
+  assert.equal(g.cells.length, 6, "six destinations");
+  assert.ok(g.cells.some(c => /AEON Ledger/.test(c.name || "")), "the AEON Ledger is one of them");
   assert.ok(!g.cells.some(c => /manual/i.test(c.name || "")), "the Manual is not one of them");
   assert.equal(g.strip, false, "no odd full-width strip");
   assert.equal(new Set(g.cells.map(c => `${c.w}x${c.h}`)).size, 1, "every tile is the same size");
@@ -649,5 +650,8 @@ test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both
   const panel = await geom(page, ".al-panel");
   assert.ok(panel.l >= 0 && panel.r <= panel.vw + 1, `sheet inside the viewport (${panel.l}..${panel.r})`);
   assert.ok(await page.getByText(/Deep Field members|next ledger refresh/).count(), "the chart is behind the members wall");
+  await page.getByRole("button", { name: "Close ✕" }).tap();
+  assert.equal(await page.locator(".al-row:not(.al-ghost)").count(), 10, "the public list stops at the top 10");
+  assert.ok(await page.locator(".al-lock").isVisible(), "the rest is shown dimmed, members only");
   await ctx.close();
 });

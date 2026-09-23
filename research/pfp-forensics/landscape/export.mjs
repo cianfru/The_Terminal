@@ -116,13 +116,22 @@ export function buildLedger(rows, hh, { tokenOwners = {}, rarity = [], priceOn =
   };
 }
 
-/** The public copy: no wallet lists, per-owner figures rounded. Pure. */
-export function publicLedger(full) {
+/** How many owners the public page lists (owner decision 2026-09-23); the rest are for members. */
+export const PUBLIC_OWNERS = 10;
+
+/**
+ * The public copy: the top PUBLIC_OWNERS owners only, no wallet lists, per-owner figures rounded. Pure.
+ * The rest are left OUT of the file, not hidden by the page: each owner's AEON pieces point at its wallet
+ * through the token's owner, so a list rendered from a public file would be public whatever the page did.
+ * Totals, years, verdict counts and concentration stay computed over EVERY owner.
+ */
+export function publicLedger(full, limit = PUBLIC_OWNERS) {
   const R = ["bought", "sold", "rotated", "received", "movedOut", "holds", "boughtUsd", "soldUsd"];
   return {
     ...full,
     rounded: "per-owner figures rounded to 3 significant figures; totals exact",
-    owners: full.owners.map(({ wallets, years, trades, pnl, ...o }) => {
+    ownersTotal: full.owners.length,
+    owners: full.owners.slice(0, limit).map(({ wallets, years, trades, pnl, ...o }) => {
       const out = { ...o };
       for (const k of R) out[k] = sig3(o[k]);
       const leg = x => (x ? { d: x.d, qty: sig3(x.qty), usd: sig3(x.usd) } : null);
