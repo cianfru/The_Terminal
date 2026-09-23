@@ -116,35 +116,73 @@ export async function linksOf(L, a, isInfra, memo = new Map()) {
   return out;
 }
 
-/** Structural component of each seed, merged across seeds with union-find. */
+/** Structural component of each seed, merged across seeds with union-find.
+ *
+ *  ⚠ "VISITED" MUST MEAN "EXPANDED AT THE SHALLOWEST DEPTH SEEN". The first version kept one
+ *  global visited set across all seeds: when another seed reached 0x9f7e2f5e at the depth
+ *  limit it was marked done WITHOUT being expanded, so #14's own seed — one hop away —
+ *  skipped it and never read its link back to the origin wallet. The five-seed gate passed
+ *  only because no other seed got there first; the full sweep dropped a wallet from a
+ *  verified household. Now a wallet is re-expanded whenever it is reached shallower than
+ *  before, and its links are cached so that costs nothing. */
 export async function households(L, seeds, isInfra, { maxDepth = MAX_DEPTH, onSeed } = {}) {
+  const best = new Map(), nodeLinks = new Map(), memo = new Map(), all = [];
+  const linksFor = async a => {
+    if (!nodeLinks.has(a)) { const ls = await linksOf(L, a, isInfra, memo); nodeLinks.set(a, ls); all.push(...ls); }
+    return nodeLinks.get(a);
+  };
+  let i = 0;
+  for (const s0 of seeds) {
+    const q = [[s0.toLowerCase(), 0]];
+    while (q.length) {
+      const [a, d] = q.shift();
+      if (best.has(a) && best.get(a) <= d) continue;
+      best.set(a, d);
+      if (d >= maxDepth) continue;               // recorded, expanded later if reached shallower
+      for (const l of await linksFor(a)) {
+        const nb = l.from === a ? l.to : l.from;
+        if (!best.has(nb) || best.get(nb) > d + 1) q.push([nb, d + 1]);
+      }
+    }
+    if (memo.size > 60000) memo.clear();
+    onSeed?.(++i, seeds.length);
+  }
+  const key = l => `${l.t}|${l.from}|${l.to}`;
+  const links = [...new Map(all.map(l => [key(l), l])).values()];
+  return { groups: components(seeds, links), links };
+}
+
+/** ⚠ A HUB IS A SERVICE, NOT A PERSON. The vault rule has no fan-out guard by design — a
+ *  real vault operator funds several vaults — and the first full sweep fused 418 wallets
+ *  into one "household" through a single sender with 423 vault links: an airdrop, not a
+ *  saver. Across the collection, vault funders, gather targets and drain targets sit at
+ *  1-8 links, then a thin tail runs out to 423 — the same 8 the production engine uses for
+ *  its hub guard. Above it, that hub's links of that kind are dropped and the hub flagged.
+ *  Conservative on purpose: over-merging overstates, so flag rather than fuse. A farmer
+ *  consolidating 26 wallets gets split into several households, each judged correctly on
+ *  its own; the alternative is one service welding hundreds of strangers together. */
+export const MAX_HUB = 8;
+export function capHubs(links, max = MAX_HUB) {
+  const hubEnd = l => l.rule === "VAULT" ? l.from : l.to;
+  const deg = new Map();
+  for (const l of links) { const k = l.rule + "|" + hubEnd(l); deg.set(k, (deg.get(k) || 0) + 1); }
+  const flagged = new Map();
+  const kept = links.filter(l => {
+    const d = deg.get(l.rule + "|" + hubEnd(l));
+    if (d > max) { flagged.set(hubEnd(l), { rule: l.rule, links: d }); return false; }
+    return true;
+  });
+  return { kept, flagged: [...flagged.entries()].map(([a, v]) => ({ address: a, ...v })) };
+}
+
+/** Connected components of `seeds` under `links`. Pure. */
+export function components(seeds, links) {
   const parent = new Map();
   const find = x => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
   const add = x => { if (!parent.has(x)) parent.set(x, x); };
-  const union = (a, b) => { add(a); add(b); const ra = find(a), rb = find(b); if (ra !== rb) parent.set(ra, rb); };
-  const allLinks = [], seen = new Set(), memo = new Map();
-  let i = 0;
-  for (const s0 of seeds) {
-    const s = s0.toLowerCase(); add(s);
-    const depth = new Map([[s, 0]]), q = [s];
-    while (q.length) {
-      const a = q.shift();
-      if (seen.has(a)) continue;
-      seen.add(a);
-      if (depth.get(a) >= maxDepth) continue;
-      for (const l of await linksOf(L, a, isInfra, memo)) {
-        union(l.from, l.to);
-        allLinks.push(l);
-        const nb = l.from === a ? l.to : l.from;
-        if (!depth.has(nb)) { depth.set(nb, depth.get(a) + 1); q.push(nb); }
-      }
-    }
-    if (memo.size > 60000) memo.clear();     // bound memory on the long sweep
-    onSeed?.(++i, seeds.length);
-  }
-  const groups = new Map();
-  for (const x of parent.keys()) { const r = find(x); if (!groups.has(r)) groups.set(r, []); groups.get(r).push(x); }
-  const key = l => `${l.t}|${l.from}|${l.to}`;
-  const uniq = [...new Map(allLinks.map(l => [key(l), l])).values()];
-  return { groups: [...groups.values()], links: uniq };
+  for (const s of seeds) add(s.toLowerCase());
+  for (const l of links) { add(l.from); add(l.to); const a = find(l.from), b = find(l.to); if (a !== b) parent.set(a, b); }
+  const g = new Map();
+  for (const x of parent.keys()) { const r = find(x); if (!g.has(r)) g.set(r, []); g.get(r).push(x); }
+  return [...g.values()];
 }
