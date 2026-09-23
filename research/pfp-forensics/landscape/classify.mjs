@@ -20,7 +20,7 @@ import { tradeHistory } from "../../../scripts/bot/kol-cluster.mjs";
 import { buildModel, bandIndex } from "../../../src/models.js";
 import { DEFAULT_RAW } from "../../../src/data.js";
 import { loadLedger } from "./ledger.mjs";
-import { cachedFetch } from "./cached-fetch.mjs";
+import { cachedFetch, IMMUTABLE_ONLY } from "./cached-fetch.mjs";
 
 const arg = (k, d) => (process.argv.find(a => a.startsWith(`--${k}=`)) || "").split("=").slice(1).join("=") || d;
 const ROOT = new URL("../../../", import.meta.url).pathname;
@@ -77,7 +77,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const queue = H.map(h => ({ ...h, flow: flow(h) })).sort((a, b) => b.flow - a.flow);
   const done = new Set(existsSync(out) ? readFileSync(out, "utf8").trim().split("\n").filter(Boolean).map(l => JSON.parse(l).key) : []);
   const todo = queue.filter(h => !done.has(h.wallets[0]));
-  const fetchImpl = cachedFetch(arg("cache"));
+  // --fresh: a refresh run. Only immutable transaction pages come from the cache; every address
+  // ledger is re-read, so it reconciles against today's balance.
+  const fetchImpl = cachedFetch(arg("cache"), process.argv.includes("--fresh") ? { cacheable: IMMUTABLE_ONLY } : {});
   console.error(`${queue.length} households with SPX history · ${done.size} already done · ${todo.length} to go · concurrency ${conc}`);
   let i = 0, ok = 0, bad = 0;
   const worker = async () => {

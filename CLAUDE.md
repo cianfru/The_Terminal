@@ -365,6 +365,23 @@
   Supply-in-Profit · Rarity vs Sale Price · Trait Values**. Tab is now ~13 charts. **🔲 NEEDS THOUGHT (owner parked):** a
   **Trait Explorer** (browse-by-trait gallery) + a **Cross-holder value board** (the 346 AEON+SPX dual-holders ranked by combined value).
 
+## 📒 AEON LEDGER — every AEON owner's SPX record, held vs sold (built 2026-09-23, owner-named)
+- **Site:** `?chart=aeonledger` (Project Aeon → Holders, first), `src/AeonLedger.jsx`. Every AEON holder grouped with the wallets it
+  structurally controls into one OWNER; each owner's full SPX history on Ethereum rebuilt trade by trade and RECONCILED to its
+  on-chain balance before it counts (693/693 did). Headline (snapshot 2026-09-23): 1,177 holders → 1,156 owners, 463 never held SPX;
+  of 693 with SPX: bought 999M SPX / $82M vs sold 726M / $101M (buying leads in COINS only because of launch-month prices — in
+  DOLLARS they took out more); 2025 net −$19M; 306 exited · 155 trimming · 86 holding · 146 never sold; top 10 hold 56% of what's
+  held; 60 owners did 80% of selling.
+- **TWO LAYERS (owner decision):** numbers public, ADDRESSES for Deep Field members only. `public/aeon-ledger.json` = no addresses +
+  per-owner figures rounded to 3 sig figs (totals exact); the full file goes to KV feed `aeon-ledger` (allow-listed in
+  `api/auth.js` PRIVATE_FEEDS) and is NEVER committed. `export.mjs` refuses to write a public file containing an address.
+- **Pipeline:** `research/pfp-forensics/landscape/` — `build-households.mjs` (phase 2) → `classify.mjs` (phase 3, `--fresh` caches
+  only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (dispatch-only, ~1h, BigQuery table +
+  Alchemy tail → KV + commit + deploy)**; sanity gate refuses <500 owners or >5% unreconciled. Feed audit cadence 35d.
+- **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
+  (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
+  on socials SLOWLY — one finding at a time.
+
 ## 🏙 AEON CITY / WHALE CITY — the 3D holder cities (built 2026-07-27, IN DEVELOPMENT, gated)
 - Two pages, ONE shared engine (`src/Skyline3D.jsx`): **Aeon City** (`?chart=aeonskyline`, AEON holders) and **Whale City**
   (`?chart=whalewatch`, biggest SPX wallets from `public/whales.json`). Every wallet is a BUILDING on real Manhattan geometry —

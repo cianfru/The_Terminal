@@ -1,0 +1,156 @@
+name: AEON Ledger refresh
+
+# Rebuilds the AEON Ledger (src/AeonLedger.jsx): every AEON owner's SPX record on Ethereum, rebuilt from the
+# chain and reconciled to it. Dispatch-only — a full refresh re-reads every owner's ledger from Blockscout
+# (tens of thousands of requests, roughly an hour), so it runs when the owner wants a new snapshot, not daily.
+#
+#   1. transfers   the full SPX transfer history from our BigQuery table (the daily on-chain workflow keeps
+#                  it current) + the Alchemy leading edge, exactly as onchain-dune.yml builds it
+#   2. households  every AEON holder grouped with the wallets it structurally controls (build-households.mjs)
+#   3. ledgers     each owner's trades, classified and reconciled to its balance (classify.mjs --fresh:
+#                  only immutable transaction pages come from the cache; every address ledger is re-read)
+#   4. export      aeon-ledger.full.json (with wallet addresses) → KV, members only (feed "aeon-ledger")
+#                  public/aeon-ledger.json (no addresses, per-owner figures rounded) → committed + deployed
+#
+# Owner decision 2026-09-23: numbers public, addresses for Deep Field members. The full file is NEVER committed.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aeon-ledger
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT: goog-fltx
+  BQ_DATASET: spx_onchain
+  BQ_TABLE: eth_transfers
+  LAND: research/pfp-forensics/landscape
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    outputs:
+      deploy: ${{ steps.commit.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: Require the BigQuery key
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ -z "$GCP_SA_KEY" ]; then echo "::error::GCP_SA_KEY is not set — the ledger reads the transfer history from BigQuery"; exit 1; fi
+
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Transfers — export our BigQuery table
+        # A read of our own ~2.7M-row table, not the public dataset: the daily on-chain workflow does the
+        # incremental append, so this never scans crypto_ethereum.
+        run: |
+          bq --project_id="$GCP_PROJECT" query --use_legacy_sql=false --format=csv --max_rows=6000000 \
+            "SELECT sender, receiver, time, value FROM \`$GCP_PROJECT.$BQ_DATASET.$BQ_TABLE\` ORDER BY time" > transfers.csv
+          echo "transfers: $(( $(wc -l < transfers.csv) - 1 )) rows"
+
+      - name: Transfers — Alchemy leading edge (BigQuery edge → now)
+        continue-on-error: true
+        env: { ALCHEMY_KEY: "${{ secrets.ALCHEMY_KEY }}" }
+        run: node scripts/build-eth-transfers-alchemy-tail.mjs --archive=transfers.csv
+
+      - name: Restore the immutable-page cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .ledger-cache
+            codecache.json
+          key: aeon-ledger-${{ github.run_id }}
+          restore-keys: aeon-ledger-
+
+      - name: Households — group every AEON holder's wallets
+        run: >
+          node --max-old-space-size=6144 $LAND/build-households.mjs --ledger=transfers.csv
+          --aeon=public/aeon-onchain.json --addr-types=public/addr-types.json
+          --codecache=codecache.json --out=households.json
+
+      - name: Ledgers — classify and reconcile every owner
+        run: >
+          node --max-old-space-size=6144 $LAND/classify.mjs --households=households.json
+          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh
+
+      - name: Report + export
+        run: |
+          node $LAND/report.mjs --results=results.jsonl
+          node $LAND/export.mjs --results=results.jsonl --households=households.json \
+            --full=aeon-ledger.full.json --public=public/aeon-ledger.json
+          # sanity gate: a thin or badly-reconciled run must not replace a good snapshot
+          node -e '
+            const d = require("./public/aeon-ledger.json");
+            const bad = [];
+            if (d.owners.length < 500) bad.push(`only ${d.owners.length} owners`);
+            if (d.scope.excluded > 0.05 * d.scope.withSpx) bad.push(`${d.scope.excluded} of ${d.scope.withSpx} did not reconcile`);
+            if (bad.length) { console.error("::error::refusing to publish — " + bad.join("; ")); process.exit(1); }
+            console.log(`ok · ${d.owners.length} owners · ${d.scope.reconciled}/${d.scope.withSpx} reconciled · as of ${d.updated}`);'
+
+      - name: Members file → KV (addresses, members only)
+        env:
+          KV_REST_API_URL: ${{ secrets.KV_REST_API_URL }}
+          KV_REST_API_TOKEN: ${{ secrets.KV_REST_API_TOKEN }}
+        run: node scripts/push-private-feed.mjs --file=aeon-ledger.full.json --key=aeon-ledger
+
+      - name: Commit the public ledger
+        id: commit
+        run: |
+          if [[ -n "$(git status --porcelain public/aeon-ledger.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add public/aeon-ledger.json
+            git commit -m "chore: AEON Ledger refresh $(date -u +%F)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              git pull --rebase -X theirs --autostash origin main || exit 1
+              sleep $((i * 3))
+            done
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No change"; echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # GITHUB_TOKEN commits don't trigger deploy.yml, so the refreshed file ships from here.
+  deploy:
+    needs: refresh
+    if: needs.refresh.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: vercel-production
+      cancel-in-progress: true
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - run: npm install --global vercel@latest
+      - run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

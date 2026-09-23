@@ -113,6 +113,10 @@ export const FEEDS = [
     // Derived from cex-sankey.json's 90-day profiles, so it is only as fresh as that. A document,
     // not a series: `counts` present and the wallet list non-empty is what proves it ran.
     require: ["counts", "n"], nonEmpty: ["wallets"] },
+  { file: "aeon-ledger.json", cadence: 35, by: "aeon-ledger.yml (dispatch)", what: "AEON Ledger: every AEON owner's SPX record, held vs sold",
+    // A dated snapshot refreshed by hand (a full sweep is ~45k Blockscout reads), so the window is
+    // monthly, like the manual on-chain extracts. owners non-empty proves the export ran.
+    require: ["updated", "totals", "scope"], nonEmpty: ["owners"] },
   { file: "aeon-clusters.json", cadence: 3, by: "aeon.yml", what: "AEON owner clusters, holding vs selling",
     // A current-state document, not a time series, so it is checked the way aeon-market.json is:
     // top-level counts must be present and the cluster list must not be empty. `owners` going
