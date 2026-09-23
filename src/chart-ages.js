@@ -26,6 +26,7 @@ export const CHART_AGES = {
   channel: "2026-06-29",
   cityflow: "2026-08-08",
   citygrowth: "2026-08-08",
+  cityintel: "2026-09-19",
   citylab: "2026-07-27",
   clustercity: "2026-08-15",
   concentration: "2026-07-16",

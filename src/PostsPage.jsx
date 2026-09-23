@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 import { SANS, MONO } from "./chart-ui.jsx";
 import { SUSPENDED_IMG, COMMS_HANDLE } from "./x-notice.js";
 
-const RAW = "https://raw.githubusercontent.com/cianfru/SPX6900_rainbow_chart/main/public/";
+const RAW = "https://raw.githubusercontent.com/cianfru/The_Terminal/main/public/";
 const DIM = "#8b98ad", BODY = "#cbd5e1", TEXT = "#f1f5f9", RULE = "#23232a", ACCENT = "#5eead4", WARN = "#fbbf24";
 
 
