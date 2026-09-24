@@ -689,3 +689,25 @@ test("390px Find an AEON: three visible traits narrow 3,333 pieces to one, linke
   assert.equal(await open.count(), 1, "links to the owner's ledger record");
   await ctx.close();
 });
+
+test("390px AEON Ledger: the finder opens in the page and a found piece opens its owner's record in place", async () => {
+  const ctx = await browser.newContext(phone(390));
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/?chart=aeonledger", { waitUntil: "networkidle" });
+  await page.locator(".al-row").first().waitFor();
+  await page.getByRole("button", { name: "Find an AEON from a picture" }).tap();
+  const sel = k => page.locator("#al-find label", { hasText: k }).locator("select");
+  await sel("Hairstyle").waitFor();
+  await sel("Hairstyle").selectOption("Space-Buns");
+  await sel("Face").selectOption("Cross");
+  await sel("Background").selectOption("Sunset");
+  await page.getByText("AEON #2904", { exact: true }).waitFor();
+  const o = await overflow(page);
+  assert.ok(o.sw <= o.cw, `no sideways scroll (${o.sw} > ${o.cw})`);
+  await page.getByRole("button", { name: /Open Owner #\d+/ }).tap();
+  const dlg = page.getByRole("dialog");
+  await dlg.waitFor();
+  assert.match(await dlg.getAttribute("aria-label"), /Owner #\d+/);
+  assert.match(page.url(), /chart=aeonledger/, "stays on the ledger");
+  await ctx.close();
+});

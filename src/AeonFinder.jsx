@@ -35,7 +35,7 @@ const CSS = `
 
 const has = (t, k, v) => t.traits.some(x => x.t === k && x.v === v);
 
-function Detail({ tok, owner, total, isMobile }) {
+function Detail({ tok, owner, total, isMobile, onOwner }) {
   const ref = useRef(null);
   useEffect(() => { ref.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, [tok.id]);
   return (
@@ -58,7 +58,9 @@ function Detail({ tok, owner, total, isMobile }) {
             : <span style={{ color: MUT }}>Its holder has no SPX on Ethereum, so it is not in the AEON Ledger.</span>}
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 14 }}>
-          {owner && <a className="af-btn acc" href={`/?chart=aeonledger&owner=${owner.n}`}>Open Owner #{owner.n} →</a>}
+          {owner && (onOwner
+            ? <button type="button" className="af-btn acc" onClick={() => onOwner(owner)}>Open Owner #{owner.n} →</button>
+            : <a className="af-btn acc" href={`/?chart=aeonledger&owner=${owner.n}`}>Open Owner #{owner.n} →</a>)}
           <a className="af-btn" href={openseaUrl(tok.id)} target="_blank" rel="noopener noreferrer">OpenSea ↗</a>
         </div>
       </div>
@@ -66,19 +68,23 @@ function Detail({ tok, owner, total, isMobile }) {
   );
 }
 
-export default function AeonFinder({ isMobile }) {
+/** Standalone page (?chart=aeonfind), or embedded in the AEON Ledger: there the page passes its already
+ *  loaded `ledger` and `onOwner`, so "Open Owner #N" opens that record in place instead of navigating. */
+export default function AeonFinder({ isMobile, ledger: given = null, onOwner = null, embedded = false }) {
   const [rar, setRar] = useState(null);
-  const [ledger, setLedger] = useState(null);
+  const [fetched, setLedger] = useState(null);
+  const ledger = given || fetched;
   const [picks, setPicks] = useState({});
   const [num, setNum] = useState("");
   const [sel, setSel] = useState(null);
-  const [shown, setShown] = useState(PER);
+  const [shown, setShown] = useState(embedded ? PER / 2 : PER);
 
   useEffect(() => {
     let off = false;
     loadAeonRarity().then(d => { if (!off) setRar(d || { tokens: [] }); });
-    fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => { if (!off) setLedger(d); });
+    if (!given) fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null).then(d => { if (!off) setLedger(d); });
     return () => { off = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const tokens = useMemo(() => [...(rar?.tokens || [])].sort((a, b) => a.rank - b.rank), [rar]);
@@ -99,9 +105,9 @@ export default function AeonFinder({ isMobile }) {
     return Object.fromEntries(Object.entries(f).map(([k, m]) => [k, [...m].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))]));
   }, [pool]);
 
-  if (!rar) return <div style={{ textAlign: "center", fontFamily: SANS, color: MUT, padding: 60 }}>Loading 3,333 pieces…</div>;
+  if (!rar) return <div style={{ textAlign: "center", fontFamily: SANS, color: MUT, padding: embedded ? 24 : 60 }}>Loading 3,333 pieces…</div>;
 
-  const pick = (k, v) => { setPicks(p => { const n = { ...p }; if (v) n[k] = v; else delete n[k]; return n; }); setShown(PER); setSel(null); };
+  const pick = (k, v) => { setPicks(p => { const n = { ...p }; if (v) n[k] = v; else delete n[k]; return n; }); setShown(embedded ? PER / 2 : PER); setSel(null); };
   const lookup = e => { e.preventDefault(); const id = Number(String(num).replace(/\D/g, "")); if (byId.has(id)) setSel(id); };
   const active = Object.keys(picks).length;
   const selected = sel != null ? byId.get(sel) : pool.length === 1 && active ? pool[0] : null;
@@ -130,10 +136,10 @@ export default function AeonFinder({ isMobile }) {
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, margin: "16px 0 12px" }}>
         <span style={{ fontFamily: MONO, fontSize: 20, fontWeight: 700, color: pool.length === 1 && active ? ACC : INK }}>{pool.length.toLocaleString()}</span>
         <span style={{ fontFamily: SANS, fontSize: 15, color: MUT }}>{pool.length === 1 ? "piece matches" : "pieces match"}{active ? "" : " · pick a trait to narrow"}</span>
-        {active > 0 && <button type="button" className="af-btn" onClick={() => { setPicks({}); setSel(null); setShown(PER); }}>Clear</button>}
+        {active > 0 && <button type="button" className="af-btn" onClick={() => { setPicks({}); setSel(null); setShown(embedded ? PER / 2 : PER); }}>Clear</button>}
       </div>
 
-      {selected && <Detail tok={selected} owner={ownerOf.get(selected.id)} total={tokens.length} isMobile={isMobile} />}
+      {selected && <Detail tok={selected} owner={ownerOf.get(selected.id)} total={tokens.length} isMobile={isMobile} onOwner={onOwner} />}
 
       <div className="af-grid">
         {pool.slice(0, shown).map(t => (
@@ -144,7 +150,7 @@ export default function AeonFinder({ isMobile }) {
         ))}
       </div>
       {shown < pool.length && (
-        <button type="button" className="af-btn" style={{ marginTop: 14, width: isMobile ? "100%" : "auto" }} onClick={() => setShown(shown + PER * 2)}>
+        <button type="button" className="af-btn" style={{ marginTop: 14, width: isMobile ? "100%" : "auto" }} onClick={() => setShown(shown + PER)}>
           Show more ({(pool.length - shown).toLocaleString()} left)
         </button>
       )}

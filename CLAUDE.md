@@ -425,6 +425,10 @@
   the piece, traits, rank and its holder: "Owner #N" linked to `?chart=aeonledger&owner=N` (the ledger opens that owner's record —
   `openN` in AeonLedger/OwnerList) or "not in the ledger" (holder has no SPX on Ethereum) + OpenSea. All client-side. Worked example
   (first use): an X PFP → Space-Buns (75) → Cross face (9) → Sunset (1) = **#2904**, Owner #254. A PFP is a lead, never proof.
+  **Also embedded in the ledger (owner, 2026-09-24):** a "Find an AEON from a picture" toggle under the ledger's stats strip opens the
+  same component inline (`embedded`, lazy-loaded, reuses the page's already-fetched ledger); "Open Owner #N" there opens the owner
+  sheet IN PLACE (`onOwner`). The open owner record now lives in AeonLedger (`sheetN` → OwnerList `sheet`/`onSheet`), so any owner can
+  be opened even when the current filter hides it. `?find=1` opens the finder on load.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

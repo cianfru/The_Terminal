@@ -10,10 +10,13 @@
 // but the top 10 behind the members login; the owner reversed that.)
 //
 // Built by landscape/export.mjs → public/aeon-ledger.json; refreshed by aeon-ledger.yml (dispatch).
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { SANS, MONO, MAX_W, ViewTabs } from "./chart-ui.jsx";
 import OwnerList from "./AeonLedgerOwners.jsx";
 import { OWNER_SORTS } from "./aeon-ledger-pos.js";
+
+// Find an AEON, embedded (owner, 2026-09-24): same component as ?chart=aeonfind, loaded only when opened.
+const AeonFinder = lazy(() => import("./AeonFinder.jsx"));
 
 const INK = "var(--ch-ink,#fff)", BODY = "var(--ch-body,#e2e9f2)", MUT = "var(--ch-mut,#d0d9e6)", DIM = "var(--ch-dim,#b1bccc)";
 const LINE = "rgba(148,163,184,0.28)";
@@ -119,8 +122,10 @@ export default function AeonLedger({ isMobile }) {
   const [d, setD] = useState(null);
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState("holds");
-  // ?owner=N (from Find an AEON) opens that owner's record straight away
-  const [openN] = useState(() => { try { return Number(new URLSearchParams(window.location.search).get("owner")) || null; } catch { return null; } });
+  const q = (() => { try { return new URLSearchParams(window.location.search); } catch { return new URLSearchParams(); } })();
+  // ?owner=N opens that owner's record straight away; ?find=1 opens the finder
+  const [sheetN, setSheetN] = useState(() => Number(q.get("owner")) || null);
+  const [find, setFind] = useState(() => q.get("find") === "1");
   useEffect(() => {
     let off = false;
     fetch("/aeon-ledger.json", { cache: "no-cache" }).then(r => (r.ok ? r.json() : null)).catch(() => null)
@@ -159,6 +164,21 @@ export default function AeonLedger({ isMobile }) {
         {stat(pct(exited / s.withSpx), "exited", "#fb7185")}
         {d.cex ? stat(big(d.cex.net), "SPX to exchanges", "#fbbf24") : stat(big(t.holds), "SPX held", "#34d399")}
       </div>
+      <div style={{ display: "flex", justifyContent: "center", margin: "0 0 14px" }}>
+        <button type="button" onClick={() => setFind(!find)} aria-expanded={find} aria-controls="al-find"
+          style={{ minHeight: 44, padding: "0 18px", cursor: "pointer", fontFamily: SANS, fontSize: 15, fontWeight: 600, width: isMobile ? "100%" : "auto",
+            background: find ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: "1px solid #2dd4bf" }}>
+          {find ? "Close the finder" : "Find an AEON from a picture"}
+        </button>
+      </div>
+      {find && (
+        <section id="al-find" aria-label="Find an AEON" style={{ border: `1px solid ${LINE}`, padding: isMobile ? "14px 12px" : "18px 20px", margin: "0 0 20px" }}>
+          <p style={{ fontFamily: SANS, fontSize: 15, color: BODY, margin: "0 0 14px" }}>Pick the traits you can see; each list shows only what is still possible. One piece left = its owner.</p>
+          <Suspense fallback={<div style={{ fontFamily: SANS, color: MUT, padding: 24, textAlign: "center" }}>Loading…</div>}>
+            <AeonFinder isMobile={isMobile} ledger={d} onOwner={o => setSheetN(o.n)} embedded />
+          </Suspense>
+        </section>
+      )}
       <ViewTabs tabs={[["all", "All"], ...ORDER.map(k => [k, V[k].label])]} value={filter} onChange={setFilter} />
       <div style={{ display: "flex", alignItems: "center", justifyContent: isMobile ? "flex-start" : "center", gap: 8, margin: "10px 0 12px", fontFamily: SANS, fontSize: 14, color: MUT,
         overflowX: "auto", whiteSpace: "nowrap", paddingBottom: 2 }}>
@@ -168,7 +188,8 @@ export default function AeonLedger({ isMobile }) {
             background: sort === k ? "rgba(45,212,191,0.16)" : "transparent", color: INK, border: `1px solid ${sort === k ? "#2dd4bf" : LINE}` }}>{l}</button>
         ))}
       </div>
-      <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile} openN={openN} />
+      <OwnerList key={filter + sort} rows={rows} spot={d.spot} isMobile={isMobile}
+        sheet={sheetN ? d.owners.find(o => o.n === sheetN) || null : null} onSheet={o => setSheetN(o?.n ?? null)} />
 
       <Section title="The collection">
         <div style={{ display: "flex", flexWrap: "wrap", gap: isMobile ? 22 : 40 }}>
