@@ -9,7 +9,8 @@
 //            (owner, 2026-09-23: it is public chain data, the ledger only reconstructs it). The trade lists
 //            live in public/aeon-ledger-trades.json, fetched the first time a sheet opens.
 //
-// Figures are SPX trading only (average cost, landscape/export.mjs pnlOf); AEON trading is not in them.
+// Figures are SPX trading only (average cost, src/aeon-ledger-pos.js positionFromTrades — the same replay the
+// pipeline publishes); AEON trading is not in them.
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { loadAeonRarity, loadPriceHistory } from "./history-data.js";
@@ -268,7 +269,7 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
   }, []);
   const trades = o.trades || tr?.owners?.[o.n] || null;
   const p = o.pnl || {};
-  const pos = trades && px ? positionFromTrades(trades, priceLookup(px), o.holds) : null;
+  const pos = trades && px ? positionFromTrades(trades, priceLookup(px), o.holds, spot) : null;
   const pub = (
     <div className="al-tiles">
       <Tile k="SPX held" v={big(o.holds)} sub={spot ? usd(o.holds * spot) + " today" : ""} />
@@ -310,8 +311,9 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
               footer={
                 <div style={{ marginTop: 22 }}>
                   <p className="al-s" style={{ whiteSpace: "normal", fontSize: 14, lineHeight: 1.6, maxWidth: 780 }}>
-                    Green orbs are SPX bought through a pool or router; red triangles are SPX sold, including sales settled in another token.
-                    Also received {big(pos.received)} SPX from other wallets (entered at that day&apos;s price) and sent {big(pos.sentOut)} out (left at average cost, no gain or loss booked).
+                    Green orbs are SPX bought, at the price actually paid; red triangles are SPX sold, at what came back (a sale into another token at that day&apos;s price).
+                    {pos.returned >= 1 ? ` ${big(pos.returned)} SPX went out and came back from the same place (loan collateral, a liquidity pool, an exchange) and kept its cost.` : ""}
+                    {pos.receivedAtMarket >= 1 ? ` ${big(pos.receivedAtMarket)} SPX arrived from wallets it never sent to; that cost can't be known, so it counts at the day's price.` : ""}
                     {o.cex ? ` Of what went out, ${big(o.cex.sent)} SPX went to exchanges (${Object.keys(o.cex.venues || {}).join(", ")}) and ${big(o.cex.back)} came back: ${big(o.cex.net)} net, likely sold, not proven.` : ""}
                   </p>
                   {o.wallets?.length > 0 && <>

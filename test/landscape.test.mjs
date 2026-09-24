@@ -178,3 +178,32 @@ test("the ledger gives each owner its exact pieces, rarest first, as the profile
   assert.deepEqual(o.pfp, { id: 9, rank: 12, img: "b" });
   assert.equal(o.aeon, 2);
 });
+
+test("exchange round trips match by venue: deposit address in, hot wallet out", async () => {
+  const { keyer, keyTrades } = await import("../research/pfp-forensics/landscape/export.mjs");
+  const key = keyer(new Map([["0xhot", "Kraken"]]), { "0xdeposit": "Kraken" });
+  assert.equal(key("0xDEPOSIT"), "x:Kraken"); assert.equal(key("0xhot"), "x:Kraken");
+  assert.equal(key("0x1234567890abcdef"), "0x12345678"); assert.equal(key(null), null);
+  const t = keyTrades([["t", "out", 5, null, "0xdeposit"], ["t", "buy", 5, 1, "wallet"], ["t", "in", 5]], key);
+  assert.deepEqual(t, [["t", "out", 5, null, "x:Kraken"], ["t", "buy", 5, 1, "wallet"], ["t", "in", 5]]);
+});
+
+test("a trade is valued at what our wallets moved, else the pools' price, else the close — never 3x off it", async () => {
+  const { tradeValue } = await import("../research/pfp-forensics/landscape/classify.mjs");
+  const fx = { eth: () => 2000, btc: () => 60000 };
+  const row = (wallet, pool) => ({ ts: "2024-03-04T00:00:00Z", qty: 1000, value: { wallet, pool } });
+  assert.deepEqual(tradeValue(row({ usd: 2800 }, { eth: 1.4 }), 3, fx), { usd: 2800, via: "wallet" });   // case #14: 2,800.38 USDC in
+  assert.deepEqual(tradeValue(row(null, { eth: 1.5 }), 3, fx), { usd: 3000, via: "pool" });                // paid in another token
+  assert.deepEqual(tradeValue(row({ eth: 2 }, { eth: 1.5 }), 3, fx), { usd: 3000, via: "pool" });          // wallet 33% over: a refund we can't see
+  assert.deepEqual(tradeValue(row({ eth: 0.002 }, null), 3, fx), { usd: 3000, via: "close" });             // $4 for $3,000 of SPX: rejected
+  assert.deepEqual(tradeValue({ ts: "2024-03-04T00:00:00Z", qty: 1000 }, 3, fx), { usd: 3000, via: "close" });
+});
+
+test("pool price: a batch settler passing SPX through (and other users' money) is not a pool", async () => {
+  const { poolPrice } = await import("../scripts/bot/kol-cluster.mjs");
+  const n = o => ({ spx: 0, gross: 0, usd: 0, eth: 0, btc: 0, ...o });
+  // CoW batch, 2024-09-17: we sold 100,000 SPX; the settler kept a 151 fee and netted −$6,235 of other orders
+  const net = new Map([["settler", n({ spx: 151, gross: 199849, usd: -6235 })], ["v2pool", n({ spx: 99849, gross: 99849, eth: -1.5582 })]]);
+  const p = poolPrice(net);
+  assert.ok(Math.abs(p.bought.eth - 1.5582 / 99849) < 1e-15); assert.equal(p.bought.usd, 0); assert.equal(p.sold, null);
+});
