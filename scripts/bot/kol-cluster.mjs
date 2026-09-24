@@ -72,6 +72,35 @@ export const VALUE_TOKENS = new Set([
   "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599", // WBTC
 ]);
 
+/** What a unit of each money token is worth, for pricing a trade at what actually changed hands.
+ *  ETH-like tokens are counted as 1 ETH and savings dollars as $1: wstETH/rETH/sUSDe/sDAI trade a few
+ *  percent above that, so a trade settled in them reads slightly LOW — the direction that never flatters. */
+const ETH_LIKE = new Set(["0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", "0xae7ab96520de3a18e5e111b5eaab095312d7fe84",
+  "0x7f39c581f595b53c5cb19bd0b3f8da6c935e2ca0", "0xae78736cd615f374d3085123a210448e74fc6393", "0xbe9895146f7af43049ca1c1ae358b0541ea49704"]);
+const BTC_LIKE = new Set(["0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"]);
+export const moneyUnit = addr => (ETH_LIKE.has(addr) ? "eth" : BTC_LIKE.has(addr) ? "btc" : "usd");
+
+/** Money per SPX at the pools that traded in one transaction. Pure; unit-tested.
+ *  `net` = address → {spx, usd, eth, btc} received minus sent (our own wallets left out). A pool that SOLD
+ *  SPX sent SPX out and took money in; one that BOUGHT the reverse. Routers and batch settlers pass both
+ *  through and net to ~0, so they drop out; dividing by the pools' own SPX keeps a batch auction's other
+ *  traders out of our price. Returns {sold, bought}: per-SPX money by unit, or null when no pool traded. */
+export function poolPrice(net) {
+  const side = sign => {
+    let spx = 0; const m = { usd: 0, eth: 0, btc: 0 };
+    for (const x of net.values()) {
+      if (sign * x.spx >= -1e-9) continue;                           // this side's pools moved SPX the other way
+      if (Math.abs(x.spx) < 0.5 * x.gross) continue;                 // a pass-through (router, batch settler keeping a fee)
+      const money = ["usd", "eth", "btc"].filter(k => sign * x[k] > 1e-12);
+      if (!money.length) continue;
+      spx += Math.abs(x.spx);
+      for (const k of money) m[k] += Math.abs(x[k]);
+    }
+    return spx > 0 ? { usd: m.usd / spx, eth: m.eth / spx, btc: m.btc / spx } : null;
+  };
+  return { sold: side(1), bought: side(-1) };
+}
+
 /** A V2-style LP token: the pair contract IS the token. SPX out with one of these back is a
  *  liquidity deposit, SPX in with one sent away is a withdrawal. */
 export const isLpToken = (addr, symbol = "") => POOLS.has(addr) || /^(UNI-V2|SLP|SUSHI-LP|CAKE-LP)$|-LP$/i.test(symbol);
@@ -178,7 +207,7 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
 
   // Every leg of each transaction, not just the SPX one, so a trade can be recognised by the
   // value moving the other way even when the counterparty is one we have never seen.
-  const kinds = new Map();
+  const kinds = new Map(), money = new Map();
   for (const tx of new Set(rows.map(r => r.tx))) {
     const [t, legs] = await Promise.all([
       j(`${BS}/transactions/${tx}`, fetchImpl),
@@ -190,6 +219,10 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
     // must stop the job, never quietly produce a different answer.
     if (!legs) throw new Error(`token-transfers unavailable for ${tx} — refusing to classify on a partial read`);
     const shape = { valueIn: 0, valueOut: 0, otherIn: 0, lpTokenIn: 0, lpTokenOut: 0 };
+    // the money that actually moved, by unit, into and out of the household (priced later, per day)
+    const got = { usd: 0, eth: 0, btc: 0 }, paid = { usd: 0, eth: 0, btc: 0 };
+    const net = new Map();   // every OTHER address: SPX and money in minus out — finds the pools that traded
+    const at = a => net.get(a) || net.set(a, { spx: 0, gross: 0, usd: 0, eth: 0, btc: 0 }).get(a);
     let unwrapped = 0, spxOut = 0;
     for (const L of legs?.items || []) {
       const addr = (L.token?.address_hash || L.token?.address || "").toLowerCase();
@@ -205,19 +238,43 @@ export async function tradeHistory(wallets, { fetchImpl = fetch, sinceDays = nul
       if (set.has(from) && isSpx) spxOut += v;
       if (set.has(to)) { if (isValue) shape.valueIn += v; else if (!isSpx) shape.otherIn += v; }
       if (set.has(from) && isValue) shape.valueOut += v;
+      if (isSpx || isValue) {
+        const k = isSpx ? "spx" : moneyUnit(addr);
+        if (!set.has(from) && from !== ZERO) { at(from)[k] -= v; if (isSpx) at(from).gross += v; }
+        if (!set.has(to) && to !== ZERO) { at(to)[k] += v; if (isSpx) at(to).gross += v; }
+      }
+      if (isValue && set.has(to) && !set.has(from)) got[moneyUnit(addr)] += v;
+      if (isValue && set.has(from) && !set.has(to)) paid[moneyUnit(addr)] += v;
     }
+    // native ETH: sent with the call by one of our wallets (a buy through a router) …
+    if (set.has((t?.from?.hash || "").toLowerCase())) paid.eth += Number(t?.value || 0) / 1e18;
     // ⚠ ONLY INFER PAYMENT FROM AN UNWRAP WHEN NOTHING ELSE CAME BACK. A multi-hop router
     // burns WETH and USDC to the zero address as part of its own internal plumbing, which
     // has nothing to do with our wallet being paid. Without the otherIn guard this fired on
     // the 680,000-SPX/ASTEROID swap, set valueIn, and kept it classified as a $212,470 sale
     // — precisely the error the audit was criticised for making.
-    if (spxOut > 0 && shape.valueIn === 0 && shape.otherIn === 0 && unwrapped > 0) shape.valueIn = unwrapped;
+    if (spxOut > 0 && shape.valueIn === 0 && shape.otherIn === 0 && unwrapped > 0) { shape.valueIn = unwrapped; got.eth += unwrapped; }   // … or paid out unwrapped
     const r0 = rows.find(r => r.tx === tx);
     const base = classify({ dir: r0.dir, cp: r0.cp, txTo: t?.to?.hash,
                             txToName: t?.to?.name || "", txMethod: t?.method || "" });
     kinds.set(tx, upgradeKind(base, shape));
+    money.set(tx, { got, paid, pool: poolPrice(net) });
   }
-  return rows.map(r => ({ ...r, kind: kinds.get(r.tx) ?? "out" }));
+  // A trade's money belongs to the whole transaction; split it across its SPX rows by quantity.
+  const txQty = new Map();
+  for (const r of rows) txQty.set(r.tx + r.dir, (txQty.get(r.tx + r.dir) || 0) + r.qty);
+  return rows.map(r => {
+    const kind = kinds.get(r.tx) ?? "out", m = money.get(r.tx), share = r.qty / (txQty.get(r.tx + r.dir) || r.qty);
+    if (kind !== "buy" && kind !== "sell") return { ...r, kind };
+    // Both readings of what this trade was worth, in money units; the caller prices them per day and picks
+    // (tradeValue in landscape/classify.mjs). wallet = what our wallets paid or received; pool = our quantity
+    // at the price the SPX pools in this transaction traded at.
+    const pp = m?.pool?.[kind === "buy" ? "sold" : "bought"];
+    const side = kind === "buy" ? m?.paid : m?.got;
+    const wallet = side && (side.usd || side.eth || side.btc) ? { usd: side.usd * share, eth: side.eth * share, btc: side.btc * share } : null;
+    const pool = pp ? { usd: pp.usd * r.qty, eth: pp.eth * r.qty, btc: pp.btc * r.qty } : null;
+    return { ...r, kind, ...(wallet || pool ? { value: { wallet, pool } } : {}) };
+  });
 }
 
 export const sells = rows => rows.filter(r => r.kind === "sell");

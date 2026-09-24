@@ -130,6 +130,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const priceOn = d => { if (P.has(d)) return P.get(d); let b = 0; for (const x of days) { if (x > d) break; b = P.get(x); } return b; };
   const out = ownerCexOut(mine, owners, cex, deposits, priceOn, (k, ts) => sales.has(k + "|" + ts.slice(0, 19)));
   const n = Object.keys(out).length, sum = f => Object.values(out).reduce((a, r) => a + r[f], 0), q = sum("qty");
-  writeFileSync(arg("out", "cex-out.json"), JSON.stringify({ exchanges: cex.size, deposits: deposits.size, owners: out }));
+  // the deposit addresses owners actually used, so the ledger can match a deposit with its withdrawal
+  const depositVenue = {};
+  for (const [from, to] of mine) if (own.has(from) && deposits.has(to)) depositVenue[to] = deposits.get(to);
+  writeFileSync(arg("out", "cex-out.json"), JSON.stringify({ exchanges: cex.size, deposits: deposits.size, owners: out, depositVenue }));
   console.log(`cex-out: ${cex.size} exchange wallets · ${deposits.size} inferred deposit addresses · ${n} owners sent ${Math.round(q).toLocaleString()} SPX, withdrew ${Math.round(sum("back")).toLocaleString()}, net ${Math.round(sum("net")).toLocaleString()}`);
 }

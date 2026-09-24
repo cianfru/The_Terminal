@@ -429,6 +429,24 @@
   same component inline (`embedded`, lazy-loaded, reuses the page's already-fetched ledger); "Open Owner #N" there opens the owner
   sheet IN PLACE (`onOwner`). The open owner record now lives in AeonLedger (`sheetN` → OwnerList `sheet`/`onSheet`), so any owner can
   be opened even when the current filter hides it. `?find=1` opens the finder on load.
+- **⭐⭐ REAL P&L (owner, 2026-09-24: "as close as possible to real pnl, not made up numbers").** Found while checking the ledger
+  against the case studies: coin counts matched all four exactly, but P&L was wrong in two ways. (1) **Every trade was priced at the
+  day's SPX close**, while the classifier already opened each transaction and threw the money leg away; on #2451 the close overstated
+  cost by 21% (posted $64,095 vs $52,922 actually paid; 3.9× recovered is really 4.4×). (2) **A round trip was re-priced at market:**
+  case #14's household put 2,000,000 SPX into **Morpho** as collateral (2025-07-15/16) and took it back 07-23 near the ATH, so its own
+  coins re-entered at ~$1.80 → avg cost $1.86 and a −$1.13M "loss" for a $51k buyer who took out $1.9M. 63 owners moved >$1k, 14 flipped.
+  **Fixes:** `kol-cluster.mjs tradeHistory` now returns each buy/sell's `value: {wallet, pool}` in money units (labels UNCHANGED) —
+  `wallet` = money our wallets paid/received (incl. native ETH sent with the call and unwrapped WETH), `pool` = our qty × the price at the
+  SPX pools in that tx (`poolPrice`: net money ÷ net SPX; an address is a pool only if ≥50% of the SPX it touched stayed — CoW's settler
+  passes 100k SPX through and nets other users' $6k, which first produced a 2.7× outlier). `classify.mjs tradeValue` picks wallet → pool
+  (when wallet is >25% off it, e.g. an unseen refund) → the close, rejecting anything >3× off the close; ETH/BTC from `landscape/fx.mjs`
+  (Coinbase daily candles, a workflow step). Trades are now `[t, buy|sell, qty, usd, via]` / `[t, kind, qty, null, key]`. **ONE P&L
+  function**, `src/aeon-ledger-pos.js positionFromTrades`, used by export.mjs `pnlOf` AND the owner sheet: out/lpOut are REMEMBERED by
+  key and coins coming back from the same key return at the cost they left with (liquidity is one key "lp" — V3 goes out to the pool and
+  back from the position manager; an exchange is one key per venue via `keyer`, since deposits go in through a deposit address and come
+  back from the hot wallet — cex-out.mjs now emits `depositVenue`). Receipts from anyone else can't have a known cost → the day's close,
+  counted as `receivedAtMarket` and SAID on the sheet. Verified on #14/#2451/#3062/#220/#438 (all reconcile; the 2,800.38-USDC buy reads
+  $2,805; the 24.4293/23.4932-WETH sales exact). Ledger carries `pricing {wallet, pool, close}`.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

@@ -248,7 +248,7 @@ export default function AeonLedger({ isMobile }) {
           <li><strong style={{ color: INK }}>Checked, not estimated.</strong> Each owner&apos;s SPX history is rebuilt trade by trade and counts only if it sums to the real balance ({s.reconciled} of {s.withSpx}). {s.neverTouchedSpx.toLocaleString()} AEON owners never held SPX on Ethereum.</li>
           <li><strong style={{ color: INK }}>Sold</strong> = trades through a DEX pool or router. <strong style={{ color: INK }}>Sent to exchanges</strong> = transfers into {d.cex ? `${d.cex.exchanges} tagged exchange wallets or ${d.cex.deposits.toLocaleString()} inferred deposit addresses` : "tagged exchange wallets"}, net of withdrawals: likely sold, not proven.</li>
           <li><strong style={{ color: INK }}>Verdicts:</strong> {ORDER.map(k => `${V[k].label}: ${V[k].def.replace(/\.$/, "")}`).join(" · ")}.</li>
-          <li><strong style={{ color: INK }}>P&amp;L</strong> is SPX trading only, at average cost. Ethereum only. A snapshot as of {d.updated}; a picture never proves who owns a wallet.</li>
+          <li><strong style={{ color: INK }}>P&amp;L</strong> is SPX trading only, at average cost. Every buy and sell counts what actually changed hands in its transaction{d.pricing ? ` (${(d.pricing.wallet + d.pricing.pool).toLocaleString()} trades; ${d.pricing.close.toLocaleString()} unreadable ones at the day's close)` : ""}. SPX that goes out and comes back from the same place (collateral, a pool, an exchange) keeps its cost; SPX from anyone else counts at the day&apos;s price. Ethereum only. A snapshot as of {d.updated}; a picture never proves who owns a wallet.</li>
         </ul>
       </details>
     </div>

@@ -86,10 +86,13 @@ jobs:
           --aeon=public/aeon-onchain.json --addr-types=public/addr-types.json
           --codecache=codecache.json --out=households.json
 
-      - name: Ledgers — classify and reconcile every owner
+      - name: Daily ETH and BTC closes — to value trades settled in them
+        run: node $LAND/fx.mjs --out=fx.json
+
+      - name: Ledgers — classify and reconcile every owner (each trade valued at what changed hands)
         run: >
           node --max-old-space-size=6144 $LAND/classify.mjs --households=households.json
-          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh
+          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh --fx=fx.json
 
       - name: Exchange flows — SPX each owner sent to exchanges (tagged wallets + inferred deposit addresses)
         run: >
