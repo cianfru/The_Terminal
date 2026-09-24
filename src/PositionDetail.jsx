@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { ResponsiveContainer, ComposedChart, Line, Scatter, Area, XAxis, YAxis, ZAxis, Tooltip, CartesianGrid, ReferenceLine } from "recharts";
 import { walletGradient } from "./WalletCard.jsx";
-import { MONO, MAX_W, TipBox } from "./chart-ui.jsx";
+import { MONO, SANS, MAX_W, TipBox } from "./chart-ui.jsx";
 
 // Shared "where it bought & sold + P&L" view, used by BOTH the smart-money wallet page (WalletDetail)
 // and the cluster page (ClusterDetail). A cluster is just one position (the whole owner) — same tiles,
@@ -121,13 +121,17 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
           <Line dataKey="price" type="monotone" dot={false} stroke={PALE} strokeWidth={1.4} strokeOpacity={0.8} isAnimationActive={false} />
           <ReferenceLine y={avg} stroke={GOLD} strokeDasharray="5 5" strokeOpacity={0.8} label={{ value: "avg cost", fill: GOLD, fontSize: 11, fontFamily: MONO, position: "insideTopLeft" }} />
           <ReferenceLine y={live} stroke="#5eead4" strokeDasharray="2 4" strokeOpacity={0.7} label={{ value: "now", fill: "#5eead4", fontSize: 11, fontFamily: MONO, position: "insideBottomLeft" }} />
-          <Scatter data={model.buys} dataKey="price" fill={GRN} fillOpacity={0.55} stroke={GRN} isAnimationActive={false} />
-          <Scatter data={model.sells} dataKey="price" fill={RED} fillOpacity={0.6} stroke={RED} shape="triangle" isAnimationActive={false} />
+          {/* ⚠ only when there are points: an EMPTY <Scatter data> falls back to the chart's own data, which put a
+              triangle on every day of the price line for owners who never sold (Owner #17, 2026-09-24) */}
+          {model.buys.length > 0 && <Scatter data={model.buys} dataKey="price" fill={GRN} fillOpacity={0.55} stroke={GRN} isAnimationActive={false} />}
+          {model.sells.length > 0 && <Scatter data={model.sells} dataKey="price" fill={RED} fillOpacity={0.6} stroke={RED} shape="triangle" isAnimationActive={false} />}
         </ComposedChart>
       </ResponsiveContainer>
 
       <div style={{ fontFamily: "var(--mono)", fontSize: 12.5, color: "var(--dim)", margin: "22px 0 6px" }}>REALIZED P&amp;L OVER TIME <span style={{ color: "var(--faint)" }}>· booked on each sale (cumulative) · unrealized shown live above</span></div>
-      <ResponsiveContainer width="100%" height={isMobile ? 240 : 320}>
+      {model.sells.length === 0 ? (
+        <div style={{ fontFamily: SANS, fontSize: 15, color: "var(--tx)", margin: "4px 0 10px" }}>Nothing sold yet, so nothing realized: the whole result is still unrealized, shown above.</div>
+      ) : <ResponsiveContainer width="100%" height={isMobile ? 240 : 320}>
         <ComposedChart data={model.pnl} margin={{ top: 10, right: 20, left: 6, bottom: 6 }}>
           <defs><linearGradient id="wpnl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={GRN} stopOpacity={0.5} /><stop offset="100%" stopColor={GRN} stopOpacity={0.05} /></linearGradient></defs>
           <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -140,7 +144,7 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
           }} />
           <Area dataKey="cum" type="stepAfter" stroke={GRN} strokeWidth={1.6} fill="url(#wpnl)" isAnimationActive={false} />
         </ComposedChart>
-      </ResponsiveContainer>
+      </ResponsiveContainer>}
 
       {footer}
     </div>
