@@ -339,8 +339,9 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
 
 const PAGE = 25;
 
-export default function OwnerList({ rows, spot, isMobile, openN = null }) {
-  const [sheet, setSheet] = useState(() => (openN ? rows.find(o => o.n === openN) || null : null));
+/** `sheet`/`onSheet`: the open owner record lives with the page, so Find an AEON can open any owner. */
+export default function OwnerList({ rows, spot, isMobile, sheet = null, onSheet }) {
+  const setSheet = o => onSheet?.(o);
   const [gal, setGal] = useState(null);
   const [shown, setShown] = useState(PAGE);
   const withUsd = o => ({ ...o, holdsUsd: spot ? o.holds * spot : 0 });
