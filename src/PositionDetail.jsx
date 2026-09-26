@@ -29,7 +29,9 @@ function Tile({ label, value, color, sub }) {
 // head = { seed (for gradient), title, cmd, links:[{label,href}], meta (jsx under the title) }
 // bare = drop the back link, prompt line and title (the AEON Ledger's owner sheet draws its own header)
 // px   = the price-history array [{date, price}]
-export default function PositionDetail({ pos, head, px, price, isMobile, footer, bare }) {
+// tiles = optional [{label, value, color?, sub?}] replacing the default five; avgLine = draw the avg-cost line;
+// note = a node shown right under the tiles (the AEON Ledger explains coins of unknown cost there)
+export default function PositionDetail({ pos, head, px, price, isMobile, footer, bare, tiles, avgLine = true, note }) {
   const model = useMemo(() => {
     if (!pos || !px) return null;
     const buys = (pos.buys || []).map(([t, p, q]) => ({ t, price: p, qty: q }));
@@ -95,12 +97,15 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
       </>}
 
       <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap", margin: "0 0 18px" }}>
+        {tiles ? tiles.map(t => <Tile key={t.label} {...t} />) : <>
         <Tile label="holds now" value={fM(bag) + " SPX"} sub={fUsd(bag * live)} />
         <Tile label="avg cost" value={fP(avg)} sub={(pos.avgBuy ? "avg buy " + fP(pos.avgBuy) + " · " : "") + "live " + fP(live)} />
         <Tile label="realized" value={fUsd(realized)} color={realized >= 0 ? GRN : RED} sub={pos.roi ? pos.roi + "× ROI" : ""} />
         <Tile label="unrealized" value={fUsd(unreal)} color={unreal >= 0 ? GRN : RED} sub={costed < bag - 0.5 ? `on the ${fM(costed)} SPX with a known cost` : "on the current bag"} />
         <Tile label="total P&L" value={fUsd(total)} color={total >= 0 ? GRN : RED} sub="realized + unrealized" />
+        </>}
       </div>
+      {note}
 
       <div style={{ fontFamily: "var(--mono)", fontSize: 12.5, color: "var(--dim)", margin: "0 0 6px" }}>WHERE IT BOUGHT &amp; SOLD · <span style={{ color: GRN }}>● buys</span> · <span style={{ color: RED }}>▲ sells</span> · size = amount</div>
       <ResponsiveContainer width="100%" height={isMobile ? 340 : 480}>
@@ -120,7 +125,7 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
             </div></TipBox>;
           }} />
           <Line dataKey="price" type="monotone" dot={false} stroke={PALE} strokeWidth={1.4} strokeOpacity={0.8} isAnimationActive={false} />
-          <ReferenceLine y={avg} stroke={GOLD} strokeDasharray="5 5" strokeOpacity={0.8} label={{ value: "avg cost", fill: GOLD, fontSize: 11, fontFamily: MONO, position: "insideTopLeft" }} />
+          {avgLine && <ReferenceLine y={avg} stroke={GOLD} strokeDasharray="5 5" strokeOpacity={0.8} label={{ value: "avg cost", fill: GOLD, fontSize: 11, fontFamily: MONO, position: "insideTopLeft" }} />}
           <ReferenceLine y={live} stroke="#5eead4" strokeDasharray="2 4" strokeOpacity={0.7} label={{ value: "now", fill: "#5eead4", fontSize: 11, fontFamily: MONO, position: "insideBottomLeft" }} />
           {/* ⚠ only when there are points: an EMPTY <Scatter data> falls back to the chart's own data, which put a
               triangle on every day of the price line for owners who never sold (Owner #17, 2026-09-24) */}

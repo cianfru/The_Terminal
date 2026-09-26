@@ -137,7 +137,7 @@ function Row({ o, onOpen, onGallery }) {
         </div>
         <div className="r"><div className="al-v">{big(o.holds)}</div><div className="al-s">{o.holdsUsd ? usd(o.holdsUsd) : "SPX"}</div></div>
         <div className="r"><div className={"al-v " + tone(p.realized)}>{signed(p.realized || 0)}</div><div className="al-s">{p.proceeds ? `on ${usd(p.proceeds)} sold` : "nothing sold"}</div></div>
-        <div className="r"><div className={"al-v " + tone(p.unrealized)}>{signed(p.unrealized || 0)}</div><div className="al-s">avg cost {price(p.avgCost)}</div></div>
+        <div className="r"><div className={"al-v " + tone(p.unrealized)}>{signed(p.unrealized || 0)}</div><div className="al-s">{p.avgBuy ? "avg buy " + price(p.avgBuy) : "\u00a0"}</div></div>
         <div className="r"><Leg x={p.lastBuy} none="never bought" /></div>
         <div className="r"><Leg x={p.lastSell} none="never sold" /></div>
         <span className="al-chev" aria-hidden="true">›</span>
@@ -257,6 +257,40 @@ let tradesPromise = null;
 const loadTrades = () => (tradesPromise ||= fetch("/aeon-ledger-trades.json", { cache: "no-cache" })
   .then(r => (r.ok ? r.json() : null)).catch(() => null));
 
+/** Share of everything that ever came in (bought + received) that has been sold. Pure. */
+const soldShare = o => { const inn = (o.bought || 0) + (o.received || 0); return inn > 0 ? Math.min(1, ((o.sold || 0) + (o.rotated || 0)) / inn) : 0; };
+const pct = x => Math.round(x * 100) + "%";
+
+/** The owner sheet's tiles: facts first (what it bought, what it sold, how much of it), then P&L on known costs.
+ *  No "avg cost" tile: after selling cheap coins and buying dearer ones it reads wrong to anyone (owner, 2026-09-26). */
+function sheetTiles(pos, spot) {
+  const came = pos.boughtQty + pos.receivedUnknown, sold = came > 0 ? Math.min(1, pos.soldQty / came) : 0;
+  const unreal = pos.costedBag * ((spot || 0) - pos.avgCost);
+  const col = v => (v >= 0 ? "#34d399" : "#fb7185");
+  return [
+    { label: "holds now", value: big(pos.bag) + " SPX", sub: spot ? usd(pos.bag * spot) : "" },
+    { label: "bought", value: pos.boughtQty ? big(pos.boughtQty) + " SPX" : "—", sub: pos.boughtQty ? `${usd(pos.invested)} · avg ${price(pos.avgBuy)}` : "never bought" },
+    { label: "sold", value: pos.soldQty ? big(pos.soldQty) + " SPX" : "—", sub: pos.soldQty ? `${usd(pos.proceeds)} · ${pct(sold)} of all it had` : "never sold" },
+    { label: "realized", value: signed(pos.realized), color: col(pos.realized), sub: "profit booked on sales" },
+    { label: "unrealized", value: signed(unreal), color: col(unreal), sub: pos.unknownHeld >= 1 ? `on the ${big(pos.costedBag)} SPX it paid for` : "on what it holds today" },
+  ];
+}
+
+/** Why some of the bag has no dollar figure — said plainly, so nobody reads it as a broken chart. */
+function UnknownNote({ pos }) {
+  if (!(pos.unknownHeld >= 1 || pos.receivedUnknown >= 1)) return null;
+  return (
+    <div style={{ borderLeft: "3px solid var(--al-acc)", padding: "10px 14px", margin: "0 0 18px", maxWidth: 780, background: "rgba(45,212,191,0.07)" }}>
+      <div style={{ font: `700 14px ${SANS}`, color: "var(--ch-ink)" }}>Why part of this is counted in SPX, not dollars</div>
+      <p style={{ font: `400 14px/1.55 ${SANS}`, color: "var(--ch-ink)", margin: "4px 0 0" }}>
+        {big(pos.receivedUnknown)} SPX reached these wallets without a purchase: bridged from another chain, sent from another
+        wallet or given. What it cost can&apos;t be known, so profit and loss here counts only the SPX bought on Ethereum, at the
+        price actually paid{pos.unknownHeld >= 1 ? `; ${big(pos.unknownHeld)} of what it holds today is that kind of SPX` : ""}. Every buy and sale is still on the chart.
+      </p>
+    </div>
+  );
+}
+
 export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
   const rar = useRarity(true);
   const [px, setPx] = useState(null);
@@ -273,7 +307,8 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
   const pub = (
     <div className="al-tiles">
       <Tile k="SPX held" v={big(o.holds)} sub={spot ? usd(o.holds * spot) + " today" : ""} />
-      <Tile k="Avg cost" v={price(p.avgCost)} sub={[p.avgBuy ? "avg buy " + price(p.avgBuy) : "", spot ? "now " + price(spot) : ""].filter(Boolean).join(" · ")} />
+      <Tile k="Bought" v={o.bought ? big(o.bought) + " SPX" : "—"} sub={o.bought ? `${usd(o.boughtUsd)}${p.avgBuy ? " · avg " + price(p.avgBuy) : ""}` : "never bought"} />
+      <Tile k="Sold" v={o.sold + o.rotated ? big(o.sold + o.rotated) + " SPX" : "—"} sub={o.sold + o.rotated ? `${usd(o.soldUsd)} · ${pct(soldShare(o))} of all it had` : "never sold"} />
       <Tile k="Realized" v={signed(p.realized || 0)} cls={tone(p.realized)} sub={p.proceeds ? `on ${usd(p.proceeds)} sold` : "nothing sold"} />
       <Tile k="Unrealized" v={signed(p.unrealized || 0)} cls={tone(p.unrealized)} sub={p.unknownHeld >= 1 ? `on the ${big(p.costedBag)} SPX with a known cost` : "on what is held today"} />
       <Tile k="Put in" v={usd(p.invested)} sub="SPX bought, at the time" />
@@ -307,13 +342,13 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
         <div style={{ marginTop: 22 }}>
           <Suspense fallback={<div className="al-s">Loading the chart…</div>}>
             <PositionDetail bare isMobile={isMobile} px={px} price={spot || undefined}
-              pos={{ bag: pos.bag, costedBag: pos.costedBag, avgCost: pos.avgCost, avgBuy: pos.avgBuy, realized: pos.realized, buys: pos.buys, sells: pos.sells }} head={{}}
+              pos={{ bag: pos.bag, costedBag: pos.costedBag, avgCost: pos.avgCost, realized: pos.realized, buys: pos.buys, sells: pos.sells }} head={{}}
+              avgLine={false} tiles={sheetTiles(pos, spot)} note={<UnknownNote pos={pos} />}
               footer={
                 <div style={{ marginTop: 22 }}>
                   <p className="al-s" style={{ whiteSpace: "normal", fontSize: 14, lineHeight: 1.6, maxWidth: 780 }}>
                     Green orbs are SPX bought, at the price actually paid; red triangles are SPX sold, at what came back (a sale into another token at that day&apos;s price).
                     {pos.returned >= 1 ? ` ${big(pos.returned)} SPX went out and came back from the same place (loan collateral, a liquidity pool, an exchange) and kept its cost.` : ""}
-                    {pos.unknownHeld >= 1 ? ` ${big(pos.unknownHeld)} of the SPX held today arrived without a purchase (a bridge, another wallet, a gift): its cost can't be known, so it is left out of the P&L.` : ""}
                     {o.cex ? ` Of what went out, ${big(o.cex.sent)} SPX went to exchanges (${Object.keys(o.cex.venues || {}).join(", ")}) and ${big(o.cex.back)} came back: ${big(o.cex.net)} net, likely sold, not proven.` : ""}
                   </p>
                   {o.wallets?.length > 0 && <>

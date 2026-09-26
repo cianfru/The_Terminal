@@ -456,6 +456,12 @@
     SAID on the sheet, never priced; `proceedsUnknown` = sale money from no-cost coins (no P&L). Also `avgBuy` (average of EVERY
     buy) shown beside avgCost (cost of what's HELD) — they differ after selling cheap coins and buying dear (#50: $0.048 vs $0.096).
     Verified live-chain: #51 −$1.13M → +$1.87M, #220 −$240k → +$767k, #438 avg $1.46 → $0.009, #17 unchanged.
+  - **⭐ OWNER SHEET TIGHTENED — FACTS FIRST, NO AVG-COST (owner, 2026-09-26: "the main problem is people thinking the calculation is
+    wrong… what matters is showing a lot of these wallets are selling on the go").** Tiles = Holds now · **Bought** (SPX, $, avg buy) ·
+    **Sold** (SPX, $, **% of all it had**) · Realized · Unrealized (on the SPX it paid for). The "avg cost" tile and the dashed avg-cost
+    line are GONE from the ledger sheet (a correct cost-of-what's-held reads wrong to anyone after cheap coins are sold and dear ones
+    bought); `PositionDetail` got optional `tiles` / `avgLine` / `note` props (WalletDetail/ClusterDetail keep the defaults). A plain
+    "Why part of this is counted in SPX, not dollars" note appears only when SPX arrived without a purchase. Rows show "avg buy".
   - **⚠ THE REFRESH COULD NEVER FINISH (run #1, 2026-09-24):** first run in The_Terminal = cold page cache → 57,687 Blockscout
     fetches, 440/693 owners at the 330-min cap, cancelled — and `actions/cache` only SAVES on job success, so every retry would start
     cold again. Now: `cache/restore` + `cache/save` (`if: always()`), classify has its own 285-min timeout + `continue-on-error`, a
