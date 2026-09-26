@@ -38,7 +38,7 @@ const rtKey = (k, key) => (k === "lpIn" || k === "lpOut" ? "lp" : key || null);
 
 export function positionFromTrades(trades, priceOn, holds, spot = 0) {
   let kq = 0, kc = 0, uq = 0;                       // known qty + cost, unknown qty
-  let realized = 0, invested = 0, boughtQty = 0, proceeds = 0, proceedsUnknown = 0, received = 0, receivedUnknown = 0, returned = 0, sentOut = 0;
+  let realized = 0, invested = 0, boughtQty = 0, soldQty = 0, proceeds = 0, proceedsUnknown = 0, received = 0, receivedUnknown = 0, returned = 0, sentOut = 0;
   let lastBuy = null, lastSell = null;
   const buys = [], sells = [], parked = new Map();
   // take q coins out of both pools in proportion; returns what left each pool
@@ -58,7 +58,7 @@ export function positionFromTrades(trades, priceOn, holds, spot = 0) {
     } else if (kind === "sell" || kind === "rotation") {
       const v = kind === "sell" ? usd ?? q * close : q * close, out = take(q);
       const vk = q > 0 ? v * (out.k / q) : 0, r = vk - out.c;
-      realized += r; proceeds += v; proceedsUnknown += v - vk;
+      realized += r; proceeds += v; proceedsUnknown += v - vk; soldQty += q;
       sells.push([t, q > 0 ? v / q : close, q, r]); lastSell = { d, qty: q, usd: v, price: q > 0 ? v / q : close };
     } else if (kind === "out" || kind === "lpOut") {
       const out = take(q), rk = rtKey(kind, key); sentOut += q;
@@ -77,7 +77,7 @@ export function positionFromTrades(trades, priceOn, holds, spot = 0) {
   const costedBag = kq + uq > 0 ? bag * (kq / (kq + uq)) : bag;
   // avgBuy = the average price of EVERY buy; avgCost = the cost of the coins still held (after selling cheap
   // coins and buying dearer ones the two differ — both true, both shown)
-  return { bag, costedBag, unknownHeld: bag - costedBag, avgCost, avgBuy: boughtQty > 0 ? invested / boughtQty : 0, realized, unrealized: costedBag * (spot - avgCost),
+  return { bag, costedBag, unknownHeld: bag - costedBag, avgCost, avgBuy: boughtQty > 0 ? invested / boughtQty : 0, boughtQty, soldQty, realized, unrealized: costedBag * (spot - avgCost),
     invested, proceeds, proceedsUnknown, lastBuy, lastSell, buys, sells, received, receivedUnknown, returned, sentOut };
 }
 
