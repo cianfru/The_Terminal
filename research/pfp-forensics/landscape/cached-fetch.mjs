@@ -22,7 +22,9 @@ export function cachedFetch(dir, { tries = 10, cacheable = () => true } = {}) {
   let hits = 0, misses = 0;
   const f = async (u, opts) => {
     const p = path(u);
-    if (cacheable(u) && existsSync(p)) { hits++; const body = readFileSync(p, "utf8"); return { ok: true, status: 200, json: async () => JSON.parse(body) }; }
+    // a damaged cached page (a run stopped mid-write) counts as missing and is fetched again
+    if (cacheable(u) && existsSync(p)) { const body = readFileSync(p, "utf8"); let ok = true; try { JSON.parse(body); } catch { ok = false; }
+      if (ok) { hits++; return { ok: true, status: 200, json: async () => JSON.parse(body) }; } }
     for (let i = 0; i < tries; i++) {
       try {
         const r = await fetch(u, opts);

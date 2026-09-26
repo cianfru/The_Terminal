@@ -75,14 +75,26 @@ jobs:
       # whole job SUCCEEDS, so a run that hit the time limit threw away every page it had fetched and the
       # next run started cold again — forever (run #1: 57,687 pages fetched, 440/693 owners, cancelled at
       # 330 min, nothing kept). Now the pages are saved whatever happens, and each run starts warmer.
-      - name: Restore the immutable-page cache
+      # The cache also carries results.jsonl, the owners already classified: classify skips them, so a run
+      # that stopped at the limit is CONTINUED, not redone. Only a fresh one (under 3 days) is kept — an old
+      # file would make a later refresh publish old figures.
+      - name: Restore the immutable-page cache (+ the owners already done, if recent)
         uses: actions/cache/restore@v4
         with:
           path: |
             .ledger-cache
             codecache.json
+            results.jsonl
           key: aeon-ledger-${{ github.run_id }}
           restore-keys: aeon-ledger-
+
+      - name: Drop a stale resume file
+        run: |
+          if [ -f results.jsonl ] && [ -n "$(find results.jsonl -mmin +4320)" ]; then echo "results.jsonl is over 3 days old — starting fresh"; rm results.jsonl; fi
+          if [ -f results.jsonl ]; then   # keep only whole lines (a stop could in theory cut the last one)
+            node -e 'const f="results.jsonl",fs=require("fs");const ok=fs.readFileSync(f,"utf8").split("\n").filter(l=>{try{JSON.parse(l);return true}catch{return false}});fs.writeFileSync(f,ok.join("\n")+(ok.length?"\n":""))'
+            echo "resuming: $(wc -l < results.jsonl) owners already done"
+          else echo "no resume file"; fi
 
       - name: Households — group every AEON holder's wallets
         run: >
@@ -96,10 +108,22 @@ jobs:
       - name: Ledgers — classify and reconcile every owner (each trade valued at what changed hands)
         id: classify
         continue-on-error: true      # a stop here must still reach the cache save below
-        timeout-minutes: 285
+        timeout-minutes: 290         # backstop only — `timeout` below stops it first, cleanly
+        # ⚠ Stop the process OURSELVES (coreutils timeout → exit 124 → this step fails → the gate below). The
+        # step's own timeout left node running in the background, still writing pages while the cache was
+        # packed: "tar: file changed as we read it" → nothing saved (run #2, 2026-09-26).
+        # conc 3, not 5: at 5 Blockscout throttled us and it got SLOWER (320 owners in 285 min vs 440 at 3).
         run: >
+          timeout --signal=TERM --kill-after=60 275m
           node --max-old-space-size=6144 $LAND/classify.mjs --households=households.json
-          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=5 --fresh --fx=fx.json
+          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh --fx=fx.json
+
+      - name: Make sure classify has stopped writing
+        if: always()
+        run: |
+          pkill -f classify.mjs || true
+          for i in $(seq 1 30); do pgrep -f classify.mjs >/dev/null || break; sleep 2; done
+          echo "pages cached: $(find .ledger-cache -type f | wc -l) · owners done: $(wc -l < results.jsonl 2>/dev/null || echo 0)"
 
       - name: Save the page cache (always — so an unfinished run is not wasted)
         if: always()
@@ -108,6 +132,7 @@ jobs:
           path: |
             .ledger-cache
             codecache.json
+            results.jsonl
           key: aeon-ledger-${{ github.run_id }}
 
       - name: Stop if the ledgers did not finish (never publish a partial ledger)
