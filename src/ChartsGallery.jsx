@@ -79,7 +79,7 @@ function DripCover({ color, mode }) {
   const released = mode === "members", loading = mode === "loading";
   const glyph = loading ? "" : released ? "🔭" : "◱";
   const kicker = loading ? "Deep Field" : released ? "Deep Field · members" : "Under construction";
-  const line = loading ? "…" : released ? "Log in with X to unlock" : "Releasing soon";
+  const line = loading ? "…" : released ? "Sign in to unlock" : "Releasing soon";
   const acc = released ? color : loading ? "#7c8a9e" : "#f59e0b";   // fixed ink: the cover ground is always dark
   return (
     <div style={{

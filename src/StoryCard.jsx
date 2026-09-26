@@ -85,9 +85,9 @@ export default function StoryCard({ wallet, price, isMobile }) {
         <div style={{ maxWidth: 520, padding: "18px 20px", borderRadius: 12, background: "rgba(94,234,212,0.06)", border: "1px solid rgba(94,234,212,0.25)" }}>
           <div style={{ fontFamily: SANS, fontSize: 16, fontWeight: 700, color: "#f1f5f9" }}>Your SPX Story is a members feature</div>
           <div style={{ fontFamily: SANS, fontSize: 13.5, color: "#c8d1de", lineHeight: 1.55, margin: "6px 0 14px" }}>
-            Building a story matches your wallet against the on-chain holder data, which lives behind the members wall. Log in with X to unlock it.
+            Building a story matches your wallet against the on-chain holder data, which lives behind the members wall. Sign in with your invite code to unlock it.
           </div>
-          <a href="/api/auth?action=login" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 0, fontFamily: MONO, fontSize: 13, fontWeight: 700, background: "#5eead4", color: "#04140f", border: "1px solid #5eead4", textDecoration: "none" }}>Log in with X →</a>
+          <a href="/deepfield" style={{ display: "inline-block", padding: "10px 18px", borderRadius: 0, fontFamily: MONO, fontSize: 13, fontWeight: 700, background: "#5eead4", color: "#04140f", border: "1px solid #5eead4", textDecoration: "none" }}>Sign in →</a>
         </div>
       )}
       {story?.notFound && <div style={{ fontFamily: MONO, fontSize: 13, color: "#fb7185" }}>That wallet isn't in the set yet — the prototype covers current holders of ≥100k SPX. (A ≥5k resident tier is coming.)</div>}

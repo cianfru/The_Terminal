@@ -53,3 +53,21 @@ test("cookies: serialize sets HttpOnly/Secure/SameSite; parse round-trips", () =
   const got = parseCookies("df_sess=tok123; other=zz");
   assert.equal(got.df_sess, "tok123"); assert.equal(got.other, "zz");
 });
+
+test("invite codes: readable format, no look-alike characters, hash matches however it is typed", async () => {
+  const { makeInviteCode, hashCode } = await import("../lib/auth-core.mjs");
+  const c = makeInviteCode();
+  assert.match(c, /^DF-[A-HJ-KMNP-Z2-9]{4}-[A-HJ-KMNP-Z2-9]{4}$/);
+  assert.equal(hashCode(c), hashCode(" " + c.toLowerCase() + " "));
+  const fixed = makeInviteCode(() => Buffer.from([0, 1, 2, 3, 30, 31, 32, 255]));
+  assert.equal(fixed.length, 12);
+  assert.notEqual(makeInviteCode(), makeInviteCode());
+});
+
+test("invite labels are short and plain", async () => {
+  const { cleanLabel } = await import("../lib/auth-core.mjs");
+  assert.equal(cleanLabel("  @Marco <script>alert(1)</script> "), "@Marco scriptalert1script");
+  assert.equal(cleanLabel("Zoë   B."), "Zoë B.");
+  assert.equal(cleanLabel("x".repeat(50)).length, 32);
+  assert.equal(cleanLabel(null), "");
+});
