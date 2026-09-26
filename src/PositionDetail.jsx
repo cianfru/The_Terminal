@@ -25,7 +25,7 @@ function Tile({ label, value, color, sub }) {
   );
 }
 
-// pos = { bag, avgCost, realized, roi, buys:[[t,price,qty]], sells:[[t,price,qty,realized]] }
+// pos = { bag, costedBag?, avgCost, realized, roi, buys:[[t,price,qty]], sells:[[t,price,qty,realized]] }
 // head = { seed (for gradient), title, cmd, links:[{label,href}], meta (jsx under the title) }
 // bare = drop the back link, prompt line and title (the AEON Ledger's owner sheet draws its own header)
 // px   = the price-history array [{date, price}]
@@ -66,8 +66,9 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
   if (!model) return <div style={{ textAlign: "center", fontFamily: "var(--mono)", color: "var(--faint)", padding: 60 }}>loading…</div>;
 
   const live = price ?? model.priceSeries.at(-1)?.price ?? pos.avgCost;
-  const bag = pos.bag, avg = pos.avgCost || 0;
-  const unreal = bag * (live - avg);
+  // costedBag = the part of the bag with a known cost (AEON Ledger); unrealized is only claimed on that
+  const bag = pos.bag, avg = pos.avgCost || 0, costed = pos.costedBag ?? bag;
+  const unreal = costed * (live - avg);
   const realized = pos.realized ?? model.realized ?? 0;
   const total = realized + unreal;
 
@@ -95,9 +96,9 @@ export default function PositionDetail({ pos, head, px, price, isMobile, footer,
 
       <div style={{ display: "flex", gap: isMobile ? 16 : 28, flexWrap: "wrap", margin: "0 0 18px" }}>
         <Tile label="holds now" value={fM(bag) + " SPX"} sub={fUsd(bag * live)} />
-        <Tile label="avg cost" value={fP(avg)} sub={"live " + fP(live)} />
+        <Tile label="avg cost" value={fP(avg)} sub={(pos.avgBuy ? "avg buy " + fP(pos.avgBuy) + " · " : "") + "live " + fP(live)} />
         <Tile label="realized" value={fUsd(realized)} color={realized >= 0 ? GRN : RED} sub={pos.roi ? pos.roi + "× ROI" : ""} />
-        <Tile label="unrealized" value={fUsd(unreal)} color={unreal >= 0 ? GRN : RED} sub="on the current bag" />
+        <Tile label="unrealized" value={fUsd(unreal)} color={unreal >= 0 ? GRN : RED} sub={costed < bag - 0.5 ? `on the ${fM(costed)} SPX with a known cost` : "on the current bag"} />
         <Tile label="total P&L" value={fUsd(total)} color={total >= 0 ? GRN : RED} sub="realized + unrealized" />
       </div>
 

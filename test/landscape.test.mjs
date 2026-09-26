@@ -145,20 +145,22 @@ test("a refresh re-reads address ledgers and caches only immutable transaction p
   assert.ok(!IMMUTABLE_ONLY("https://eth.blockscout.com/api/v2/addresses/0x" + "a".repeat(40) + "/token-transfers?token=0xe0f6"));
 });
 
-test("per-owner P&L: average cost, received coins at market, transfers out realize nothing", async () => {
+test("per-owner P&L: average cost on known coins only; unknown receipts counted, never priced", async () => {
   const { pnlOf } = await import("../research/pfp-forensics/landscape/export.mjs");
   const px = { "2024-01-01": 0.1, "2024-06-01": 0.5, "2025-01-01": 1.0 };
   const priceOn = d => px[d] || 0;
   const trades = [
-    ["2024-01-01T00:00:00Z", "buy", 1000],   // cost 100
-    ["2024-06-01T00:00:00Z", "in", 1000],    // received, enters at market: cost 500 → avg 0.30
-    ["2025-01-01T00:00:00Z", "sell", 500],   // proceeds 500 − 500×0.30 = +350 realized
-    ["2025-01-01T00:00:00Z", "out", 500],    // moved out at avg cost, nothing realized
+    ["2024-01-01T00:00:00Z", "buy", 1000],   // known: 1000 at 0.10 (3-column row → the close)
+    ["2024-06-01T00:00:00Z", "in", 1000],    // arrived from nobody it sent to: unknown cost
+    ["2025-01-01T00:00:00Z", "sell", 500],   // half known (250, cost 25) → 250 − 25 = +225; 250 of proceeds unknown
+    ["2025-01-01T00:00:00Z", "out", 500],    // leaves both pools in proportion, nothing realized
   ];
   const r = pnlOf(trades, priceOn, 2.0, 1000);
-  assert.equal(r.realized, 350);
-  assert.ok(Math.abs(r.avgCost - 0.3) < 1e-12);
-  assert.ok(Math.abs(r.unrealized - 1700) < 1e-9, "1000 held × (2.00 − 0.30)");
+  assert.equal(r.realized, 225);
+  assert.ok(Math.abs(r.avgCost - 0.1) < 1e-12, "what was paid, untouched by the receipt");
+  assert.ok(Math.abs(r.costedBag - 500) < 1e-9); assert.ok(Math.abs(r.unknownHeld - 500) < 1e-9);
+  assert.ok(Math.abs(r.unrealized - 950) < 1e-9, "500 known × (2.00 − 0.10)");
+  assert.equal(r.proceedsUnknown, 250);
   assert.equal(r.invested, 100);
   assert.deepEqual(r.lastBuy, { d: "2024-01-01", qty: 1000, usd: 100, price: 0.1 });
   assert.equal(r.lastSell.d, "2025-01-01");

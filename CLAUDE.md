@@ -447,6 +447,19 @@
   back from the hot wallet — cex-out.mjs now emits `depositVenue`). Receipts from anyone else can't have a known cost → the day's close,
   counted as `receivedAtMarket` and SAID on the sheet. Verified on #14/#2451/#3062/#220/#438 (all reconcile; the 2,800.38-USDC buy reads
   $2,805; the 24.4293/23.4932-WETH sales exact). Ledger carries `pricing {wallet, pool, close}`.
+  - **⭐⭐ KNOWN COST ONLY (owner, 2026-09-26, after Owner #50 showed "entry $0.46" for a buyer who paid $0.048: "not made up
+    numbers").** Pricing a receipt at the day's close INVENTS a cost — #50 got 180k SPX via the Wormhole bridge + 114k from two
+    wallets that look like its own, and even the round-trip fix read $0.16. **319 of 693 owners got >10% of their SPX without a
+    purchase (240 >50%)**, so it drove most P&L. Now `positionFromTrades` keeps TWO pools: KNOWN (bought, at the price paid) and
+    UNKNOWN (arrived from someone never sent to — no cost, no P&L); sells/outs take from both IN PROPORTION (average cost extended);
+    round trips return to the pools they left. avgCost/unrealized = KNOWN coins only (`costedBag`); `unknownHeld` is COUNTED and
+    SAID on the sheet, never priced; `proceedsUnknown` = sale money from no-cost coins (no P&L). Also `avgBuy` (average of EVERY
+    buy) shown beside avgCost (cost of what's HELD) — they differ after selling cheap coins and buying dear (#50: $0.048 vs $0.096).
+    Verified live-chain: #51 −$1.13M → +$1.87M, #220 −$240k → +$767k, #438 avg $1.46 → $0.009, #17 unchanged.
+  - **⚠ THE REFRESH COULD NEVER FINISH (run #1, 2026-09-24):** first run in The_Terminal = cold page cache → 57,687 Blockscout
+    fetches, 440/693 owners at the 330-min cap, cancelled — and `actions/cache` only SAVES on job success, so every retry would start
+    cold again. Now: `cache/restore` + `cache/save` (`if: always()`), classify has its own 285-min timeout + `continue-on-error`, a
+    gate step fails the job (NO partial publish) when classify didn't finish, conc 3→5. A stopped run keeps its pages; re-run resumes warm.
 - **Guardrails:** "sold" = DEX/router trades (+ sales into other tokens); exchange sales look like transfers, so "sold" is a FLOOR
   (367M moved out to other wallets). Ethereum only. Verdicts describe behaviour, never identity. Owner wants to talk about findings
   on socials SLOWLY — one finding at a time.

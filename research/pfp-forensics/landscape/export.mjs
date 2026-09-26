@@ -32,12 +32,14 @@ const ym = ts => (ts ? ts.slice(0, 7) : null);
 /**
  * An owner's P&L in USD. The replay itself lives in src/aeon-ledger-pos.js (positionFromTrades) — ONE
  * function for this file and the owner sheet's chart. Buys and sells at what actually changed hands,
- * round trips (collateral, liquidity, the same exchange) back at their cost, other receipts at the close.
+ * round trips (collateral, liquidity, the same exchange) back at their cost, and coins that arrived with no
+ * known cost kept OUT of the P&L (counted in unknownHeld, never priced).
  */
 export function pnlOf(trades, priceOn, spot, holds) {
   const p = positionFromTrades(trades, priceOn, holds, spot);
-  return { avgCost: p.avgCost, realized: p.realized, unrealized: p.unrealized, invested: p.invested, proceeds: p.proceeds,
-    lastBuy: p.lastBuy, lastSell: p.lastSell, receivedAtMarket: p.receivedAtMarket, returned: p.returned };
+  return { avgCost: p.avgCost, avgBuy: p.avgBuy, realized: p.realized, unrealized: p.unrealized, invested: p.invested, proceeds: p.proceeds,
+    lastBuy: p.lastBuy, lastSell: p.lastSell, costedBag: p.costedBag, unknownHeld: p.unknownHeld,
+    receivedUnknown: p.receivedUnknown, proceedsUnknown: p.proceedsUnknown, returned: p.returned };
 }
 
 /**
