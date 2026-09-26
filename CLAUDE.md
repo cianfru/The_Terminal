@@ -34,6 +34,21 @@
   schedules (restore its DRY_RUN lines to `|| vars.AEON_SALE_DRY_RUN`); retire the popup by dropping `<XNotice/>`.
 
 ## 🔭 "DEEP FIELD" — MEMBERS AREA (renamed from "the Terminal" 2026-08-22; FREE CLOSED BETA now, paid later)
+- **⭐⭐ THE WAY IN IS AN INVITE CODE NOW — X SIGN-IN IS SWITCHED OFF (owner, 2026-09-26).** The suspended @SPX6900Rainbow took its X
+  developer app with it: X answers the token endpoint with `unauthorized_client: Client application is not allowed for this
+  operation` (a made-up client id gets `invalid_client`), so NEW "Continue with X" sign-ins failed silently for days while old 30-day
+  cookies kept working — the members list looked frozen. The owner has no other X account for the developer console and no budget,
+  and chose invite codes over wallet/email/open. **`api/auth.js`:** `action=code` {code} = sign in with a code alone (uid
+  `c_<hash16>`, name = the owner's label, 30-day cookie; **rate-limited 15/hour per hashed IP**); owner-only (CONTROL_PASSWORD)
+  `invite` {label, owner} mints `DF-XXXX-XXXX` (shown ONCE, only the SHA-256 hash stored; `owner:true` = owner access without X),
+  `invites` lists them, `revoke` {h} switches a code + its member off. **`X_LOGIN=on` (Vercel env) + working X_CLIENT_ID/SECRET turns
+  X back on;** until then `action=login` and the X callback bounce to `/deepfield?auth=xoff` (the code screen). `configured()` now needs
+  only SESSION_SECRET. **Visibility fixes:** `me` counts a VISIT (≤1 per 30 min) so returning members show up, not just sign-ins;
+  every failed sign-in (wrong/revoked code, rate limit, X token/user/state errors WITH X's status) goes to `auth:fails` (last 200,
+  hashed IP only) and shows in the control panel. OWNER_HANDLES default adds `lanternlabsmain`. **Control panel → 🔭 Deep Field:**
+  create code (label + owner box, copy once) · codes table (in use / not used / revoked, last seen, Revoke) · members (via code/X,
+  visits, country, last seen) · failed sign-ins. Site copy "Log in with X" → "Sign in". Tested end to end against an in-memory KV
+  (`test/auth-code.test.mjs`).
 - **Owner decided (2026-08-22): rename the Terminal → "Deep Field"** (Bloomberg/ITC both use "Terminal"; needed to differentiate)
   and run a **FREE CLOSED BETA now** — invite ~10 trusted OG followers, gather feedback, add payment only once it's validated
   (NOT "wait for 1k followers", NOT "full paid launch now"). Rationale: the granular charts are built and idle; a free invite beta

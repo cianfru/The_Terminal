@@ -61,9 +61,9 @@ function MembersOnly({ title, preview }) {
       <h3 style={{ fontFamily: "var(--sans)", fontSize: 27, fontWeight: 800, color: "var(--tx)", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "-.01em" }}>{title || "Members chart"}</h3>
       <div style={{ height: 3, width: 190, maxWidth: "62%", margin: "0 auto 20px", borderRadius: 2, background: "var(--rainbow)" }} />
       <p style={{ color: "var(--dim)", fontSize: 15, lineHeight: 1.7, margin: "0 auto 20px", maxWidth: 400 }}>
-        This is a Deep Field members chart. Log in with X to unlock it — it&apos;s free to join.
+        This is a Deep Field members chart. Sign in with your invite code to unlock it.
       </p>
-      <a href="/api/auth?action=login" style={{ display: "inline-block", padding: "11px 22px", fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, background: "var(--live)", color: "var(--bg)", textDecoration: "none" }}>Log in with X →</a>
+      <a href="/deepfield" style={{ display: "inline-block", padding: "11px 22px", fontFamily: "var(--mono)", fontSize: 13, fontWeight: 700, background: "var(--live)", color: "var(--bg)", textDecoration: "none" }}>Sign in →</a>
     </div>
   );
 }

@@ -127,14 +127,17 @@ function XLoginButton() {
   );
 }
 
-// DEEP FIELD ACCESS GATE. Open beta: any real X login IS membership (no invite codes) — the server
-// (api/auth.js) records who signs in for the owner's power-user map. A logged-in account whose access
+// DEEP FIELD ACCESS GATE. Way in = an INVITE CODE the owner hands out (api/auth.js action=code), since
+// the project's X developer app went down with the suspended account (2026-09-26). "Continue with X"
+// shows only when the server says X sign-in is back on (me.xLogin). The server records who signs in. A logged-in account whose access
 // was revoked (obvious burner) sees a "paused" note. If the X app isn't configured yet (env unset),
 // it falls back to the legacy passphrase so nothing breaks during setup.
 function Gate({ onPass, isMobile }) {
   const [phase, setPhase] = useState("checking");   // checking | login | paused | passphrase
   const [pw, setPw] = useState(""); const [bad, setBad] = useState("");
   const [user, setUser] = useState("");
+  const [xLogin, setXLogin] = useState(false);
+  const [code, setCode] = useState(""); const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let off = false;
@@ -148,6 +151,7 @@ function Gate({ onPass, isMobile }) {
         setPhase("passphrase"); return;
       }
       if (d && d.member) { unlockClient(); onPass(); return; }
+      setXLogin(!!(d && d.xLogin));
       // Not a member — clear the optimistic member-home flag so a bare "/" stops routing here.
       try { localStorage.removeItem("df-home"); } catch { /* private */ }
       if (d && d.loggedIn) { setUser(d.username || ""); setPhase("paused"); return; }   // logged in but access removed
@@ -155,6 +159,19 @@ function Gate({ onPass, isMobile }) {
     }).catch(() => { if (!off) setPhase("passphrase"); });
     return () => { off = true; };
   }, [onPass]);
+
+  const codeSubmit = async e => {
+    e.preventDefault();
+    if (!code.trim() || busy) return;
+    setBusy(true); setBad("");
+    try {
+      const r = await fetch("/api/auth?action=code", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code: code.trim() }) });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) { unlockClient(); window.location.replace("/deepfield"); return; }
+      setBad(d.err || "That code isn't valid.");
+    } catch { setBad("Couldn't check the code. Try again."); }
+    setBusy(false);
+  };
 
   const passSubmit = e => {
     e.preventDefault();
@@ -180,14 +197,22 @@ function Gate({ onPass, isMobile }) {
   if (phase === "login") return (
     <Wrap>
       <p className="dfgate-lede">The granular on-chain layer — wallet clusters, whale flows, and per-wallet P&amp;L.</p>
-      <XLoginButton />
+      <form onSubmit={codeSubmit} style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+        <input value={code} autoFocus onChange={e => { setCode(e.target.value); setBad(""); }} placeholder="DF-XXXX-XXXX" aria-label="Invite code"
+          autoCapitalize="characters" autoComplete="off" spellCheck={false} style={{ ...inputStyle, fontSize: 16, letterSpacing: ".08em", textTransform: "uppercase" }} />
+        <button type="submit" disabled={busy} style={{ minHeight: 44, padding: "0 22px", border: 0, cursor: busy ? "wait" : "pointer", fontFamily: "var(--mono)", fontSize: 14,
+          fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", background: "var(--live)", color: "var(--bg)" }}>{busy ? "Checking…" : "Enter"}</button>
+      </form>
+      {bad && <div style={{ color: "#fb7185", fontSize: 14, marginTop: 12, fontFamily: "var(--mono)" }}>{bad}</div>}
+      <p style={{ color: "var(--dim)", fontSize: 14, marginTop: 16 }}>Deep Field is invite-only for now. No code yet? Ask on X: <a href="https://x.com/lanternlabsmain" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>@lanternlabsmain ↗</a></p>
+      {xLogin && <div style={{ marginTop: 18 }}><XLoginButton /></div>}
     </Wrap>
   );
 
   if (phase === "paused") return (
     <Wrap>
-      <p className="dfgate-lede">Signed in as <strong style={{ color: "var(--tx)" }}>@{user}</strong>, but this account&apos;s Deep Field access is paused.</p>
-      <p style={{ color: "var(--faint)", fontSize: 12.5, marginTop: 6 }}>Think this is a mistake? <a href="https://x.com/SPX6900Rainbow" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>Reach out on X ↗</a> · <a href="/api/auth?action=logout" style={{ color: "var(--dim)" }}>log out</a></p>
+      <p className="dfgate-lede">Signed in as <strong style={{ color: "var(--tx)" }}>{user}</strong>, but this Deep Field access is paused.</p>
+      <p style={{ color: "var(--dim)", fontSize: 14, marginTop: 6 }}>Think this is a mistake? <a href="https://x.com/lanternlabsmain" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>Reach out on X ↗</a> · <a href="/api/auth?action=logout" style={{ color: "var(--dim)" }}>log out</a></p>
     </Wrap>
   );
 

@@ -567,7 +567,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
             <button type="button" className="tsbdockout" onClick={onLogout}>Log out</button>
           </>
         ) : (
-          <a className="tsbdocki dfauth" href="/api/auth?action=login" title="Log in with X — enter Deep Field" aria-label="Log in with X to enter Deep Field">
+          <a className="tsbdocki dfauth" href="/api/auth?action=login" title="Sign in — enter Deep Field" aria-label="Sign in to enter Deep Field">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
           </a>
         )}
@@ -678,7 +678,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
                 )}
               </span>
             ) : (
-              <a className="siclink dfauth" href="/api/auth?action=login" title="Log in with X — enter Deep Field" aria-label="Log in with X to enter Deep Field">
+              <a className="siclink dfauth" href="/api/auth?action=login" title="Sign in — enter Deep Field" aria-label="Sign in to enter Deep Field">
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
               </a>
             )}

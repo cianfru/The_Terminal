@@ -591,7 +591,7 @@
     <div id="deepfieldView" style="display:none">
       <div class="bar">
         <button id="dfRefresh">↻ Refresh members</button>
-        <span style="margin-left:auto;color:#64748b;font-size:12px">Open beta · any real X login = access · <a href="/deepfield" target="_blank" rel="noopener" style="color:#7dd3fc">open Deep Field →</a></span>
+        <span style="margin-left:auto;color:#94a3b8;font-size:12.5px">Invite codes · X sign-in off until an X app is back · <a href="/deepfield" target="_blank" rel="noopener" style="color:#7dd3fc">open Deep Field →</a></span>
       </div>
       <div class="status" id="dfStatus">Release charts at your pace · see who's logging in.</div>
       <div style="margin:14px 0 24px">
@@ -599,9 +599,22 @@
         <p style="color:#94a3b8;font-size:12.5px;margin:0 0 10px;line-height:1.55;max-width:760px">Flip a chart to <b style="color:#4ade80">Released</b> when you want it live (members-only — non-members get "register with X"). Everything not released shows <b style="color:#f59e0b">Under construction</b> to everyone. Change goes live on the next deploy (~1 min) — then announce it on X.</p>
         <div id="dfReleases" style="display:flex;flex-direction:column;gap:8px;max-width:540px">loading…</div>
       </div>
+      <div style="margin:0 0 24px">
+        <h3 style="margin:0 0 6px;font-size:15px;color:#e2e8f0">Invite codes <span style="color:#94a3b8;font-weight:400;font-size:13px">· one per person — the way in while X sign-in is down</span></h3>
+        <p style="color:#cbd5e1;font-size:13px;margin:0 0 10px;line-height:1.55;max-width:760px">Type who it's for, create the code, send it to them. The code is shown <b>once</b> — only a hash is stored. They enter it on the Deep Field page. Revoke a code to switch that person off.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input id="dfLabel" placeholder="who is it for (e.g. @handle or name)" maxlength="32" style="min-width:240px;padding:9px 11px;background:#0b1220;border:1px solid #334155;color:#f1f5f9;font-size:14px">
+          <label style="color:#cbd5e1;font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="dfOwner"> owner access (for you)</label>
+          <button id="dfMint">+ Create code</button>
+        </div>
+        <div id="dfNewCode" style="margin-top:10px"></div>
+        <div id="dfInvites" style="margin-top:12px;font-size:13px;color:#cbd5e1">—</div>
+      </div>
       <div style="margin-top:6px">
-        <p style="color:#94a3b8;font-size:12.5px;margin:0 0 12px;line-height:1.55;max-width:760px">No invite codes — anyone who logs in with a real X account gets in. This is the map of who they are, where they're logging in from, and how often they come back, so you can tell genuine <b style="color:#cbd5e1">power users</b> (many logins, recent) from one-time "grab free access" sign-ins — and grandfather the real supporters later.</p>
-        <div id="dfMembers" style="font-size:13px;color:#94a3b8">—</div>
+        <h3 style="margin:0 0 6px;font-size:15px;color:#e2e8f0">Who's in</h3>
+        <p style="color:#cbd5e1;font-size:13px;margin:0 0 12px;line-height:1.55;max-width:760px">Everyone who signed in, by code or by X, with how often they come back. A visit counts every time a signed-in member opens the site (at most once per 30 minutes), not only the moment they sign in.</p>
+        <div id="dfMembers" style="font-size:13px;color:#cbd5e1">—</div>
+        <div id="dfFails" style="margin-top:18px;font-size:13px;color:#cbd5e1"></div>
       </div>
       </div>
     </div>
@@ -2138,22 +2151,62 @@ async function dfLoadMembers() {
   if (data.ok === false && data.err === "store not connected") { $("#dfMembers").innerHTML = `<span style="color:#f59e0b">The KV store isn't connected yet — connect it in Vercel → Storage (same store as Audience).</span>`; return; }
   if (!data.ok) { $("#dfMembers").innerHTML = `<span style="color:#f87171">Couldn't load members (${data.err || "auth not configured"}).</span>`; return; }
   const m = data.members || [];
-  if (!m.length) { $("#dfMembers").innerHTML = `<span style="color:#64748b">No one has logged in yet.</span>`; return; }
-  const power = m.filter(u => (u.logins || 0) >= 3).length;
-  $("#dfMembers").innerHTML =
-    `<div style="color:#64748b;margin-bottom:8px">${m.length} member${m.length === 1 ? "" : "s"} · <span style="color:#4ade80">${power} power user${power === 1 ? "" : "s"}</span> (3+ logins)</div>` +
-    `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:440px">` +
-    `<tr style="color:#64748b;text-align:left"><th style="padding:4px 8px 6px">handle</th><th style="padding:4px 8px 6px">where</th><th style="padding:4px 8px 6px;text-align:right">logins</th><th style="padding:4px 8px 6px">first seen</th><th style="padding:4px 8px 6px">last seen</th></tr>` +
+  const th = `style="padding:4px 8px 6px;color:#94a3b8;font-weight:600;text-align:left"`, td = `style="padding:6px 8px;color:#cbd5e1"`;
+  $("#dfMembers").innerHTML = !m.length ? `<span style="color:#cbd5e1">No one has signed in yet.</span>` :
+    `<div style="color:#cbd5e1;margin-bottom:8px">${m.length} member${m.length === 1 ? "" : "s"} · most recent first</div>` +
+    `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px;min-width:560px">` +
+    `<tr><th ${th}>who</th><th ${th}>via</th><th ${th}>where</th><th ${th} style="text-align:right;padding:4px 8px 6px;color:#94a3b8">visits</th><th ${th}>first seen</th><th ${th}>last seen</th></tr>` +
     m.map(u => {
-      const pw = (u.logins || 0) >= 3;
-      return `<tr style="border-top:1px solid #16202e">
-        <td style="padding:6px 8px">${pw ? "★ " : ""}<a href="https://x.com/${esc(u.username)}" target="_blank" rel="noopener" style="color:${pw ? "#4ade80" : "#7dd3fc"};text-decoration:none;font-weight:${pw ? 600 : 400}">@${esc(u.username)} ↗</a></td>
-        <td style="padding:6px 8px;color:#94a3b8">${dfFlag(u.country)} ${esc(u.country || "—")}</td>
-        <td style="padding:6px 8px;text-align:right;color:${pw ? "#4ade80" : "#cbd5e1"};font-variant-numeric:tabular-nums">${u.logins || 1}</td>
-        <td style="padding:6px 8px;color:#94a3b8">${esc((u.firstSeen || "").slice(0, 10))}</td>
-        <td style="padding:6px 8px;color:#94a3b8">${dfAgo(u.lastSeen)}</td></tr>`;
-    }).join("") + `</table></div>` +
-    `<p style="color:#64748b;font-size:11.5px;margin:8px 0 0;line-height:1.5">★ = power user (3+ logins). Sorted by logins. "Where" is the country of their most recent login (from the edge, no raw IP stored).</p>`;
+      const who = u.via === "code" ? `<span style="color:#f1f5f9;font-weight:600">${esc(u.username)}</span>`
+        : `<a href="https://x.com/${esc(u.username)}" target="_blank" rel="noopener" style="color:#7dd3fc;text-decoration:none">@${esc(u.username)} ↗</a>`;
+      return `<tr style="border-top:1px solid #1e293b">
+        <td ${td}>${who}${u.member ? "" : ` <span style="color:#f87171">· off</span>`}</td>
+        <td ${td}>${u.via === "code" ? "code" : "X"}</td>
+        <td ${td}>${dfFlag(u.country)} ${esc(u.country || "—")}</td>
+        <td style="padding:6px 8px;text-align:right;color:#f1f5f9;font-variant-numeric:tabular-nums">${u.visits || u.logins || 1}</td>
+        <td ${td}>${esc((u.firstSeen || "").slice(0, 10))}</td>
+        <td ${td}>${dfAgo(u.lastSeen)}</td></tr>`;
+    }).join("") + `</table></div>`;
+  const f = data.fails || [];
+  const LABEL = { "code-wrong": "wrong code", "code-revoked": "revoked code", "code-banned": "switched-off member", "code-ratelimit": "too many tries",
+    "x-token": "X refused the sign-in", "x-user": "X profile read failed", "x-state": "expired X sign-in", "x-error": "X sign-in error" };
+  $("#dfFails").innerHTML = !f.length ? `<span style="color:#94a3b8">No failed sign-ins recorded.</span>` :
+    `<h3 style="margin:0 0 6px;font-size:14px;color:#e2e8f0">Failed sign-ins <span style="color:#94a3b8;font-weight:400">· last ${f.length}</span></h3>` +
+    `<div style="display:flex;flex-direction:column;gap:3px">` + f.slice(0, 25).map(x =>
+      `<div style="color:#cbd5e1">${esc((x.at || "").slice(0, 16).replace("T", " "))} · <b style="color:#fbbf24">${esc(LABEL[x.stage] || x.stage)}</b>${x.status ? " (" + esc(String(x.status)) + ")" : ""} · ${dfFlag(x.country)} ${esc(x.country || "—")}</div>`).join("") + `</div>`;
+}
+async function dfLoadInvites() {
+  const { data } = await dfPost("invites", {});
+  if (!data.ok) { $("#dfInvites").innerHTML = `<span style="color:#f87171">Couldn't load codes (${esc(data.err || "not configured")}).</span>`; return; }
+  const v = data.invites || [];
+  if (!v.length) { $("#dfInvites").innerHTML = `<span style="color:#cbd5e1">No codes yet.</span>`; return; }
+  $("#dfInvites").innerHTML = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px">` +
+    `<tr style="text-align:left;color:#94a3b8"><th style="padding:4px 8px 6px">for</th><th style="padding:4px 8px 6px">created</th><th style="padding:4px 8px 6px">status</th><th style="padding:4px 8px 6px">last seen</th><th></th></tr>` +
+    v.map(i => `<tr style="border-top:1px solid #1e293b">
+      <td style="padding:6px 8px;color:#f1f5f9;font-weight:600">${esc(i.label)}${i.owner ? ` <span style="color:#a78bfa">· owner</span>` : ""}</td>
+      <td style="padding:6px 8px;color:#cbd5e1">${esc((i.at || "").slice(0, 10))}</td>
+      <td style="padding:6px 8px;color:${i.revoked ? "#f87171" : i.used ? "#4ade80" : "#fbbf24"}">${i.revoked ? "revoked" : i.used ? "in use" : "not used yet"}</td>
+      <td style="padding:6px 8px;color:#cbd5e1">${i.lastSeen ? dfAgo(i.lastSeen) : "—"}</td>
+      <td style="padding:6px 8px;text-align:right">${i.revoked ? "" : `<button data-rev="${esc(i.h)}" style="font-size:12.5px">Revoke</button>`}</td></tr>`).join("") + `</table></div>`;
+  document.querySelectorAll("#dfInvites [data-rev]").forEach(b => b.onclick = async () => {
+    if (!confirm("Switch this code off? Its member loses access.")) return;
+    const { data: r } = await dfPost("revoke", { h: b.dataset.rev });
+    dfStatus(r.ok ? "Code revoked." : "Couldn't revoke: " + (r.err || "error"), r.ok ? "ok" : "err");
+    dfLoadInvites(); dfLoadMembers();
+  });
+}
+async function dfMint() {
+  const label = $("#dfLabel").value.trim();
+  if (!label) { dfStatus("Type who the code is for first.", "err"); return; }
+  const { data } = await dfPost("invite", { label, owner: $("#dfOwner").checked });
+  if (!data.ok) { dfStatus("Couldn't create a code: " + (data.err || "error"), "err"); return; }
+  $("#dfLabel").value = ""; $("#dfOwner").checked = false;
+  $("#dfNewCode").innerHTML = `<div style="border:1px solid #4ade80;padding:10px 12px;display:inline-flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <span style="color:#cbd5e1">Code for <b style="color:#f1f5f9">${esc(data.label)}</b> — send it now, it won't be shown again:</span>
+    <code id="dfCodeTxt" style="font-size:18px;letter-spacing:.08em;color:#4ade80;font-weight:700">${esc(data.code)}</code>
+    <button id="dfCopy">Copy</button></div>`;
+  $("#dfCopy").onclick = () => { navigator.clipboard?.writeText(data.code); dfStatus("Copied " + data.code, "ok"); };
+  dfLoadInvites();
 }
 // Release control — flip each walled chart between "under construction" (everyone) and released
 // (members-only). State lives in public/deepfield-releases.json; the toggle commits via /api/control.
@@ -2184,9 +2237,12 @@ async function dfToggleRelease(id, on) {
 }
 function dfInit() {
   if (dfWired) return; dfWired = true;
-  $("#dfRefresh").onclick = () => { dfLoadReleases(); dfLoadMembers(); };
+  $("#dfRefresh").onclick = () => { dfLoadReleases(); dfLoadMembers(); dfLoadInvites(); };
+  $("#dfMint").onclick = dfMint;
+  $("#dfLabel").onkeydown = e => { if (e.key === "Enter") dfMint(); };
   dfLoadReleases();
   dfLoadMembers();
+  dfLoadInvites();
 }
 
 showTab("daily");   // sync the menu label + active highlight to the default view
