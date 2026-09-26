@@ -71,8 +71,12 @@ jobs:
         env: { ALCHEMY_KEY: "${{ secrets.ALCHEMY_KEY }}" }
         run: node scripts/build-eth-transfers-alchemy-tail.mjs --archive=transfers.csv
 
+      # ⚠ RESTORE and SAVE are separate steps on purpose (2026-09-26). actions/cache saves only when the
+      # whole job SUCCEEDS, so a run that hit the time limit threw away every page it had fetched and the
+      # next run started cold again — forever (run #1: 57,687 pages fetched, 440/693 owners, cancelled at
+      # 330 min, nothing kept). Now the pages are saved whatever happens, and each run starts warmer.
       - name: Restore the immutable-page cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             .ledger-cache
@@ -90,9 +94,27 @@ jobs:
         run: node $LAND/fx.mjs --out=fx.json
 
       - name: Ledgers — classify and reconcile every owner (each trade valued at what changed hands)
+        id: classify
+        continue-on-error: true      # a stop here must still reach the cache save below
+        timeout-minutes: 285
         run: >
           node --max-old-space-size=6144 $LAND/classify.mjs --households=households.json
-          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=3 --fresh --fx=fx.json
+          --out=results.jsonl --ledger=transfers.csv --cache=.ledger-cache --conc=5 --fresh --fx=fx.json
+
+      - name: Save the page cache (always — so an unfinished run is not wasted)
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .ledger-cache
+            codecache.json
+          key: aeon-ledger-${{ github.run_id }}
+
+      - name: Stop if the ledgers did not finish (never publish a partial ledger)
+        if: steps.classify.outcome != 'success'
+        run: |
+          echo "::error::classify did not finish ($(wc -l < results.jsonl 2>/dev/null || echo 0) owners done). The pages it fetched are saved — run this workflow again and it resumes much faster."
+          exit 1
 
       - name: Exchange flows — SPX each owner sent to exchanges (tagged wallets + inferred deposit addresses)
         run: >

@@ -4,15 +4,22 @@
 // An owner's trades, oldest first (landscape/classify.mjs):
 //   [time, "buy" | "sell", qty, usd, via]         usd = what actually changed hands (via wallet | pool | close)
 //   [time, kind, qty, null, key]                   every other move; key = who was on the other side
-// Average cost, with ROUND TRIPS kept at their cost (owner, 2026-09-24: "as close as possible to real P&L"):
-//   buy                 acquire at the price paid
-//   sell                realize the money received − average cost
-//   rotation            SPX swapped into another token: realized at the day's close (nothing came back as money)
-//   out / lpOut         leave at average cost, nothing realized — and are REMEMBERED against their key
-//   in / lpIn           coins coming back from a key they went to (loan collateral, a liquidity pool, the same
-//                       exchange) return at the cost they left with; anything beyond that is a new receipt,
-//                       whose true cost is unknowable, entered at the day's close and counted in `receivedAtMarket`
-// Older 3-column rows ([time, kind, qty]) still replay, priced at the close.
+//
+// KNOWN COST ONLY (owner, 2026-09-26: "not made up numbers"). Coins sit in two pools, and every move
+// that takes coins out takes from both in proportion (average cost, extended to two pools):
+//   KNOWN    coins bought: cost = what was actually paid
+//   UNKNOWN  coins that arrived without a purchase from someone they were never sent to (a bridge, another
+//            wallet, a gift). Their cost cannot be known, so they carry NO cost and NO P&L — they are
+//            counted (`unknownHeld`) and said, never priced. (Pricing them at the day's close, the
+//            previous rule, invented a cost: Owner #50 read $0.46, or $0.16, against $0.048 paid.)
+//   buy                 KNOWN += qty at the price paid
+//   sell / rotation     realized = the KNOWN share of the proceeds − its average cost; the unknown share of
+//                       the proceeds is `proceedsUnknown`, no P&L (a rotation into another token at the close)
+//   out / lpOut         leave both pools in proportion, nothing realized — REMEMBERED against their key
+//   in / lpIn           coins coming back from a key they went to (collateral, a pool, the same exchange)
+//                       return to the pools they left, at their cost; anything beyond that is UNKNOWN
+// avgCost (cost of what is held) and unrealized cover the KNOWN coins only; avgBuy = average price of every buy; `costedBag` = how much of today's bag that is.
+// Older 3-column rows ([time, kind, qty]) still replay, their buys and sells priced at the close.
 
 /** Day → price lookup over the price-history array [{date, price}], carrying the last known close forward. */
 export function priceLookup(px) {
@@ -30,33 +37,48 @@ export function priceLookup(px) {
 const rtKey = (k, key) => (k === "lpIn" || k === "lpOut" ? "lp" : key || null);
 
 export function positionFromTrades(trades, priceOn, holds, spot = 0) {
-  let units = 0, cost = 0, realized = 0, invested = 0, proceeds = 0, received = 0, receivedAtMarket = 0, returned = 0, sentOut = 0;
+  let kq = 0, kc = 0, uq = 0;                       // known qty + cost, unknown qty
+  let realized = 0, invested = 0, boughtQty = 0, proceeds = 0, proceedsUnknown = 0, received = 0, receivedUnknown = 0, returned = 0, sentOut = 0;
   let lastBuy = null, lastSell = null;
   const buys = [], sells = [], parked = new Map();
-  const leave = q => { const avg = units > 0 ? cost / units : 0, take = Math.min(q, units); cost -= take * avg; units -= take; return take * avg; };
-  for (const [ts, k, q, usd, key] of trades || []) {
+  // take q coins out of both pools in proportion; returns what left each pool
+  const take = q => {
+    const tot = kq + uq, n = Math.min(q, tot);
+    if (!(n > 0)) return { k: 0, c: 0, u: 0 };
+    const k = n * (kq / tot), c = kq > 0 ? kc * (k / kq) : 0, u = n - k;
+    kq -= k; kc -= c; uq -= u;
+    return { k, c, u };
+  };
+  for (const [ts, kind, q, usd, key] of trades || []) {
     const t = Date.parse(ts), d = ts.slice(0, 10), close = priceOn(d) || 0;
-    if (k === "buy") {
+    if (kind === "buy") {
       const v = usd ?? q * close;
-      units += q; cost += v; invested += v;
+      kq += q; kc += v; invested += v; boughtQty += q;
       buys.push([t, q > 0 ? v / q : close, q]); lastBuy = { d, qty: q, usd: v, price: q > 0 ? v / q : close };
-    } else if (k === "sell" || k === "rotation") {
-      const v = k === "sell" ? usd ?? q * close : q * close, c = leave(q), r = v - c;
-      realized += r; proceeds += v;
+    } else if (kind === "sell" || kind === "rotation") {
+      const v = kind === "sell" ? usd ?? q * close : q * close, out = take(q);
+      const vk = q > 0 ? v * (out.k / q) : 0, r = vk - out.c;
+      realized += r; proceeds += v; proceedsUnknown += v - vk;
       sells.push([t, q > 0 ? v / q : close, q, r]); lastSell = { d, qty: q, usd: v, price: q > 0 ? v / q : close };
-    } else if (k === "out" || k === "lpOut") {
-      const c = leave(q), rk = rtKey(k, key); sentOut += q;
-      if (rk) { const p = parked.get(rk) || { q: 0, c: 0 }; p.q += q; p.c += c; parked.set(rk, p); }
-    } else if (k === "in" || k === "lpIn") {
-      const rk = rtKey(k, key), p = rk && parked.get(rk);
-      const back = p ? Math.min(q, p.q) : 0, backCost = back > 0 ? (p.c * back) / p.q : 0;
-      if (back > 0) { p.q -= back; p.c -= backCost; returned += back; }
-      units += q; cost += backCost + (q - back) * close; received += q; receivedAtMarket += q - back;
+    } else if (kind === "out" || kind === "lpOut") {
+      const out = take(q), rk = rtKey(kind, key); sentOut += q;
+      if (rk) { const p = parked.get(rk) || { k: 0, c: 0, u: 0 }; p.k += out.k; p.c += out.c; p.u += out.u; parked.set(rk, p); }
+    } else if (kind === "in" || kind === "lpIn") {
+      const rk = rtKey(kind, key), p = rk && parked.get(rk), pt = p ? p.k + p.u : 0;
+      const back = Math.min(q, pt);
+      if (back > 0) {
+        const f = back / pt, bk = p.k * f, bc = p.c * f, bu = p.u * f;
+        p.k -= bk; p.c -= bc; p.u -= bu; kq += bk; kc += bc; uq += bu; returned += back;
+      }
+      uq += q - back; received += q; receivedUnknown += q - back;
     }
   }
-  const bag = Math.max(0, holds || 0), avgCost = units > 0 ? cost / units : 0;
-  return { bag, avgCost, realized, unrealized: bag * (spot - avgCost), invested, proceeds, lastBuy, lastSell,
-    buys, sells, received, receivedAtMarket, returned, sentOut };
+  const bag = Math.max(0, holds || 0), avgCost = kq > 0 ? kc / kq : 0;
+  const costedBag = kq + uq > 0 ? bag * (kq / (kq + uq)) : bag;
+  // avgBuy = the average price of EVERY buy; avgCost = the cost of the coins still held (after selling cheap
+  // coins and buying dearer ones the two differ — both true, both shown)
+  return { bag, costedBag, unknownHeld: bag - costedBag, avgCost, avgBuy: boughtQty > 0 ? invested / boughtQty : 0, realized, unrealized: costedBag * (spot - avgCost),
+    invested, proceeds, proceedsUnknown, lastBuy, lastSell, buys, sells, received, receivedUnknown, returned, sentOut };
 }
 
 /** Alchemy's CDN serves the full render (~0.5 MB); its image service has a ~50 KB thumbnail of the same file. */

@@ -24,7 +24,7 @@ test("the ledger's P&L IS the sheet's replay (one function)", () => {
 test("buys and sells count what actually changed hands, not the day's close", () => {
   const p = priceLookup(px);
   const a = positionFromTrades([["2024-01-01T00:00:00Z", "buy", 1000, 30, "wallet"], ["2024-06-01T00:00:00Z", "sell", 1000, 420, "pool"]], p, 0);
-  assert.equal(a.invested, 30); assert.equal(a.proceeds, 420); assert.equal(a.realized, 390);
+  assert.equal(a.invested, 30); assert.equal(a.proceeds, 420); assert.equal(a.realized, 390); assert.equal(a.avgBuy, 0.03);
   assert.equal(a.buys[0][1], 0.03, "the orb sits at the price paid");
 });
 
@@ -37,22 +37,38 @@ test("collateral that comes back returns at its cost, not at the price on the da
   const a = positionFromTrades(trades, p, 1000000, 0.5);
   assert.equal(a.avgCost, 0.002, "still the 2023 cost");
   assert.equal(a.realized, 548000);
-  assert.equal(a.returned, 2000000); assert.equal(a.receivedAtMarket, 0);
+  assert.equal(a.returned, 2000000); assert.equal(a.receivedUnknown, 0);
 });
 
 test("liquidity out to a pool and back from the position manager is one round trip", () => {
   const p = d => ({ "2023-11-13": 0.01, "2023-11-15": 0.03 })[d] || 0;
   const a = positionFromTrades([["2023-11-01T00:00:00Z", "buy", 100, 1, "wallet"],
-    ["2023-11-13T00:00:00Z", "lpOut", 100, null, "0x00ed26e7"], ["2023-11-15T00:00:00Z", "lpIn", 110, null, "0xc36442b4"]], p, 110);
-  assert.ok(Math.abs(a.avgCost - (1 + 10 * 0.03) / 110) < 1e-12, "100 back at cost, the 10 extra at market");
-  assert.equal(a.returned, 100); assert.equal(a.receivedAtMarket, 10);
+    ["2023-11-13T00:00:00Z", "lpOut", 100, null, "0x00ed26e7"], ["2023-11-15T00:00:00Z", "lpIn", 110, null, "0xc36442b4"]], p, 110, 0.05);
+  assert.equal(a.avgCost, 0.01, "the 100 come back at their cost; the 10 extra have none");
+  assert.equal(a.returned, 100); assert.equal(a.receivedUnknown, 10);
+  assert.ok(Math.abs(a.costedBag - 100) < 1e-9); assert.ok(Math.abs(a.unrealized - 100 * 0.04) < 1e-9);
 });
 
-test("a receipt from someone it never sent to is a new coin, entered at the day's close", () => {
+test("a receipt from someone it never sent to has NO cost: counted, never priced", () => {
   const p = d => ({ "2024-01-01": 0.1, "2024-06-01": 0.5 })[d] || 0;
   const a = positionFromTrades([["2024-01-01T00:00:00Z", "buy", 100, 10, "wallet"], ["2024-01-01T00:00:00Z", "out", 100, null, "0xaaaaaaaa"],
-    ["2024-06-01T00:00:00Z", "in", 100, null, "0xcccccccc"]], p, 100);
-  assert.equal(a.avgCost, 0.5); assert.equal(a.returned, 0); assert.equal(a.receivedAtMarket, 100);
+    ["2024-06-01T00:00:00Z", "in", 100, null, "0xcccccccc"]], p, 100, 1);
+  assert.equal(a.returned, 0); assert.equal(a.receivedUnknown, 100);
+  assert.equal(a.costedBag, 0); assert.equal(a.unknownHeld, 100); assert.equal(a.unrealized, 0, "no P&L claimed on coins of unknown cost");
+});
+
+test("Owner #50's shape: coins bridged in don't move the price that was actually paid", () => {
+  const p = d => ({ "2023-10-25": 0.03, "2024-09-28": 0.6, "2024-11-01": 0.7 })[d] || 0;
+  const a = positionFromTrades([["2023-10-25T00:00:00Z", "buy", 1092436, 52922, "wallet"],
+    ["2024-09-28T00:00:00Z", "in", 180000, null, "0x3ee18b22"],            // Wormhole bridge: cost unknown
+    ["2024-11-01T00:00:00Z", "sell", 836673, 234799, "wallet"]], p, 435763, 0.52);
+  assert.ok(Math.abs(a.avgCost - 52922 / 1092436) < 1e-12, "$0.048, what was paid");
+  assert.ok(Math.abs(a.avgBuy - 52922 / 1092436) < 1e-12);
+  // the sale takes from both pools in proportion; only the known share books a gain
+  const kShare = 1092436 / 1272436;
+  assert.ok(Math.abs(a.realized - (234799 * kShare - 836673 * kShare * (52922 / 1092436))) < 1e-6);
+  assert.ok(Math.abs(a.proceedsUnknown - 234799 * (1 - kShare)) < 1e-6);
+  assert.ok(Math.abs(a.costedBag + a.unknownHeld - 435763) < 1e-6);
 });
 
 test("thumbnails come from the image service; anything else passes through", () => {

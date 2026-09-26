@@ -273,9 +273,9 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
   const pub = (
     <div className="al-tiles">
       <Tile k="SPX held" v={big(o.holds)} sub={spot ? usd(o.holds * spot) + " today" : ""} />
-      <Tile k="Avg cost" v={price(p.avgCost)} sub={spot ? "now " + price(spot) : ""} />
+      <Tile k="Avg cost" v={price(p.avgCost)} sub={[p.avgBuy ? "avg buy " + price(p.avgBuy) : "", spot ? "now " + price(spot) : ""].filter(Boolean).join(" · ")} />
       <Tile k="Realized" v={signed(p.realized || 0)} cls={tone(p.realized)} sub={p.proceeds ? `on ${usd(p.proceeds)} sold` : "nothing sold"} />
-      <Tile k="Unrealized" v={signed(p.unrealized || 0)} cls={tone(p.unrealized)} sub="on what is held today" />
+      <Tile k="Unrealized" v={signed(p.unrealized || 0)} cls={tone(p.unrealized)} sub={p.unknownHeld >= 1 ? `on the ${big(p.costedBag)} SPX with a known cost` : "on what is held today"} />
       <Tile k="Put in" v={usd(p.invested)} sub="SPX bought, at the time" />
       {o.cex && <Tile k="To exchanges (net)" v={big(o.cex.net) + " SPX"} sub={`${usd(o.cex.netUsd)} · likely sold`} />}
       <Tile k="Last buy" v={day(p.lastBuy?.d)} sub={p.lastBuy ? `${big(p.lastBuy.qty)} SPX · ${usd(p.lastBuy.usd)}` : "never bought"} />
@@ -307,13 +307,13 @@ export function OwnerSheet({ o, spot, isMobile, onClose, onGallery }) {
         <div style={{ marginTop: 22 }}>
           <Suspense fallback={<div className="al-s">Loading the chart…</div>}>
             <PositionDetail bare isMobile={isMobile} px={px} price={spot || undefined}
-              pos={{ bag: pos.bag, avgCost: pos.avgCost, realized: pos.realized, buys: pos.buys, sells: pos.sells }} head={{}}
+              pos={{ bag: pos.bag, costedBag: pos.costedBag, avgCost: pos.avgCost, avgBuy: pos.avgBuy, realized: pos.realized, buys: pos.buys, sells: pos.sells }} head={{}}
               footer={
                 <div style={{ marginTop: 22 }}>
                   <p className="al-s" style={{ whiteSpace: "normal", fontSize: 14, lineHeight: 1.6, maxWidth: 780 }}>
                     Green orbs are SPX bought, at the price actually paid; red triangles are SPX sold, at what came back (a sale into another token at that day&apos;s price).
                     {pos.returned >= 1 ? ` ${big(pos.returned)} SPX went out and came back from the same place (loan collateral, a liquidity pool, an exchange) and kept its cost.` : ""}
-                    {pos.receivedAtMarket >= 1 ? ` ${big(pos.receivedAtMarket)} SPX arrived from wallets it never sent to; that cost can't be known, so it counts at the day's price.` : ""}
+                    {pos.unknownHeld >= 1 ? ` ${big(pos.unknownHeld)} of the SPX held today arrived without a purchase (a bridge, another wallet, a gift): its cost can't be known, so it is left out of the P&L.` : ""}
                     {o.cex ? ` Of what went out, ${big(o.cex.sent)} SPX went to exchanges (${Object.keys(o.cex.venues || {}).join(", ")}) and ${big(o.cex.back)} came back: ${big(o.cex.net)} net, likely sold, not proven.` : ""}
                   </p>
                   {o.wallets?.length > 0 && <>
