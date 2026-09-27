@@ -21,7 +21,7 @@ export default function LiveFlowStrip({ isMobile }) {
   useEffect(() => {
     let off = false, timer, t2;
     const pull = () => fetch("/api/live-flow").then(r => r.json()).then(d => { if (!off) setLive(d); }).catch(() => {});
-    pull(); timer = setInterval(pull, 60000); t2 = setInterval(() => setTick(x => x + 1), 15000);
+    pull(); timer = setInterval(pull, 300000);   // the server refreshes its shared copy at most every 30 min t2 = setInterval(() => setTick(x => x + 1), 15000);
     return () => { off = true; clearInterval(timer); clearInterval(t2); };
   }, []);
 

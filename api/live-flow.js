@@ -9,9 +9,33 @@
 // board still renders its wallets (from whales.json) with just no live pulse.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { kvConnected, cmd, getJSON, setRaw } from "../lib/kv.mjs";
+
+// ⚠ ONE SHARED COPY + A MONTHLY BUDGET (2026-09-27). Pulled on view with a 3-minute per-REGION edge cache,
+// this endpoint's Alchemy cost grew with traffic (hundreds of heavy pulls on a busy day), and the account
+// was on Pay-As-You-Go. The key now lives on a FREE plan (30M CU/month, hard cap — hitting it pauses every
+// Alchemy job, not just this one). So: the live copy is kept ONCE in KV and refreshed at most every
+// LIVEFLOW_REFRESH_MIN (30) minutes for everyone; a lock lets only one visitor trigger a pull; each pull's
+// estimated CU is added to a monthly counter, and past LIVEFLOW_CU_BUDGET (10M — a third of the plan) it
+// stops pulling and serves its last copy until the month turns. The daily jobs keep the other two thirds.
+const REFRESH_MIN = () => Number(process.env.LIVEFLOW_REFRESH_MIN || 30);
+const BUDGET_CU = () => Number(process.env.LIVEFLOW_CU_BUDGET || 10e6);
+const CACHE_KEY = "liveflow:v1", LOCK_KEY = "liveflow:lock";
+// Alchemy compute units per call, rounded UP (so the budget errs on the safe side)
+const CU = { alchemy_getAssetTransfers: 150, eth_blockNumber: 10, getSlot: 10, getAccountInfo: 20, getTokenAccountsByOwner: 20 };
+const meter = { cu: 0 };
+const charge = method => { meter.cu += CU[method] ?? 30; };
+export const monthKey = (d = new Date()) => "liveflow:cu:" + d.toISOString().slice(0, 7);
+/** What to do with a request. Pure; unit-tested.
+ *  serve  = the shared copy is fresh; pull = refresh from Alchemy; paused = the month's budget is spent */
+export function liveFlowDecision({ cached, now, refreshMs, spent, budget }) {
+  if (cached?.updated && now - Date.parse(cached.updated) < refreshMs) return "serve";
+  if (spent >= budget) return "paused";
+  return "pull";
+}
 
 const SPX = "0xe0f63a424a4439cbe457d80e4f4b51ad25b2c56c"; // SPX6900 ERC-20 (Ethereum), 8 decimals
-const DAYS_DEFAULT = 7, DAYS_MAX = 14;
+const DAYS_DEFAULT = 7;
 const LIVE_HOURS = 6;                                       // the "moving right now" sub-window
 const BLOCKS_PER_HOUR = 300, BLOCKS_PER_DAY = 7200;         // ~12s blocks (Ethereum defaults)
 const TOP_N = 800;                                          // watch ALL ≥100k holders (~575) — the transfer
@@ -80,6 +104,7 @@ const SOL_DEC = 8, SOL_SPH = 9000, SOL_SPD = 216000;   // ~2.5 slots/sec → per
 const solAmount = d => { try { return Number(Buffer.from(d[0], "base64").readBigUInt64LE(0)) / 10 ** SOL_DEC; } catch { return null; } };
 
 async function rpcBatch(url, calls) {
+  for (const c of calls) charge(c.method);
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(calls.map((c, i) => ({ id: i, jsonrpc: "2.0", method: c.method, params: c.params }))) });
   if (!res.ok) throw new Error(`batch ${res.status}`);
   const out = new Array(calls.length);
@@ -105,7 +130,7 @@ async function solanaFlow(key, days, liveHours) {
   // ~575×2 of them just to swallow the errors floods the Alchemy logs and burns CU for nothing. One
   // cheap probe on the mint tells us if the tier is available; if not, emit nothing (the board falls
   // back to the daily reconstruction) — and it auto-upgrades to live the instant the key gets PAYG.
-  let archiveOk = false;
+  let archiveOk;
   try { const pr = await rpcBatch(url, [{ method: "getAccountInfo", params: [SOL_MINT, { encoding: "base64", dataSlice: { offset: 0, length: 8 }, slot: past7 }] }]); archiveOk = !pr[0]?.error; }
   catch { archiveOk = false; }
   if (!archiveOk) return [];
@@ -137,6 +162,7 @@ async function solanaFlow(key, days, liveHours) {
 }
 
 async function rpc(url, method, params) {
+  charge(method);
   const res = await fetch(url, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: 1, jsonrpc: "2.0", method, params }),
@@ -171,23 +197,9 @@ async function chainFlow(id, cfg, key, days) {
     .map(w => ({ ...w, chain: id }));
 }
 
-export default async function handler(req, res) {
-  // A 7-day earmark tolerates a few minutes of lag — cache 3 min so the CDN absorbs the (heavier)
-  // 7-day pull and Alchemy is hit at most ~once per 3 min however many people are watching.
-  res.setHeader("Cache-Control", "public, max-age=0, s-maxage=180, stale-while-revalidate=600");
-  const params = new URL(req.url, "http://x").searchParams;
-  const days = Math.min(DAYS_MAX, Math.max(1, Number(params.get("days")) || DAYS_DEFAULT));
-
-  // ALCHEMY_KEY must be set in the VERCEL env (production). A dashboard env change only applies to a
-  // NEW deployment, so adding it requires a redeploy to take effect (it does not hot-apply). The same
-  // key works across all Alchemy networks (ETH + Base).
-  const key = process.env.ALCHEMY_KEY;
-  const meta = { updated: new Date().toISOString(), days, liveHours: LIVE_HOURS };
-  if (!key) return res.status(200).json({ ...meta, wallets: [], error: "no ALCHEMY_KEY" });
-
-  // per chain, in parallel + isolated: one chain erroring never kills the others. EVM chains use the
-  // getAssetTransfers window; Solana uses Account Archive (historical getAccountInfo) — same key, its
-  // own job appended after the EVM loop.
+// One full pull from Alchemy: every chain in parallel and isolated, so one erroring never kills the others.
+// EVM chains use the getAssetTransfers window; Solana uses Account Archive (skips itself on a Free key).
+async function pull(key, days, meta) {
   const jobs = [
     ...Object.entries(CHAINS).map(([id, cfg]) => ["evm:" + id, () => chainFlow(id, cfg, key, days)]),
     ["sol", () => solanaFlow(key, days, LIVE_HOURS)],
@@ -195,5 +207,48 @@ export default async function handler(req, res) {
   const results = await Promise.allSettled(jobs.map(([, run]) => run()));
   const wallets = results.flatMap(r => (r.status === "fulfilled" ? r.value : []));
   const errors = results.map((r, i) => (r.status === "rejected" ? `${jobs[i][0]}: ${r.reason?.message || r.reason}` : null)).filter(Boolean);
-  return res.status(200).json({ ...meta, wallets, ...(errors.length ? { errors } : {}) });
+  return { ...meta, wallets, ...(errors.length ? { errors } : {}) };
+}
+
+export default async function handler(req, res) {
+  // The shared KV copy is the real limiter; the edge cache just spares KV (5 min per region).
+  res.setHeader("Cache-Control", "public, max-age=0, s-maxage=300, stale-while-revalidate=900");
+  // The window is FIXED: a ?days= value must not be able to force extra pulls past the shared copy.
+  const days = DAYS_DEFAULT;
+
+  // ALCHEMY_KEY must be set in the VERCEL env (production). A dashboard env change only applies to a
+  // NEW deployment, so changing it requires a redeploy to take effect. One key covers ETH + Base + Solana.
+  const key = process.env.ALCHEMY_KEY;
+  const meta = { updated: new Date().toISOString(), days, liveHours: LIVE_HOURS, refreshMin: REFRESH_MIN() };
+  if (!key) return res.status(200).json({ ...meta, wallets: [], error: "no ALCHEMY_KEY" });
+
+  // No shared store: keep working, but only on the edge cache — lengthened so traffic can't multiply pulls.
+  if (!kvConnected()) {
+    res.setHeader("Cache-Control", `public, max-age=0, s-maxage=${REFRESH_MIN() * 60}, stale-while-revalidate=900`);
+    return res.status(200).json(await pull(key, days, meta));
+  }
+
+  let cached, spent;
+  try { cached = await getJSON(CACHE_KEY); spent = Number(await cmd("GET", monthKey())) || 0; }
+  catch { return res.status(200).json({ ...meta, wallets: [], error: "store unavailable" }); }   // never pull blind
+  const decision = liveFlowDecision({ cached, now: Date.now(), refreshMs: REFRESH_MIN() * 60e3, spent, budget: BUDGET_CU() });
+  if (decision === "serve") return res.status(200).json({ ...cached, cache: "shared" });
+  if (decision === "paused") return res.status(200).json({ ...(cached || { ...meta, wallets: [] }), cache: "stale", paused: "monthly Alchemy budget reached" });
+
+  // Only one visitor refreshes; the rest get the last copy (or an empty "warming" answer the very first time).
+  const got = await cmd("SET", LOCK_KEY, "1", "NX", "EX", "120").catch(() => null);
+  if (got !== "OK") return res.status(200).json(cached ? { ...cached, cache: "stale" } : { ...meta, wallets: [], warming: true });
+
+  meter.cu = 0;
+  let body;
+  try { body = await pull(key, days, meta); }
+  finally {
+    try { await cmd("INCRBY", monthKey(), String(Math.ceil(meter.cu))); await cmd("EXPIRE", monthKey(), String(40 * 86400)); } catch { /* counting is best-effort */ }
+  }
+  const failed = body.errors?.length && !body.wallets.length;
+  if (!failed) { try { await setRaw(CACHE_KEY, JSON.stringify(body), 86400); } catch { /* serve it anyway */ } }
+  await cmd("DEL", LOCK_KEY).catch(() => null);
+  // A pull that failed outright (e.g. the plan's cap) keeps serving the last good copy.
+  if (failed && cached) return res.status(200).json({ ...cached, cache: "stale", errors: body.errors });
+  return res.status(200).json({ ...body, cache: "fresh", cu: Math.ceil(meter.cu) });
 }
