@@ -264,6 +264,18 @@
   and the repo keeps the full sales history if Dune ever stops. **🔲 Backup path if Dune stops:** validate the drafted
   `bigquery/aeon_sales.sql` against Dune for the last ~30 days (GCP_SA_KEY is set, so CI can run it), then wire it gated like
   the ETH migration. OpenSea's events API covers OpenSea only (~42% of volume; Blur is the larger venue) — not a full replacement.
+- **⭐⭐ ALCHEMY BILL + FREE-PLAN BUDGET (owner, 2026-09-27: "avoid paying at all costs").** The account was on Pay-As-You-Go
+  (every CU billed, $0.525/M, NO free allowance) and showed **112.5M CU used** — mostly a separate "block0" experiment on another
+  chain (owner's read), but this site's **`api/live-flow.js`** (the live whale pulse) also scaled with TRAFFIC: pulled on view with a
+  3-min PER-REGION edge cache, each pull = 7d of ETH + Base transfers (up to 25 pages each) + on a paid key ~1,700 Solana archive
+  reads. Owner set a Usage Limit and moved to a key on a **FREE plan (30M CU/month, hard cap, never billed — hitting it pauses ALL
+  Alchemy jobs for the month)**. **Fix:** live-flow keeps ONE shared copy in KV (`liveflow:v1`), refreshed at most every
+  `LIVEFLOW_REFRESH_MIN` (30) min for everyone; a `SET NX` lock lets one visitor pull; each pull's estimated CU (rounded up per
+  method) goes to a monthly counter `liveflow:cu:YYYY-MM`, and past `LIVEFLOW_CU_BUDGET` (10M = a third of the plan) it serves its
+  last copy until the month turns; `?days=` no longer busts the cache; a failed pull serves the last good copy; clients poll 5 min.
+  Budget: daily jobs ~2–3M + live pulse ≤ ~8–9M ≈ 11–12M of 30M. Solana's archive branch skips itself on a Free key (one probe).
+  **⚠ The key must be the free one in BOTH Vercel env (live-flow) AND the GitHub secret (daily jobs)** — on 2026-09-27 Vercel's
+  `ALCHEMY_KEY` was still the 2026-08-05 (paid) one. Tested (`test/live-flow-budget.test.mjs`, fake KV + fake Alchemy).
 - **✅ ALCHEMY FREE TIER IS INTACT — VERIFIED 2026-08-28 (owner worried it was going paid-only like Dune; it is NOT).** The
   September deadline that drove our migrations is **DUNE going VIEW-ONLY on the free plan 2026-09-10** — NOT Alchemy. Confirmed on
   alchemy.com/pricing (2026-08-28): **free tier still live, 30M compute-units/month, no paid-only announcement**; the Transfers API
