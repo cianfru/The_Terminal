@@ -256,6 +256,23 @@ function DFLink({ name, desc, href, faved, onToggle }) {
 }
 
 const shortAddr = a => a.slice(0, 6) + "…" + a.slice(-4);
+
+// What drove a radar flag: the single wallet behind most of the day's coin-days / realized P&L, or the
+// exchange whose balance moved most. Says plainly when one wallet IS the spike, so nobody reads a
+// wallet move as a market-wide event.
+const DRIVER_WHAT = { cdd: "coin-days destroyed", loss: "realized loss", profit: "realized profit" };
+const ethLink = a => <a href={`https://etherscan.io/address/${a}`} target="_blank" rel="noopener" style={{ color: "var(--live)" }}>{shortAddr(a)}</a>;
+function DriverNote({ d }) {
+  if (!d) return null;
+  if (d.kind === "venue") return <span className="tmnote">Biggest move: {d.venue} {d.delta > 0 ? "+" : "−"}{fmtSpx(Math.abs(d.delta))} SPX since the day before</span>;
+  const pct = Math.round(d.share * 100);
+  return (
+    <span className="tmnote">
+      {pct}% of the day's {DRIVER_WHAT[d.what]} came from one wallet: {ethLink(d.a)}{d.to ? <> → {ethLink(d.to)}</> : null} ({fmtSpx(d.q)} SPX)
+      {pct >= 50 ? ". One wallet, not a market-wide move — check it before reading anything into this." : null}
+    </span>
+  );
+}
 const fmtSpx = v => { const a = Math.abs(v); return a >= 1e6 ? (a / 1e6).toFixed(2) + "M" : a >= 1e3 ? (a / 1e3).toFixed(0) + "k" : String(Math.round(a)); };
 // AGGREGATE net demand across a whole cohort — the total 24h/7d/30d balance change, shown ABOVE the
 // (collapsed) dropdown so the headline read is the summed flow, not just the top-N list. `null` for a
@@ -483,7 +500,7 @@ export default function TerminalPage({ isMobile }) {
               <thead><tr><th>metric</th><th>move</th><th>σ</th><th></th></tr></thead>
               <tbody>{S.anomalies.map((a, i) => (
                 <tr key={i}>
-                  <td className="tmk">{a.label}</td>
+                  <td className="tmk">{a.label}<DriverNote d={a.driver} /></td>
                   <td className={a.dir === "up" ? "tmup" : "tmdn"}>{a.dir === "up" ? "▲" : "▼"} {a.rel > 0 ? "+" : ""}{Math.abs(a.rel) >= 1000 ? (a.rel / 1000).toFixed(1) + "k" : a.rel}%</td>
                   <td className="tmval">{Math.abs(a.z)}σ</td>
                   <td>{a.chart ? <a href={`/?chart=${a.chart}`} target="_blank" rel="noopener" style={{ color: "var(--live)", textDecoration: "none" }}>view ↗</a> : ""}</td>

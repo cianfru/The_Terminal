@@ -155,6 +155,15 @@ function selfMoves(sm, refDate, eventDays = 7) {
     .filter(x => x.age == null || x.age <= eventDays);
   const recent = cand.sort((a, b) => (b.e.supply || 0) - (a.e.supply || 0)).slice(0, 2);
   return recent.map(({ e, age }) => {
+    const ago0 = age != null && age >= 1 ? ` (${age}d ago)` : " (today)";
+    if (e.type === "migration") return {
+      lane: "whale-moves", severity: Math.min(7, 3 + Math.log10((e.supply || 1) / 1e5) * 1.5) * (age != null && age > 3 ? 0.85 : 1), emoji: "🔑",
+      headline: `A ${fM(e.supply)}-SPX holder moved everything to a new wallet of its own`,
+      detail: `${e.date}${ago0}. A test send, a test sent back, then the whole balance — the coins keep their age and cost, so it is not a sale and books no profit or loss.${e.unverified ? " One side is a contract, so it was left as a normal transfer." : ""}`,
+      framing: `A ${fM(e.supply)} SPX position changed wallets on ${e.date}: same holder, new address. Say "moved to a new wallet", never "sold" or "exited".`,
+      checkable: "The handshake (small send, small send back, then the balance) is in the raw transfer history; both wallets are linked below.",
+      verify: etherscan("The old wallet", e.source),
+    };
     const split = e.type === "split";
     let sev = Math.min(9, 4 + Math.log10((e.supply || 1) / 1e5) * 2);
     if (age != null && age > 3) sev *= 0.85;   // fade older moves within the window so today's leads
