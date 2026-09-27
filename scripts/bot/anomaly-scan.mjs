@@ -75,6 +75,35 @@ function seriesFromDaily(arr, { extraNested } = {}) {
   return out;
 }
 
+// WHAT DROVE IT — for the spend metrics, the FIFO engine records per recent day which sending wallets
+// destroyed the coin-days and booked the realized profit/loss (`row.drivers`). A flag then carries its
+// biggest single contributor and that wallet's share of the day's total, so "84% from one wallet" is on
+// the radar itself (2026-09-26: a wallet migration read as a $2.7M capitulation until traced by hand).
+// Exchange balance gets the venue whose balance moved most since the previous day.
+const DRIVER_OF = { cdd: ["cdd", "cdd"], dormancy: ["cdd", "cdd"], nrplLoss: ["loss", "nrplLoss"], nrplProfit: ["profit", "nrplProfit"] };
+export function driverFor(item, onchain) {
+  const row = Array.isArray(onchain) ? onchain[onchain.length - 1] : null;
+  if (!row) return null;
+  let spec = DRIVER_OF[item.key];
+  if (!spec && (item.key === "nrpl" || item.key === "sopr")) spec = item.dir === "down" ? ["loss", "nrplLoss"] : ["profit", "nrplProfit"];
+  if (spec) {
+    const top = row.drivers?.[spec[0]]?.[0], total = row[spec[1]];
+    if (!top || !(total > 0)) return null;
+    return { kind: "wallet", what: spec[0], a: top.a, to: top.to, q: top.q, share: Math.min(1, top.v / total), senders: row.drivers.senders ?? null };
+  }
+  if (item.key === "cexBal" || item.key === "liqEx") {
+    const prev = onchain[onchain.length - 2], a = row.cexVenues, b = prev?.cexVenues;
+    if (!a || !b) return null;
+    let best = null;
+    for (const v of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      const d = (a[v] || 0) - (b[v] || 0);
+      if (!best || Math.abs(d) > Math.abs(best.delta)) best = { venue: v, delta: d };
+    }
+    return best && Math.abs(best.delta) > 0 ? { kind: "venue", venue: best.venue, delta: +best.delta.toFixed(2) } : null;
+  }
+  return null;
+}
+
 // scanAnomalies(feeds, opts) → { date, count, scanned, items:[{label, chart, value, z, rel, dir}] }
 export function scanAnomalies(feeds, opts = {}) {
   const Z = opts.z ?? 4;              // robust-z gate (conservative for ~40 comparisons)
@@ -97,7 +126,10 @@ export function scanAnomalies(feeds, opts = {}) {
     const r = robustZ(s.series, opts);
     if (!r) continue;
     if (Math.abs(r.z) >= Z && Math.abs(r.rel) >= REL) {
-      items.push({ key: s.key, label: s.label, chart: s.chart || null, value: +r.latest.toFixed(4), median: +r.med.toFixed(4), z: +r.z.toFixed(1), rel: +(r.rel * 100).toFixed(1), dir: r.z > 0 ? "up" : "down" });
+      const it = { key: s.key, label: s.label, chart: s.chart || null, value: +r.latest.toFixed(4), median: +r.med.toFixed(4), z: +r.z.toFixed(1), rel: +(r.rel * 100).toFixed(1), dir: r.z > 0 ? "up" : "down" };
+      const drv = driverFor(it, onchain);
+      if (drv) it.driver = drv;
+      items.push(it);
     }
   }
   items.sort((a, b) => Math.abs(b.z) - Math.abs(a.z));

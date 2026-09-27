@@ -31,6 +31,28 @@ That reconstruction runs locally against a transfer archive, refreshed daily fro
 on-chain pull. Exchange, LP, bridge and burn addresses are tagged and excluded from the holder set,
 which is what makes the remaining buildings real holders rather than infrastructure.
 
+### When a holder changes wallets
+
+A send normally counts as spending the coins: it books a realized profit or loss and ends their
+holding age. That is wrong when a holder is only moving to a new wallet of their own, so three
+patterns keep the coins' age and cost instead:
+
+| Pattern | What it looks like |
+| --- | --- |
+| Split | In one block, a wallet sends at least 90% of its balance to 3–20 empty wallets in near-equal amounts |
+| Consolidation | In one block, 2–20 wallets each send at least 90% of their balance into one empty wallet |
+| Migration | A wallet sends a small test to an empty wallet, **gets a test back**, then sends at least 90% of its balance — all within 24 hours, with the new wallet dealing with no one else in between |
+
+The return leg is what separates a migration from a sale: an exchange deposit address takes test
+sends but never sends one back, and a buyer paying for coins doesn't either. The rule needs at least
+100,000 SPX to move, and it is skipped when either side is a contract. Every match is listed in
+`public/self-moves.json`, so each one can be checked on Etherscan.
+
+Run over the full history to August 2026, the migration rule found 35 moves covering 46M SPX
+(31 carried over; 4 touched a contract and were left as ordinary transfers). The rule was added
+after a 1.77M SPX move on 26 September 2026 read as a $2.3M realized loss and 770M coin-days
+destroyed in a single day.
+
 ## Rebuilding the city on a past date
 
 The city can be rebuilt **as it stood on any date** by truncating the transfer archive at that date
