@@ -1590,7 +1590,7 @@ export default function App() {
 
       {/* "Follow our new account" popup — once per session, dismissed only from the bottom (XNotice.jsx) */}
       <XNotice />
-      <NewChartNotice onOpen={() => goChart("aeonledger")} onChart={route === "chart" && tab === "aeonledger"} />
+      <NewChartNotice onOpen={() => goChart("aeonledger")} onChart={route === "chart" && tab === "aeonledger"} hold={route === "terminal"} />
     </div>
   );
 }

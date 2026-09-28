@@ -7,6 +7,7 @@ import { fetchPrivate } from "./history-data.js";
 import { classifyFlow } from "./whale-flow.js";
 import { DF_CHARTS } from "./deep-field-charts.js";
 import { useFavs } from "./favs.js";
+import DeepFieldLoginNotice from "./DeepFieldLoginNotice.jsx";
 
 // THE TERMINAL (/terminal) — the owner's daily intel one-pager, kept SEPARATE from the post-control
 // panel so the "what's happening on-chain today" read isn't tangled up with the "which card to fire"
@@ -194,7 +195,11 @@ function Gate({ onPass, isMobile }) {
 
   if (phase === "checking") return <Wrap><p style={{ color: "var(--faint)", fontFamily: "var(--mono)", fontSize: 13 }}>checking access…</p></Wrap>;
 
+  // The sign-in notice sits OUTSIDE <Wrap>: Wrap is re-created on every render, so anything inside it
+  // remounts on each keystroke — the notice would pop straight back up.
   if (phase === "login") return (
+    <>
+    <DeepFieldLoginNotice onClose={() => document.querySelector('input[aria-label="Invite code"]')?.focus()} />
     <Wrap>
       <p className="dfgate-lede">The granular on-chain layer — wallet clusters, whale flows, and per-wallet P&amp;L.</p>
       <form onSubmit={codeSubmit} style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
@@ -207,6 +212,7 @@ function Gate({ onPass, isMobile }) {
       <p style={{ color: "var(--dim)", fontSize: 14, marginTop: 16 }}>Deep Field is invite-only for now. No code yet? Ask on X: <a href="https://x.com/lanternlabsmain" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>@lanternlabsmain ↗</a></p>
       {xLogin && <div style={{ marginTop: 18 }}><XLoginButton /></div>}
     </Wrap>
+    </>
   );
 
   if (phase === "paused") return (

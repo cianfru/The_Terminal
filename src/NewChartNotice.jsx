@@ -63,7 +63,9 @@ function chime() {
 const seen = () => { try { return localStorage.getItem(ANNOUNCE.key) === "1"; } catch { return false; } };
 const markSeen = () => { try { localStorage.setItem(ANNOUNCE.key, "1"); } catch { /* fine */ } };
 
-export default function NewChartNotice({ onOpen, onChart }) {
+export default function NewChartNotice({ onOpen, onChart, hold }) {
+  const holdRef = useRef(hold);   // not over the Deep Field sign-in notice
+  useEffect(() => { holdRef.current = hold; }, [hold]);
   const [open, setOpen] = useState(false);
   const goRef = useRef(null);
 
@@ -73,7 +75,7 @@ export default function NewChartNotice({ onOpen, onChart }) {
   useEffect(() => {
     if (seen() || onChart) return;
     let t;
-    const show = delay => { t = setTimeout(() => { if (seen()) return; setOpen(true); chime(); }, delay); };
+    const show = delay => { t = setTimeout(() => { if (seen() || holdRef.current) return; setOpen(true); chime(); }, delay); };
     const xSeen = (() => { try { return sessionStorage.getItem(XNOTICE_SEEN) === "1"; } catch { return true; } })();
     if (xSeen) show(1200);
     const onClosed = () => show(450);

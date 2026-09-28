@@ -21,6 +21,12 @@
   on a cold load). Easy to dismiss (×/Later/Esc), once per BROWSER (`localStorage["spx-newchart-aeonledger"]`), and opening the
   ledger any way marks it seen. e2e seeds that key in every context and tests the card from a fresh one. To announce another
   chart: change `ANNOUNCE` in the file.
+- **+ a DEEP FIELD SIGN-IN NOTICE (`src/DeepFieldLoginNotice.jsx`, owner 2026-09-28):** on EVERY visit to the Deep Field sign-in
+  screen (Gate `login` phase — no "seen" memory, by design) a card says X sign-ins can't be processed since the X account was
+  suspended, and to DM @lanternlabsmain for an invite code (CTA → the profile; "I have a code" closes and focuses the code box).
+  Easy to dismiss (×/Esc/click outside). Waits for the new-account popup to close if it's up; the new-chart card is held off the
+  Deep Field route (`hold` prop) so the three never stack. Rendered OUTSIDE the Gate's `<Wrap>` — Wrap is re-created each render,
+  so anything inside it remounts on every keystroke. Retire it when X sign-in comes back (`X_LOGIN=on`).
 - **THE SITE'S ONLY MESSAGE: a "follow our new account" popup (owner, 2026-09-23, v2).** History: a suspension notice + posts
   page were built, then removed in full ("people just use the charts"), then the owner asked for ONE popup back with a new
   message. `src/XNotice.jsx` (mounted at the end of App.jsx), picture `public/new-account.jpg` (deliberately NOT named
