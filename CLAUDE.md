@@ -16,7 +16,7 @@
   forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed. `BOT_SITE_ONLY` (repo var, defaults on in
   post-tweet.yml) makes any manual run skip X (and skips the 1st-of-month recap). **Owner call: no cards at all for now.**
 - **+ a "NEW CHART · JUST DEPLOYED" card (`src/NewChartNotice.jsx`, owner 2026-09-23) announcing the AEON Ledger:** appears ~0.5s
-  AFTER the popup is dismissed (XNotice dispatches `spx:xnotice-closed`; if the popup was already seen this session it shows ~1.2s
+  AFTER the follow-us-on-X card is dismissed (XNotice dispatches `spx:xnotice-closed`; if the popup was already seen this session it shows ~1.2s
   after load), with a synthesised two-note chime (plays only after a user gesture — browsers block audio otherwise, so it's silent
   on a cold load). Easy to dismiss (×/Later/Esc), once per BROWSER (`localStorage["spx-newchart-aeonledger"]`), and opening the
   ledger any way marks it seen. e2e seeds that key in every context and tests the card from a fresh one. To announce another
@@ -27,13 +27,14 @@
   Easy to dismiss (×/Esc/click outside). Waits for the new-account popup to close if it's up; the new-chart card is held off the
   Deep Field route (`hold` prop) so the three never stack. Rendered OUTSIDE the Gate's `<Wrap>` — Wrap is re-created each render,
   so anything inside it remounts on every keystroke. Retire it when X sign-in comes back (`X_LOGIN=on`).
-- **THE SITE'S ONLY MESSAGE: a "follow our new account" popup (owner, 2026-09-23, v2).** History: a suspension notice + posts
-  page were built, then removed in full ("people just use the charts"), then the owner asked for ONE popup back with a new
-  message. `src/XNotice.jsx` (mounted at the end of App.jsx), picture `public/new-account.jpg` (deliberately NOT named
-  "suspended"), CTA → **@lanternlabsmain**. **Deliberately hard to dismiss (owner's brief):** no ×, no click-outside, no Esc —
-  the only way out is "Continue to the charts" at the very BOTTOM of the card (below the fold on phones). Once per browser
-  session (`sessionStorage["spx-new-account-seen"]`). e2e seeds that key in every test context and tests the popup itself from
-  a fresh session. **No landing bar, no posts page, no site feed** — don't reintroduce them unless asked.
+- **THE SITE'S ONLY MESSAGE: a small "Follow us on X" card (owner, 2026-09-30, v3 — "less aggressive").** History: a suspension
+  notice + posts page were built, then removed in full ("people just use the charts"), then ONE popup came back (v2: full-screen
+  picture, "Our old X account is gone. We're not giving up…", closable ONLY from a button below the fold). The owner then asked for
+  it to be LESS AGGRESSIVE → v3: `src/XNotice.jsx`, a compact card — "Follow us on X · Chart updates, new tools and on-chain reads,
+  posted at @lanternlabsmain" + Follow button + "Not now"; closes with ×, "Not now", Esc or a tap outside; no picture, no body
+  scroll-lock. Once per browser session (`sessionStorage["spx-new-account-seen"]`). e2e seeds that key in every test context and
+  tests the card itself from a fresh session. `public/new-account.jpg` is no longer used. **No landing bar, no posts page, no site
+  feed** — don't reintroduce them unless asked. Don't bring back the hard-to-close behaviour unless the owner asks.
 - **⚠ DO NOT publish or hint at WHY the account went down.** Owner considers it a coordinated attack (the second one) and keeps
   that private. The new account is **@lanternlabsmain** (owner-provided).
 - **To resume when X is back:** set repo var `BOT_SITE_ONLY=0`, uncomment the `post-tweet.yml` + `aeon-sale-watch.yml`

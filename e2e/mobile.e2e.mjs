@@ -12,7 +12,7 @@ let browser;
 let rawContext;
 before(async () => {
   browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined });
-  // The "follow our new account" popup (src/XNotice.jsx) opens once per browser session and covers the
+  // The "follow us on X" card (src/XNotice.jsx) opens once per browser session and covers the
   // page, so every test context starts with it already seen. The popup itself is tested at the end,
   // through rawContext — a fresh session, exactly as a first-time visitor gets it.
   rawContext = browser.newContext.bind(browser);
@@ -602,29 +602,29 @@ test("390px: no request leaves the site for a font", async () => {
   await ctx.close();
 });
 
-test("390px: the new-account popup fits, points at the new handle, and only closes from the bottom", async () => {
+test("390px: the 'follow us on X' card fits, points at the new handle, and closes easily", async () => {
   const ctx = await rawContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
   const box = await geom(page, ".xn");
-  assert.ok(box, "popup shows on a first visit");
-  assert.ok(box.l >= 0 && box.r <= box.vw, `popup inside the viewport (${box.l}..${box.r} of ${box.vw})`);
+  assert.ok(box, "card shows on a first visit");
+  assert.ok(box.l >= 0 && box.r <= box.vw, `card inside the viewport (${box.l}..${box.r} of ${box.vw})`);
   assert.equal(await page.locator(".xn-go").getAttribute("href"), "https://x.com/lanternlabsmain");
-  assert.equal(await page.locator(".xn button").count(), 1, "one way out, no corner ×");
+  const later = await page.locator(".xn-later").boundingBox();
+  assert.ok(later.y + later.height <= 844, `"Not now" is on screen without scrolling (${Math.round(later.y)}px)`);
+  assert.ok(later.height >= 40, "a real tap target");
   await page.keyboard.press("Escape");
-  assert.equal(await page.locator(".xn").count(), 1, "Esc does not dismiss");
-  await page.mouse.click(5, 5);
-  assert.equal(await page.locator(".xn").count(), 1, "clicking outside does not dismiss");
-  const foot = await page.locator(".xn-later").boundingBox();
-  assert.ok(foot.y > 844, `the way out sits below the fold (${Math.round(foot.y)}px)`);
-  assert.ok(foot.height >= 40, "still a real tap target once reached");
-  await page.locator(".xn-later").scrollIntoViewIfNeeded();
-  await page.tap(".xn-later");
-  assert.equal(await page.locator(".xn").count(), 0, "closes from the bottom");
+  assert.equal(await page.locator(".xn").count(), 0, "Esc closes it");
   await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
   assert.equal(await page.locator(".xn").count(), 0, "does not reopen in the same session");
   assert.deepEqual(await overflow(page).then(o => o.sw <= o.cw), true, "no horizontal overflow");
   await ctx.close();
+  const ctx2 = await rawContext(phone(390));
+  const p2 = await ctx2.newPage();
+  await p2.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
+  await p2.tap(".xn-x");
+  assert.equal(await p2.locator(".xn").count(), 0, "the corner × closes it");
+  await ctx2.close();
 });
 
 test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both inside the screen", async () => {
@@ -655,7 +655,7 @@ test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both
   await ctx.close();
 });
 
-test("390px: after the new-account popup, a 'new chart' card announces the AEON Ledger and opens it", async () => {
+test("390px: after the follow-us-on-X card, a 'new chart' card announces the AEON Ledger and opens it", async () => {
   const ctx = await rawContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
