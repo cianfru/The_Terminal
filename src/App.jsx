@@ -1588,7 +1588,7 @@ export default function App() {
       )}
       </div>{/* end content */}
 
-      {/* "Follow our new account" popup — once per session, dismissed only from the bottom (XNotice.jsx) */}
+      {/* "Follow us on X" card — once per session, easy to close (XNotice.jsx) */}
       <XNotice />
       <NewChartNotice onOpen={() => goChart("aeonledger")} onChart={route === "chart" && tab === "aeonledger"} hold={route === "terminal"} />
     </div>

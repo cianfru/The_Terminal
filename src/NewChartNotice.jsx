@@ -1,8 +1,8 @@
 // "New chart just deployed" card (owner, 2026-09-23): announces the AEON Ledger.
 //
-// Order: it waits for the "follow our new account" popup (XNotice) to be dismissed, then slides in a
+// Order: it waits for the "follow us on X" card (XNotice) to be dismissed, then slides in a
 // moment later with a short synthesised chime. If that popup was already seen this session, it shows
-// shortly after load. Unlike XNotice it is EASY to dismiss (×, "Later", Esc) and it is shown once per
+// shortly after load. Like XNotice it is EASY to dismiss (×, "Later", Esc) and it is shown once per
 // browser (localStorage), not once per session; opening the ledger by any route also counts as seen.
 //
 // Styled as XNotice (black panel, rainbow hairline, DepartureMono tag, Geist copy). Bottom-right card on

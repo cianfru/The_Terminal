@@ -1,12 +1,11 @@
 // The Deep Field sign-in notice (owner, 2026-09-28): every time someone reaches the Deep Field sign-in
 // screen, explain that X sign-in can't be processed since the X account was suspended, and that an
 // invite code is a DM away. Shown on EVERY visit to the sign-in screen — no "seen" memory, by design.
-// Easy to dismiss (×, "I have a code", Esc, click outside) — unlike the new-account popup, it sits in
-// front of a form people came to use. If the new-account popup is still up (first page of a session),
+// Easy to dismiss (×, "I have a code", Esc, click outside). If the follow-us-on-X card is still up (first page of a session),
 // this waits for it to close so the two never stack.
 //
 // ⚠ Say nothing about WHY the account was suspended (owner keeps that private — see CLAUDE.md).
-// Reuses the new-account popup's look: black panel, squared, rainbow hairline, DepartureMono labels.
+// Reuses the follow-us-on-X card's look: black panel, squared, rainbow hairline, DepartureMono labels.
 import { useEffect, useRef, useState } from "react";
 import { NEW_HANDLE, SEEN_KEY } from "./XNotice.jsx";
 
@@ -46,7 +45,7 @@ const CSS = `
 const X_ICON = "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z";
 
 export default function DeepFieldLoginNotice({ onClose }) {
-  // Open straight away unless the new-account popup is still up this session (then after it closes).
+  // Open straight away unless the follow-us-on-X card is still up this session (then after it closes).
   const [open, setOpen] = useState(() => { try { return sessionStorage.getItem(SEEN_KEY) === "1"; } catch { return false; } });
   const ref = useRef(null);
 
