@@ -1746,7 +1746,7 @@ Where the supply lives — on-chain, reproducible.`,
     const share = (100 * r.cexTo / 931e6).toFixed(1);
     return {
       id: "cexflow",
-      text: ct`📤 Over the last 30 days ${m(r.organic)} SPX moved ${onto ? "ONTO" : "OFF"} exchanges${r.onboarding === 0 ? " — no new listings in the window, so this is holders, not a venue filling up" : ""}.
+      text: ct`📤 Over the last 30 days ${m(r.organic)} SPX moved ${onto ? "ONTO" : "OFF"} exchanges${r.onboarding === 0 ? " — no large new-wallet fills in the window, so this is holders, not a venue filling up" : ""}.
 That lifts exchange-held supply from ${m(r.cexFrom)} to ${m(r.cexTo)} — about ${share}% of all SPX — while price went ${px(r.priceFrom)} → ${px(r.priceTo)} (${mon(r.from)}–${mon(r.to)}). The chart runs the full exchange era behind it, with the one-time listing fills that flatter every "inflow" number greyed out.
 ${onto ? "Coins on an exchange can be sold, but do not have to be" : "Coins moving to self-custody is holding, not distribution"} — a read on the crowd, not a forecast.`,
       card: { type: "cexflow" },

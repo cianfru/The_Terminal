@@ -1371,8 +1371,12 @@
   8053292, 3,615 rows, **5.99 credits**) → `dune/out/spx6900_cex_lp_flows.csv`. RECONCILES to the FIFO engine's liqEx to 0.14%.
   `scripts/build-cex-flow.mjs` → bundle `src/cex-flow.js` (weekly balance + **organic-vs-onboarding netflow split**: an address's
   first 21 days = one-time listing fill).
-  - **⭐ THE KEY FINDING (why the split matters):** the two biggest "inflows" were **new wallets ramping zero→20-27M in days =
-    exchange LISTINGS** (Kraken, Sep-2025). Strip the listings and **organic net = −11.5M (net WITHDRAWAL off exchanges)** vs +122.7M
+  - **⭐ THE KEY FINDING (why the split matters):** the two biggest "inflows" were **new wallets ramping zero→20-27M in days** (Kraken, Sep-2025).
+    **⚠ CORRECTED 2026-10-01: those are NOT listings.** Kraken listed 2024-12-11 and Bybit 2024-11-21 (their announcements); our tagged
+    Kraken wallets only filled 2025-09-15 (+22.3M) / 09-22 (+40M) and Bybit 2025-07-10 (+23.7M), each from a few single untagged wallets
+    (an exchange moving its own coins or one big deposit — the chain can't tell). Only MEXC (2024-10-10), Gate.io (10-11), KuCoin (12-04),
+    Coinbase (2025-09-09) and Binance US (06-19) show first wallet activity ON their listing date. The tagged set undercounts per-user-deposit
+    exchanges (Upbit). Charts/cards now say "large new-wallet fill", never "listing". Strip the listings and **organic net = −11.5M (net WITHDRAWAL off exchanges)** vs +122.7M
     onboarding — the OPPOSITE of the naive "supply piling on = sell pressure" read. Self-custody leaning, not distribution.
     Cycle-timing only *suggestive* (one cycle, lumpy) → framed as behaviour, NOT a signal. Honesty caveats: known-addresses-only
     (undercount), netflow ≠ guaranteed buy/sell (OTC/internal/MM), SPX is thin → weekly smoothing + POSITION read.
