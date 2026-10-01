@@ -96,8 +96,8 @@ export const CHART_GROUPS = [
     desc: "Where the tradable float sits and how it flows on and off exchanges.",
     charts: [
       { id: "cexsupply", title: "Supply on Exchanges", post: "cexsupply", desc: "Where the tradable float sits: exchanges, LP and custody, from DEX-native to CEX-listed." },
-      { id: "cexflow", title: "Exchange Flow", post: "cexflow", desc: "Daily net flow on/off exchanges vs price: deposits, withdrawals, listings stripped." },
-      { id: "cexvenues", title: "Exchange Supply by Venue", post: "cexvenues", desc: "SPX on each exchange over time: how the venue mix shifted as listings landed." },
+      { id: "cexflow", title: "Exchange Flow", post: "cexflow", desc: "Daily net flow on/off exchanges vs price: deposits and withdrawals, large new-wallet fills stripped." },
+      { id: "cexvenues", title: "Exchange Supply by Venue", post: "cexvenues", desc: "SPX on each exchange over time: how the venue mix shifted over time." },
       { id: "cexvenflow", title: "Exchange Flow by Venue", post: "cexvenflow", desc: "Which exchanges gained vs bled SPX: per-venue net flow, pick the window." },
       { id: "cexsankey", title: "Where the Volume Goes", desc: "A flow map of every wallet supplying and withdrawing from exchanges — who feeds each venue on one side, who's pulling out on the other." },
     ],

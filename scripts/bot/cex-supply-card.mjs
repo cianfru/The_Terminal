@@ -89,7 +89,7 @@ export function cexSupplySvg(opts = {}) {
 ${cardDepth(W, H)}${brandStripe(H)}
 <rect x="16" y="16" width="${W - 32}" height="${H - 32}" rx="24" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1.5"/>
 <text x="60" y="66" font-size="40" font-weight="800" font-family="sans-serif" letter-spacing="1"><tspan fill="#fb7185">WHERE SPX6900'S</tspan><tspan fill="#f1f5f9"> TRADABLE SUPPLY SITS</tspan></text>
-<text x="60" y="98" font-size="20" font-family="sans-serif" fill="#94a3b8">Launched DEX-native (all in the LP); exchange-held supply grew as listings landed</text>
+<text x="60" y="98" font-size="20" font-family="sans-serif" fill="#94a3b8">Launched DEX-native (all in the LP); exchange-held supply grew as exchanges added wallets</text>
 ${grid}${xl}${stackAreas()}${legend}
 <text x="60" y="${H - 22}" fill="#94a3b8" font-size="17" font-family="sans-serif" textLength="${W - 96}" lengthAdjust="spacingAndGlyphs">${esc(`spx6900rainbow.xyz · on-chain (Dune) · supply on tagged exchange & LP addresses · known addresses only · a location map, not a signal`)}</text>
 </svg>`;

@@ -9,11 +9,13 @@
 // the CURRENT EXCLUDE_LABELS (build-onchain-local.mjs), so onchain.json is a fully-reconstructed, always-
 // current, Dune-free source. We read it directly — one source of truth, no seam, no re-extract needed.
 //
+// NOTE (2026-10-01): a big fill is NOT necessarily a listing. Checked against listing dates — Kraken listed 2024-12-11 but its
+// +62M fills are 2025-09-15/22 (single wallets into new Kraken wallets); Bybit listed 2024-11-21, its +23.7M fill is 2025-07-10.
 // ONBOARDING vs ORGANIC: onchain.json is an AGGREGATE daily level, so we can't split by per-address age
 // like the old per-wallet CSV. Instead we flag a day whose CEX balance STEPS UP by more than ONBOARD_STEP
-// as a one-time listing / onboarding fill (a fresh venue wallet filling zero→millions in a day) and grey
+// as a one-time new-wallet fill (a fresh venue wallet filling zero→millions in a day) and grey
 // it; everything else is organic behavioural flow. Approximate, but it matches the intent — grey the big
-// one-off listing spikes so the real deposit/withdrawal behaviour underneath stays visible.
+// one-off fill spikes so the real deposit/withdrawal behaviour underneath stays visible.
 //
 // Output shape is UNCHANGED so the two exchange-flow cards + charts read it as-is:
 //   row = [dayISO, cexBal, lpBal, custodyBal(=0, custody is folded into cex now), cexOrganicNet, cexOnboardNet, price]

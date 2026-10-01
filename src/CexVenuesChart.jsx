@@ -72,7 +72,7 @@ export default function CexVenuesChart({ isMobile, preview = false }) {
   return (
     <div style={{ maxWidth: MAX_W, margin: "0 auto" }}>
       <Explain q="Which exchanges custody SPX6900, and how has that shifted?" accent={PAL[0]}>
-        Every coin on a <strong style={{ color: "#e2e8f0" }}>tagged exchange wallet</strong>, stacked by venue. SPX launched DEX-native, then filled exchange wallets as listings landed.
+        Every coin on a <strong style={{ color: "#e2e8f0" }}>tagged exchange wallet</strong>, stacked by venue. SPX launched DEX-native, then filled exchange wallets over time.
         <strong style={{ color: PAL[0] }}>Kraken</strong> currently holds the largest share, with the rest spread across the mid-tier venues. Venue holdings shift over time, a location map, not a signal.
       </Explain>
 

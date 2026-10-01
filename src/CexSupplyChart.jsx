@@ -28,7 +28,7 @@ function Tip({ active, payload }) {
 }
 
 // Where the tradable float sits, SPX launched DEX-native (all in the LP); exchange-held
-// supply grew as listings landed. Stacked area of on-venue supply over time.
+// supply grew as exchanges added wallets. Stacked area of on-venue supply over time.
 export default function CexSupplyChart({ isMobile, preview = false }) {
   const [all, setAll] = useState(BUNDLE);
   useEffect(() => { let c = false; loadCexFlow().then(d => { if (!c && d?.days?.length) setAll(build(d.days)); }); return () => { c = true; }; }, []);

@@ -119,10 +119,10 @@ export function cexFlowSvg(opts = {}) {
 ${cardDepth(W, H)}${brandStripe(H)}
 <rect x="16" y="16" width="${W - 32}" height="${H - 32}" rx="24" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="1.5"/>
 <text x="60" y="66" font-size="38" font-weight="800" font-family="sans-serif" letter-spacing="0.5"><tspan fill="#4ade80">SPX6900</tspan><tspan fill="#f1f5f9"> ON EXCHANGES — FLOW vs PRICE</tspan></text>
-<text x="60" y="98" font-size="20" font-family="sans-serif" fill="#94a3b8">7-day rolling net flow, one-time listing fills stripped out (grey bands = listing periods)</text>
+<text x="60" y="98" font-size="20" font-family="sans-serif" fill="#94a3b8">7-day rolling net flow, large new-wallet fills stripped out (grey bands = fill periods)</text>
 ${sw(60, "#fb7185")}<text x="94" y="132" fill="#fb7185" font-size="21" font-weight="700" font-family="sans-serif">deposits (sell-side)</text>
 ${sw(360, "#4ade80")}<text x="394" y="132" fill="#4ade80" font-size="21" font-weight="700" font-family="sans-serif">withdrawals (accumulation)</text>
-${sw(742, "#64748b")}<text x="776" y="132" fill="#94a3b8" font-size="21" font-weight="700" font-family="sans-serif">listing</text>
+${sw(742, "#64748b")}<text x="776" y="132" fill="#94a3b8" font-size="21" font-weight="700" font-family="sans-serif">new-wallet fill</text>
 <line x1="880" y1="127" x2="916" y2="127" stroke="#fbbf24" stroke-width="4"/><text x="924" y="132" fill="#fbbf24" font-size="21" font-weight="700" font-family="sans-serif">price</text>
 ${ax}${xl}${marks}${flow}<polyline points="${pl}" fill="none" stroke="#fbbf24" stroke-width="3.2"/>
 <text x="60" y="${H - 22}" fill="#94a3b8" font-size="17" font-family="sans-serif" textLength="${W - 96}" lengthAdjust="spacingAndGlyphs">${esc(`spx6900rainbow.xyz · on-chain (Dune) · organic net = flow minus listing fills · known exchange addresses · one cycle of data — behaviour, not a forecast`)}</text>
