@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-01",
+  "date": "2026-10-02",
   "signals": [
     {
       "type": "drawdown",
@@ -9,27 +9,27 @@
       "framing": "Deep drawdowns are the toll — it's paid them before (no recovery promise).",
       "note": "It's deep and unrecovered NOW; don't imply it always recovers.",
       "card": "underwater",
-      "score": 1.4588221254237363
+      "score": 1.4637367335344862
     },
     {
       "type": "mvrv-vs-btc",
       "emoji": "₿",
-      "title": "SPX's MVRV 0.85 = 7th percentile of Bitcoin's history",
-      "detail": "SPX's MVRV of 0.85 sits at the 7th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
-      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 7th percentile. BTC was only this cheap at major bottoms.",
+      "title": "SPX's MVRV 0.92 = 10th percentile of Bitcoin's history",
+      "detail": "SPX's MVRV of 0.92 sits at the 10th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
+      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 10th percentile. BTC was only this cheap at major bottoms.",
       "note": "A position on BTC's map, not a date-match forecast.",
       "card": "mvrvbtc",
-      "score": 1.3583333333333334
+      "score": 1.3333333333333333
     },
     {
       "type": "deep-value",
       "emoji": "🟣",
       "title": "-81% below its long-run trend (Fire Sale band)",
-      "detail": "Fair value for its age is $2.37; price sits -81% under it.",
+      "detail": "Fair value for its age is $2.38; price sits -81% under it.",
       "framing": "Where today sits in the long power-law arc.",
       "note": "Not a prediction.",
       "card": "valuation",
-      "score": 1.3069229372758009
+      "score": 1.3114712527380312
     }
   ]
 }
