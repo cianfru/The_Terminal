@@ -1,35 +1,36 @@
 {
-  "date": "2026-10-02",
+  "date": "2026-10-03",
   "signals": [
+    {
+      "type": "diamond-jump",
+      "severity": 3,
+      "emoji": "💎",
+      "title": "Diamond share up +1.1pp → 41.8%",
+      "detail": "392,670,052 SPX now in the longest-held tier.",
+      "framing": "Post it — ~9,976,658 SPX just aged into DIAMOND hands (the longest-held, rarely-sold tier). Coins reach it only by being HELD through everything, not by trading — supply maturing into strong hands, conviction deepening. Diamond hands earning the name.",
+      "note": "Word it as HELD, not BOUGHT: the +9,976,658 came from a cohort aging in from gold (≈ gold -10,924,456), not fresh demand. \"Held into diamond\" ✓ · \"diamonds bought 9,976,658\" ✗.",
+      "card": "diamondtrend",
+      "score": 3
+    },
+    {
+      "type": "underwater-holding",
+      "emoji": "💎",
+      "title": "Holders ~14% underwater — and still not selling",
+      "detail": "MVRV 0.86: price is 14% below the crowd's avg on-chain cost basis ($0.499). Yet 58% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 1.08→0.86 over ~30d.",
+      "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
+      "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
+      "card": "breakeven",
+      "score": 1.5071492586910509
+    },
     {
       "type": "drawdown",
       "emoji": "📉",
-      "title": "-80% below its all-time high",
+      "title": "-81% below its all-time high",
       "detail": "Deepest drawdown on record was -92%; it has made new highs after every prior one so far.",
       "framing": "Deep drawdowns are the toll — it's paid them before (no recovery promise).",
       "note": "It's deep and unrecovered NOW; don't imply it always recovers.",
       "card": "underwater",
-      "score": 1.4637367335344862
-    },
-    {
-      "type": "mvrv-vs-btc",
-      "emoji": "₿",
-      "title": "SPX's MVRV 0.92 = 10th percentile of Bitcoin's history",
-      "detail": "SPX's MVRV of 0.92 sits at the 10th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
-      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 10th percentile. BTC was only this cheap at major bottoms.",
-      "note": "A position on BTC's map, not a date-match forecast.",
-      "card": "mvrvbtc",
-      "score": 1.3333333333333333
-    },
-    {
-      "type": "deep-value",
-      "emoji": "🟣",
-      "title": "-81% below its long-run trend (Fire Sale band)",
-      "detail": "Fair value for its age is $2.38; price sits -81% under it.",
-      "framing": "Where today sits in the long power-law arc.",
-      "note": "Not a prediction.",
-      "card": "valuation",
-      "score": 1.3114712527380312
+      "score": 1.4748953954640194
     }
   ]
 }
