@@ -1,5 +1,5 @@
 {
- "checked": "2026-10-03",
+ "checked": "2026-10-04",
  "ok": 40,
  "warn": 0,
  "fail": 6,
@@ -7,18 +7,18 @@
  "priceGaps": [
   {
    "label": "onchain.json spot",
-   "date": "2026-10-02",
-   "value": 0.4489,
-   "live": 0.4489,
+   "date": "2026-10-03",
+   "value": 0.427699,
+   "live": 0.427699,
    "gapPct": 0,
    "stale": false
   },
   {
    "label": "city-history.json price",
-   "date": "2026-10-02",
-   "value": 0.449156,
-   "live": 0.4489,
-   "gapPct": 0.1,
+   "date": "2026-10-03",
+   "value": 0.427732,
+   "live": 0.427699,
+   "gapPct": 0,
    "stale": false
   }
  ],
@@ -30,7 +30,7 @@
    "status": "fail",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": [
     "upnl: stopped arriving",
     "rpnl: stopped arriving"
@@ -43,7 +43,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": []
   },
   {
@@ -53,7 +53,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": []
   },
   {
@@ -63,7 +63,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": []
   },
   {
@@ -73,7 +73,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": []
   },
   {
@@ -83,7 +83,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -93,7 +93,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -103,7 +103,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -113,7 +113,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -123,7 +123,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": [
     "no rows"
    ]
@@ -135,7 +135,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -145,7 +145,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": [
     "no rows"
    ]
@@ -157,7 +157,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -167,7 +167,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -177,7 +177,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-10-03",
+   "date": "2026-10-04",
    "notes": []
   },
   {
@@ -187,7 +187,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -195,7 +195,7 @@
    "by": "btc-mvrv.yml",
    "what": "Bitcoin's MVRV, for the comparison chart",
    "status": "ok",
-   "age": 3,
+   "age": 4,
    "cadence": 40,
    "date": "2026-09-30",
    "notes": []
@@ -207,7 +207,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -217,7 +217,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -227,7 +227,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -235,11 +235,11 @@
    "by": "onchain-dune.yml",
    "what": "what active wallets DO: router, accumulator, drainer",
    "status": "fail",
-   "age": 13,
+   "age": 14,
    "cadence": 3,
    "date": "2026-09-20",
    "notes": [
-    "13d old, cadence allows 3d"
+    "14d old, cadence allows 3d"
    ]
   },
   {
@@ -247,7 +247,7 @@
    "by": "aeon-ledger.yml (dispatch)",
    "what": "AEON Ledger: every AEON owner's SPX record, held vs sold",
    "status": "ok",
-   "age": 7,
+   "age": 8,
    "cadence": 35,
    "date": "2026-09-26",
    "notes": []
@@ -257,7 +257,7 @@
    "by": "aeon-ledger.yml (dispatch)",
    "what": "AEON Ledger: each owner's SPX trades (for the per-owner chart)",
    "status": "ok",
-   "age": 7,
+   "age": 8,
    "cadence": 35,
    "date": "2026-09-26",
    "notes": []
@@ -267,11 +267,11 @@
    "by": "aeon.yml",
    "what": "AEON owner clusters, holding vs selling",
    "status": "fail",
-   "age": 13,
+   "age": 14,
    "cadence": 3,
    "date": "2026-09-20",
    "notes": [
-    "13d old, cadence allows 3d"
+    "14d old, cadence allows 3d"
    ]
   },
   {
@@ -281,7 +281,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -291,7 +291,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -301,7 +301,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -311,7 +311,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -321,7 +321,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -331,7 +331,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -341,7 +341,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -351,7 +351,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -361,7 +361,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -371,7 +371,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -381,7 +381,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -391,7 +391,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -401,7 +401,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -411,7 +411,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -421,7 +421,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -431,7 +431,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -441,7 +441,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -451,7 +451,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -459,7 +459,7 @@
    "by": "aeon.yml (once)",
    "what": "AEON trait rarity (static once built)",
    "status": "ok",
-   "age": 71,
+   "age": 72,
    "cadence": 400,
    "date": "2026-07-24",
    "notes": []
@@ -471,7 +471,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -481,7 +481,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-02",
+   "date": "2026-10-03",
    "notes": []
   },
   {
@@ -489,11 +489,11 @@
    "by": "onchain-dune.yml (step)",
    "what": "whale-cohort move candidates",
    "status": "fail",
-   "age": 69,
+   "age": 70,
    "cadence": 9,
    "date": "2026-07-26",
    "notes": [
-    "69d old, cadence allows 9d",
+    "70d old, cadence allows 9d",
     "signals: empty (allowed, but worth knowing)"
    ]
   }
