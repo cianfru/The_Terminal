@@ -67,7 +67,7 @@
   "chainconc": "landscape",
   "illiquid": "landscape",
   "baltier": "landscape",
-  "dualholders": "landscape",
+  "dualholders": "square",
   "supplycurve": "square",
   "whalecensus": "square",
   "whalebehaviour": "square",
