@@ -1,5 +1,11 @@
 # SPX6900 Rainbow Chart — project notes
 
+## 🛑 MAINTENANCE MODE — PROJECT COMPLETE, HANDS-OFF (owner, 2026-10-09)
+- **The owner considers this project finished and has moved on.** No new features, charts, cards, studies or redesigns.
+  **Fix only what breaks**, with the smallest change that restores it; otherwise let feeds self-heal or drift. Don't propose
+  improvements, don't spend compute on extras. The daily crons (snapshot, onchain, longshort, whale-campaigns, the monthly
+  BTC/alt/coin pulls, and SPX_CITY_2.0's roster refresh, which now also rebuilds the city layout) are the self-healing loop.
+
 ## ⭐⭐ NORTH STAR — RADICAL TRANSPARENCY IS THE MOAT (owner affirmed 2026-07-19)
 - **The strategy is to be COMPLETELY OPEN about the project.** Not secret alpha — the durable edge is being the
   transparent, SPX-native, REPRODUCIBLE on-chain analytics source. Every number must be checkable; methodology is
