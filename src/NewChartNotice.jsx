@@ -10,8 +10,8 @@
 // desktop, a bottom sheet on phones. To announce something else: change ANNOUNCE + the copy (a new key re-shows it).
 import { useEffect, useRef, useState } from "react";
 import { SEEN_KEY as XNOTICE_SEEN } from "./XNotice.jsx";
+import { CITY_SITE } from "./city-site.js";
 
-export const CITY_SITE = "https://spxcity.com";
 const ANNOUNCE = { id: "spxcity", key: "spx-newchart-spxcity" };   // e2e seeds this key
 const XNOTICE_CLOSED = "spx:xnotice-closed";
 

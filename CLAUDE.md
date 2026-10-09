@@ -25,7 +25,9 @@
 - **spxcity.com IS PUBLIC (owner, 2026-10-09).** It is its own Vercel project (`spx-city-2-0`) from the PRIVATE repo
   `cianfru/SPX_CITY_2.0` (`prototypes/spx-city-2.0`, deploys from `main` only). Its `middleware.js` used to put a preview-password page
   (`CITY_PREVIEW_PASSWORD`/`SECRET`) in front of every path; the gate is now OPT-IN — set `CITY_PREVIEW_LOCK=1` in that Vercel project and
-  redeploy to lock it again. The city also beacons its visits to this site's `api/intel` (`site:"spxcity"`).
+  redeploy to lock it again. The city also beacons its visits to this site's `api/intel` (`site:"spxcity"`). Every SPX_CITY menu
+  (desktop `FlatTop`, both phone menus, the landing's generated nav via `build-landing-nav.mjs`) ends with a **"spxcity.com ↗"** row;
+  the URL + label live in `src/city-site.js` (landing leaf `@https://spxcity.com` = an external URL, same tab).
 - **+ a DEEP FIELD SIGN-IN NOTICE (`src/DeepFieldLoginNotice.jsx`, owner 2026-09-28):** on EVERY visit to the Deep Field sign-in
   screen (Gate `login` phase — no "seen" memory, by design) a card says X sign-ins can't be processed since the X account was
   suspended, and to DM @lanternlabsmain for an invite code (CTA → the profile; "I have a code" closes and focuses the code box).

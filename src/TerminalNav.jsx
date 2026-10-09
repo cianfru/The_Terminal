@@ -4,6 +4,7 @@ import { useRecents, recordSearch } from "./recents.js";
 import { useFavs } from "./favs.js";
 import { useDialog } from "./use-dialog.js";
 import { CHART_GROUPS, AEON_GROUPS, CITY_GROUPS, CHART_VIEWS } from "./charts-catalog.js";
+import { CITY_SITE_LABEL, openCitySite } from "./city-site.js";
 import { GCOL } from "./terminal-colors.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import { themeWave } from "./theme-wave.js";
@@ -485,6 +486,10 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
         spark={heavy ? <Scene3D seed={c.id + g.title} color={gc} /> : null}
         render={() => renderPreview(c.id)} onTap={() => go(() => goChart(c.id))} />;
     });
+    if (sec.id === "city") tiles.push(
+      <button key="citysite" className="tsbtile tsbchart" style={{ "--tc": gc }} onClick={() => go(openCitySite)}>
+        <span className="tsbmeta"><span className="tsbcat">{g.title}</span><span className="tsbnm">{CITY_SITE_LABEL}</span></span>
+      </button>);
   }
 
   // Search wins over a chip; a chip alone filters; neither shows the destinations + rails.
@@ -595,8 +600,11 @@ function MobileMenu({ open, onClose, openRainbow, openGallery, openAeon, openCit
         <div className="tmob-sub">
           <MobRow label={allLabel} cls="tmob-all" onTap={() => nav(onAll)} />
           {single
-            ? groups[0].charts.filter(c => !c.dev).map(c => (
-                <MobRow key={c.id} label={c.title} cls="tmob-leaf" onTap={() => nav(() => goChart(c.id))} />))
+            ? <>
+                {groups[0].charts.filter(c => !c.dev).map(c => (
+                  <MobRow key={c.id} label={c.title} cls="tmob-leaf" onTap={() => nav(() => goChart(c.id))} />))}
+                <MobRow label={CITY_SITE_LABEL} cls="tmob-leaf" onTap={() => nav(openCitySite)} />
+              </>
             : groups.map(g => (
                 <Fragment key={g.title}>
                   <MobRow label={g.title} chev={grp === g.title ? "▲" : "▾"} cls="tmob-grp" onTap={() => setGrp(x => (x === g.title ? null : g.title))} />
@@ -635,6 +643,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
   const cityItems = [
     { label: "SPX City", color: cityColor, onClick: openCity },
     ...(CITY_GROUPS[0]?.charts || []).map(c => ({ label: c.title, color: cityColor, onClick: () => goChart(c.id) })),
+    { label: CITY_SITE_LABEL, color: cityColor, onClick: openCitySite },
   ];
   const [mobOpen, setMobOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);

@@ -11,6 +11,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { CHART_GROUPS, AEON_GROUPS, CITY_GROUPS, CHART_VIEWS, VIEW_PARAM } from "../src/charts-catalog.js";
+import { CITY_SITE, CITY_SITE_LABEL } from "../src/city-site.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FILE = join(__dirname, "..", "public", "landing-next.html");
@@ -21,14 +22,14 @@ const nonDev = (g) => g.charts.filter((c) => !c.dev);
 const charts = { label: "CHARTS", groups: CHART_GROUPS.map((g) => ({ g: g.title, items: nonDev(g).map((c) => c.title) })) };
 // SPX_CITY — the city page itself + its charts (mirrors the site's flat City menu)
 const cityCharts = (CITY_GROUPS[0]?.charts || []).filter((c) => !c.dev);
-const city = { label: "SPX_CITY", groups: [{ g: CITY_GROUPS[0]?.title || "SPX City", items: ["SPX City", ...cityCharts.map((c) => c.title)] }] };
+const city = { label: "SPX_CITY", groups: [{ g: CITY_GROUPS[0]?.title || "SPX City", items: ["SPX City", ...cityCharts.map((c) => c.title), CITY_SITE_LABEL] }] };
 // PROJECT_AEON — the Aeon groups (Market, Holders, Rarity)
 const aeon = { label: "PROJECT_AEON", groups: AEON_GROUPS.map((g) => ({ g: g.title, items: nonDev(g).map((c) => c.title) })) };
 
 const NAV = [charts, city, aeon];
 
 // title -> description (title-keyed, as the landing's descOf expects)
-const DESC = {};
+const DESC = { [CITY_SITE_LABEL]: "SPX City on its own site, open to everyone: every wallet a building in a 3D city." };
 [...CHART_GROUPS, ...AEON_GROUPS, ...CITY_GROUPS].forEach((g) => nonDev(g).forEach((c) => { if (c.desc) DESC[c.title] = c.desc; }));
 
 // "SECTION|title" -> chart id (or "@/route" for a top-level page). Drives per-leaf nav.
@@ -36,6 +37,7 @@ const LEAFID = {};
 CHART_GROUPS.forEach((g) => nonDev(g).forEach((c) => { LEAFID[`CHARTS|${c.title}`] = c.id; }));
 AEON_GROUPS.forEach((g) => nonDev(g).forEach((c) => { LEAFID[`PROJECT_AEON|${c.title}`] = c.id; }));
 LEAFID["SPX_CITY|SPX City"] = "@/city";
+LEAFID[`SPX_CITY|${CITY_SITE_LABEL}`] = `@${CITY_SITE}`;   // "@…" = a page / URL, not a chart id
 cityCharts.forEach((c) => { LEAFID[`SPX_CITY|${c.title}`] = c.id; });
 
 // "SECTION|title" -> [{label, href}] for charts with a view toggle. Drives the menu sub-rows.
