@@ -1590,7 +1590,7 @@ export default function App() {
 
       {/* "Follow us on X" card — once per session, easy to close (XNotice.jsx) */}
       <XNotice />
-      <NewChartNotice onOpen={() => goChart("aeonledger")} onChart={route === "chart" && tab === "aeonledger"} hold={route === "terminal"} />
+      <NewChartNotice hold={route === "terminal"} />
     </div>
   );
 }
