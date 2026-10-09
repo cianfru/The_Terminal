@@ -15,12 +15,17 @@
 - **State:** every scheduled card firing is OFF — `post-tweet.yml` schedule commented out, `aeon-sale-watch.yml` schedule off +
   forced `DRY_RUN:'1'`, band/milestone already unscheduled, kol-watch disarmed. `BOT_SITE_ONLY` (repo var, defaults on in
   post-tweet.yml) makes any manual run skip X (and skips the 1st-of-month recap). **Owner call: no cards at all for now.**
-- **+ a "NEW CHART · JUST DEPLOYED" card (`src/NewChartNotice.jsx`, owner 2026-09-23) announcing the AEON Ledger:** appears ~0.5s
-  AFTER the follow-us-on-X card is dismissed (XNotice dispatches `spx:xnotice-closed`; if the popup was already seen this session it shows ~1.2s
-  after load), with a synthesised two-note chime (plays only after a user gesture — browsers block audio otherwise, so it's silent
-  on a cold load). Easy to dismiss (×/Later/Esc), once per BROWSER (`localStorage["spx-newchart-aeonledger"]`), and opening the
-  ledger any way marks it seen. e2e seeds that key in every context and tests the card from a fresh one. To announce another
-  chart: change `ANNOUNCE` in the file.
+- **+ a "NEW · NOW LIVE" card (`src/NewChartNotice.jsx`, owner 2026-10-09) announcing spxcity.com:** "spxcity.com is live — SPX City has
+  its own home, open to everyone. No password, no sign-up." with an "Open spxcity.com →" link (new tab). Appears ~0.5s AFTER the
+  follow-us-on-X card is dismissed (XNotice dispatches `spx:xnotice-closed`; if that popup was already seen this session it shows ~1.2s
+  after load), with a synthesised two-note chime (plays only after a user gesture — silent on a cold load). Easy to dismiss
+  (×/Later/Esc), once per BROWSER (`localStorage["spx-newchart-spxcity"]`), held off the Deep Field route (`hold`). e2e seeds that key
+  in every context and tests the card from a fresh one. History: it announced the AEON Ledger (key `spx-newchart-aeonledger`) from
+  2026-09-23. To announce something else: change `ANNOUNCE` + the copy in the file.
+- **spxcity.com IS PUBLIC (owner, 2026-10-09).** It is its own Vercel project (`spx-city-2-0`) from the PRIVATE repo
+  `cianfru/SPX_CITY_2.0` (`prototypes/spx-city-2.0`, deploys from `main` only). Its `middleware.js` used to put a preview-password page
+  (`CITY_PREVIEW_PASSWORD`/`SECRET`) in front of every path; the gate is now OPT-IN — set `CITY_PREVIEW_LOCK=1` in that Vercel project and
+  redeploy to lock it again. The city also beacons its visits to this site's `api/intel` (`site:"spxcity"`).
 - **+ a DEEP FIELD SIGN-IN NOTICE (`src/DeepFieldLoginNotice.jsx`, owner 2026-09-28):** on EVERY visit to the Deep Field sign-in
   screen (Gate `login` phase — no "seen" memory, by design) a card says X sign-ins can't be processed since the X account was
   suspended, and to DM @lanternlabsmain for an invite code (CTA → the profile; "I have a code" closes and focuses the code box).

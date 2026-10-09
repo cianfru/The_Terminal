@@ -1,16 +1,18 @@
-// "New chart just deployed" card (owner, 2026-09-23): announces the AEON Ledger.
+// "New thing just deployed" card (owner, 2026-09-23 AEON Ledger; 2026-10-09 spxcity.com): announces SPX City's own
+// site, now open to everyone. The button opens spxcity.com in a new tab.
 //
 // Order: it waits for the "follow us on X" card (XNotice) to be dismissed, then slides in a
 // moment later with a short synthesised chime. If that popup was already seen this session, it shows
 // shortly after load. Like XNotice it is EASY to dismiss (×, "Later", Esc) and it is shown once per
-// browser (localStorage), not once per session; opening the ledger by any route also counts as seen.
+// browser (localStorage), not once per session; opening spxcity.com from the card counts as seen.
 //
 // Styled as XNotice (black panel, rainbow hairline, DepartureMono tag, Geist copy). Bottom-right card on
-// desktop, a bottom sheet on phones. To announce another chart: change ANNOUNCE (a new key re-shows it).
+// desktop, a bottom sheet on phones. To announce something else: change ANNOUNCE + the copy (a new key re-shows it).
 import { useEffect, useRef, useState } from "react";
 import { SEEN_KEY as XNOTICE_SEEN } from "./XNotice.jsx";
 
-const ANNOUNCE = { id: "aeonledger", key: "spx-newchart-aeonledger" };   // e2e seeds this key
+export const CITY_SITE = "https://spxcity.com";
+const ANNOUNCE = { id: "spxcity", key: "spx-newchart-spxcity" };   // e2e seeds this key
 const XNOTICE_CLOSED = "spx:xnotice-closed";
 
 const CSS = `
@@ -24,7 +26,7 @@ const CSS = `
 .nc h3{ font-family:'Geist',system-ui,sans-serif; font-size:26px; line-height:1.1; font-weight:700; letter-spacing:-.01em; color:#f5f7fb; margin:10px 0 8px; }
 .nc p{ font-family:'Geist',system-ui,sans-serif; font-size:15px; line-height:1.55; color:#c9d2df; margin:0; }
 .nc-row{ display:flex; gap:10px; margin-top:16px; }
-.nc-go{ flex:1; min-height:46px; display:flex; align-items:center; justify-content:center; background:#2dd4bf; color:#04110e; border:0; cursor:pointer;
+.nc-go{ flex:1; text-decoration:none; min-height:46px; display:flex; align-items:center; justify-content:center; background:#2dd4bf; color:#04110e; border:0; cursor:pointer;
   font-family:'DepartureMono',ui-monospace,monospace; font-size:14px; letter-spacing:.08em; text-transform:uppercase; }
 .nc-go:hover{ background:#5eead4; }
 .nc-later{ min-height:46px; padding:0 16px; background:transparent; border:1px solid #2c3a52; color:#c9d2df; cursor:pointer;
@@ -63,17 +65,14 @@ function chime() {
 const seen = () => { try { return localStorage.getItem(ANNOUNCE.key) === "1"; } catch { return false; } };
 const markSeen = () => { try { localStorage.setItem(ANNOUNCE.key, "1"); } catch { /* fine */ } };
 
-export default function NewChartNotice({ onOpen, onChart, hold }) {
+export default function NewChartNotice({ hold }) {
   const holdRef = useRef(hold);   // not over the Deep Field sign-in notice
   useEffect(() => { holdRef.current = hold; }, [hold]);
   const [open, setOpen] = useState(false);
   const goRef = useRef(null);
 
-  // Already on the announced chart: that is the point of the card, so it counts as seen (and it hides).
-  useEffect(() => { if (onChart) markSeen(); }, [onChart]);
-
   useEffect(() => {
-    if (seen() || onChart) return;
+    if (seen()) return;
     let t;
     const show = delay => { t = setTimeout(() => { if (seen() || holdRef.current) return; setOpen(true); chime(); }, delay); };
     const xSeen = (() => { try { return sessionStorage.getItem(XNOTICE_SEEN) === "1"; } catch { return true; } })();
@@ -81,7 +80,6 @@ export default function NewChartNotice({ onOpen, onChart, hold }) {
     const onClosed = () => show(450);
     window.addEventListener(XNOTICE_CLOSED, onClosed);
     return () => { clearTimeout(t); window.removeEventListener(XNOTICE_CLOSED, onClosed); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -92,19 +90,19 @@ export default function NewChartNotice({ onOpen, onChart, hold }) {
     return () => window.removeEventListener("keydown", k);
   }, [open]);
 
-  if (!open || onChart) return null;
+  if (!open) return null;
   const close = () => { markSeen(); setOpen(false); };
   return (
-    <div className="nc" role="dialog" aria-label="New chart: AEON Ledger">
+    <div className="nc" role="dialog" aria-label="spxcity.com is live">
       <style>{CSS}</style>
       <div className="nc-rb" />
       <button type="button" className="nc-x" aria-label="Close" onClick={close}>×</button>
       <div className="nc-in">
-        <div className="nc-tag"><i />New chart · just deployed</div>
-        <h3>AEON Ledger</h3>
-        <p>Every AEON owner&apos;s SPX record, rebuilt from the chain: what they bought, sold, still hold and sent to exchanges, with each owner&apos;s trades on the price chart.</p>
+        <div className="nc-tag"><i />New · now live</div>
+        <h3>spxcity.com is live</h3>
+        <p>SPX City has its own home, open to everyone. Every wallet is a building in a 3D city: no password, no sign-up.</p>
         <div className="nc-row">
-          <button ref={goRef} type="button" className="nc-go" onClick={() => { close(); onOpen?.(); }}>Open the ledger →</button>
+          <a ref={goRef} className="nc-go" href={CITY_SITE} target="_blank" rel="noopener noreferrer" onClick={close}>Open spxcity.com →</a>
           <button type="button" className="nc-later" onClick={close}>Later</button>
         </div>
       </div>
