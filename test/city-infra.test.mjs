@@ -14,12 +14,10 @@ test("infraFrom reads the live venue split", () => {
   assert.ok(I.venues.length >= 10, "expected the tagged exchange venues");
   // sorted biggest first, which is what puts the largest warehouse at the head of the port
   for (let i = 1; i < I.venues.length; i++) assert.ok(I.venues[i - 1].tokens >= I.venues[i].tokens);
-  // Kraken leading by a clear margin is the actual finding this district exists to show. After the
-  // 2026-08-28 Bubblemaps sweep it's ~a third of exchange supply (was ~43% before a ~14M Bybit wallet
-  // and Coinbase Prime custody got tagged) — still the plain #1, ~2× the next venue.
-  assert.equal(I.venues[0].name, "Kraken");
-  assert.ok(I.venues[0].tokens / I.cex > 0.25, "Kraken should be at least a quarter of exchange supply");
-  assert.ok(I.venues[0].tokens > I.venues[1].tokens * 1.5, "Kraken should lead the next venue by 50%+");
+  // Which exchange leads is a fact about the market, not about this code: Kraken led by 2× in August, but by
+  // October 2026 Bybit had closed to 44M vs 63M and this assertion turned CI red with nothing broken. The test
+  // now checks the structure only — the split is real and the head of the port is the biggest venue.
+  assert.ok(I.venues[0].tokens > 0 && I.venues[0].tokens / I.cex < 1, "the largest venue holds a real share of exchange supply");
 });
 
 test("venue shares sum to the exchange total", () => {
