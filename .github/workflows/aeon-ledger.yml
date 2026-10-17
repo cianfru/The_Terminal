@@ -1,8 +1,9 @@
 name: AEON Ledger refresh
 
 # Rebuilds the AEON Ledger (src/AeonLedger.jsx): every AEON owner's SPX record on Ethereum, rebuilt from the
-# chain and reconciled to it. Dispatch-only — a full refresh re-reads every owner's ledger from Blockscout
-# (tens of thousands of requests, roughly an hour), so it runs when the owner wants a new snapshot, not daily.
+# chain and reconciled to it. WEEKLY (Sundays) + on demand — a full refresh re-reads every owner's ledger from
+# Blockscout (tens of thousands of requests, roughly an hour), so weekly, not daily (owner, 2026-10-17). It runs
+# after the daily on-chain workflow (05:23 UTC) so the BigQuery transfer table is already current.
 #
 #   1. transfers   the full SPX transfer history from our BigQuery table (the daily on-chain workflow keeps
 #                  it current) + the Alchemy leading edge, exactly as onchain-dune.yml builds it
@@ -19,6 +20,8 @@ name: AEON Ledger refresh
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "41 8 * * 0"   # Sundays 08:41 UTC
 
 permissions:
   contents: write
