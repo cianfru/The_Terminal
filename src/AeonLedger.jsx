@@ -38,6 +38,23 @@ const big = n => {
 const usd = n => "$" + big(n);
 const pct = x => Math.round(x * 100) + "%";
 
+// "Data updated <date>": the ledger is a weekly snapshot, not live, so say when it was taken. Amber once a
+// Sunday refresh has been missed (more than 8 days old).
+function Updated({ date }) {
+  const [now] = useState(() => Date.now());
+  if (!date) return null;
+  const days = Math.max(0, Math.floor((now - Date.parse(date + "T00:00:00Z")) / 86400000));
+  const dot = days > 8 ? "#fbbf24" : "#34d399";
+  const [y, m, dd] = date.slice(0, 10).split("-");
+  const label = `${+dd} ${"Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(" ")[m - 1]} ${y}`;
+  return (
+    <p style={{ margin: "0 0 12px", fontFamily: SANS, fontSize: 14, lineHeight: 1.5, color: BODY, textAlign: "center" }}>
+      <span aria-hidden="true" style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: dot, marginRight: 8, verticalAlign: "middle" }} />
+      <span>Data updated <strong style={{ color: INK }}>{label}</strong> · {days === 0 ? "today" : `${days} day${days === 1 ? "" : "s"} ago`} · refreshes every Sunday</span>
+    </p>
+  );
+}
+
 function Chip({ v }) {
   const m = V[v];
   return (
@@ -157,6 +174,7 @@ export default function AeonLedger({ isMobile }) {
   return (
     <div style={{ maxWidth: Math.min(MAX_W, 1100), margin: "0 auto" }}>
       {/* the owners come first; everything else is below the list */}
+      <Updated date={d.updated} />
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, auto)", justifyContent: isMobile ? "stretch" : "center",
         gap: isMobile ? "8px 14px" : "10px 34px", margin: "4px 0 16px" }}>
         {stat(s.withSpx.toLocaleString(), "owners")}
