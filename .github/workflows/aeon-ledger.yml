@@ -20,11 +20,16 @@ name: AEON Ledger refresh
 
 on:
   workflow_dispatch:
+    inputs:
+      part:
+        description: "Which part of a chained refresh this is (set automatically; leave at 1)"
+        default: "1"
   schedule:
     - cron: "41 8 * * 0"   # Sundays 08:41 UTC
 
 permissions:
   contents: write
+  actions: write     # a part that runs out of time starts the next part itself
 
 concurrency:
   group: aeon-ledger
@@ -138,21 +143,39 @@ jobs:
             results.jsonl
           key: aeon-ledger-${{ github.run_id }}
 
-      - name: Stop if the ledgers did not finish (never publish a partial ledger)
+      # ⭐ THE REFRESH RUNS IN PARTS (owner, 2026-10-18: "break it down in parts so work doesn't get lost"). A cold
+      # rebuild needs ~3 runs (272 of 692 owners fit in one 275-min window). When a part runs out of time, its
+      # finished owners + fetched pages are already saved above, and this step starts the NEXT part, which resumes
+      # from them. It never publishes a partial ledger: export/commit only run when classify finished. Capped at 6
+      # parts so a genuinely stuck run can't loop forever; the last part fails loudly instead.
+      - name: Not finished — start the next part (never publish a partial ledger)
         if: steps.classify.outcome != 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PART: ${{ inputs.part || '1' }}
         run: |
-          echo "::error::classify did not finish ($(wc -l < results.jsonl 2>/dev/null || echo 0) owners done). The pages it fetched are saved — run this workflow again and it resumes much faster."
-          exit 1
+          done=$(wc -l < results.jsonl 2>/dev/null || echo 0)
+          if [ "$PART" -lt 6 ]; then
+            next=$((PART + 1))
+            gh workflow run aeon-ledger.yml --ref "${GITHUB_REF_NAME}" -f part="$next"
+            echo "::notice::Part $PART ran out of time with $done owners done (saved). Started part $next, which resumes from here."
+          else
+            echo "::error::Part $PART of 6 still did not finish ($done owners done). Pages are saved; run the workflow again to continue."
+            exit 1
+          fi
 
       - name: Exchange flows — SPX each owner sent to exchanges (tagged wallets + inferred deposit addresses)
+        if: steps.classify.outcome == 'success'
         run: >
           node --max-old-space-size=6144 $LAND/cex-out.mjs --results=results.jsonl --transfers=transfers.csv
           --out=cex-out.json
 
       - name: AEON ownership — ownerOf on the contract, checked against our transfer replay
+        if: steps.classify.outcome == 'success'
         run: node $LAND/aeon-owners.mjs --out=aeon-owners.json --check=public/aeon-onchain.json
 
       - name: Report + export
+        if: steps.classify.outcome == 'success'
         run: |
           node $LAND/report.mjs --results=results.jsonl
           node $LAND/export.mjs --results=results.jsonl --households=households.json --owners=aeon-owners.json --cex=cex-out.json \
@@ -167,6 +190,7 @@ jobs:
             console.log(`ok · ${d.owners.length} owners · ${d.scope.reconciled}/${d.scope.withSpx} reconciled · as of ${d.updated}`);'
 
       - name: Commit the public ledger
+        if: steps.classify.outcome == 'success'
         id: commit
         run: |
           if [[ -n "$(git status --porcelain public/aeon-ledger.json public/aeon-ledger-trades.json)" ]]; then
