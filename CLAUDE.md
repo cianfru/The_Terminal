@@ -440,7 +440,7 @@
   No KV, no members wall, charts + wallet links for everyone; `aeon-ledger` removed from `api/auth.js` PRIVATE_FEEDS. (Same-day
   history, all REVERSED: first addresses members-only via KV, then top-10-only with a dimmed members wall.)
 - **Pipeline:** `research/pfp-forensics/landscape/` — `build-households.mjs` (phase 2) → `classify.mjs` (phase 3, `--fresh` caches
-  only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (WEEKLY, Sundays 08:41 UTC since 2026-10-17, + dispatch; ~1h, BigQuery table +
+  only immutable tx pages) → `report.mjs` → `export.mjs`. Refresh = **`aeon-ledger.yml` (WEEKLY, Sundays 08:41 UTC since 2026-10-17, + dispatch; RUNS IN PARTS since 2026-10-18 — a part that hits the 275-min classify limit saves its finished owners (`results.jsonl`) + pages and dispatches the next part (`part` input, cap 6), which resumes; export/commit only run once classify finishes; a cold rebuild is ~3 parts (272 of 692 owners per part); ~1h when warm, BigQuery table +
   Alchemy tail → KV + commit + deploy)**; sanity gate refuses <500 owners or >5% unreconciled. Feed audit cadence 35d (could tighten to ~9d now it is weekly).
 - **✅ OWNER LIST REDESIGN (owner brief 2026-09-23) — `src/AeonLedgerOwners.jsx` + pure `src/aeon-ledger-pos.js`.** Each owner is a
   wide row: a ROUND picture of its RAREST held AEON (count badge, verdict-coloured ring) · Owner #N · SPX held · realized P&L ·
