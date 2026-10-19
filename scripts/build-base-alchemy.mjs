@@ -112,13 +112,57 @@ export function dumpCohort(cohort, lastBlock) {
   return rows.join("\n") + "\n";
 }
 
+// ---- every-wallet balances (for the Base HOLDER COUNT) ----
+// The cohort CSV only keeps ever-≥5k wallets, but the replay holds every wallet's balance in memory.
+// This companion file keeps all of them (balance > 0), at the SAME lastBlock as the cohort, so the
+// daily delta can carry them forward and we can count Base holders ourselves (Blockscout, our old
+// source for the count, started answering with a Cloudflare challenge on 2026-10-07). Sorted by
+// address so the daily diff stays small.
+const ALL_HEADER = "address,balance";
+export function loadAll(text) {
+  const bal = new Map(); let lastBlock = 0;
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const m = line.match(/^#\s*lastBlock=(\d+)/); if (m) { lastBlock = Number(m[1]); continue; }
+    if (line.startsWith("address,")) continue;
+    const [a, b] = line.split(",");
+    bal.set(a.trim().toLowerCase(), strToRaw(b));
+  }
+  return { bal, lastBlock };
+}
+export function dumpAll(cohort, lastBlock) {
+  const arr = [...cohort.entries()].filter(([, r]) => r.bal > 0n).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  return [`# lastBlock=${lastBlock}`, ALL_HEADER, ...arr.map(([a, r]) => `${a},${rawToStr(r.bal)}`)].join("\n") + "\n";
+}
+// Fold the every-wallet balances into the cohort map (cohort rows win — they carry the ≥5k state).
+export function mergeAll(cohort, bal) {
+  for (const [a, b] of bal) if (!cohort.has(a)) cohort.set(a, { bal: b, first: "", since: "", status: "new", exit: "" });
+  return cohort;
+}
+// Holders = wallets with a balance > 0, minus contracts among the biggest (bridge lock, pools,
+// routers — always the largest holders, same rule the Blockscout count used). `isContract` is async.
+export async function countHolders(cohort, isContract, top = 200) {
+  const live = [...cohort.entries()].filter(([, r]) => r.bal > 0n).sort((a, b) => (b[1].bal > a[1].bal ? 1 : -1));
+  let contracts = 0;
+  for (const [a] of live.slice(0, top)) if (await isContract(a)) contracts++;
+  return { holders: live.length - contracts, nonzero: live.length, contracts };
+}
+
 async function main() {
   const args = Object.fromEntries(process.argv.slice(2).map(s => { const [k, ...v] = s.replace(/^--/, "").split("="); return [k, v.length ? v.join("=") : true]; }));
   if (!KEY) { console.log("base-alchemy: no ALCHEMY_KEY — soft-skipping (no write)"); return; }
   const csv = args.cohort || join(root, "dune/out/spx6900_base_cohort.csv");
-  const full = !!args.full;
+  const allCsv = args.all || join(root, "dune/out/spx6900_base_all.csv");
   let cohort = new Map(), lastBlock = 0;
   if (existsSync(csv)) ({ cohort, lastBlock } = loadCohort(readFileSync(csv, "utf8")));
+  // The every-wallet file must sit at the cohort's lastBlock to be carried forward; if it's missing
+  // or out of step, rebuild both from genesis once (~6M transfers, ~1M CU on the free plan).
+  let full = !!args.full;
+  if (!full && lastBlock) {
+    const all = existsSync(allCsv) ? loadAll(readFileSync(allCsv, "utf8")) : null;
+    if (all && all.lastBlock === lastBlock) mergeAll(cohort, all.bal);
+    else { full = true; console.log(`base-alchemy: every-wallet balances ${all ? `at block ${all.lastBlock}, cohort at ${lastBlock}` : "missing"} — full rebuild`); }
+  }
   // FAST SEED: no lastBlock yet (and not an explicit --full) → trust the current cohort CSV and just
   // stamp lastBlock = the chain head (or --from). Avoids re-pulling ~6M transfers on first run. The
   // only cost is a tiny seam gap (transfers between the CSV's fetch and now); a weekly --full heals it.
@@ -137,6 +181,15 @@ async function main() {
     console.log(`  applied ${total} transfers to block ${maxBlock}`);
     newLast = Math.max(lastBlock, maxBlock);
     writeFileSync(csv, dumpCohort(cohort, newLast));
+    writeFileSync(allCsv, dumpAll(cohort, newLast));
+
+    // Base holder count (replaces Blockscout). snapshot.mjs reads public/base-holders.json.
+    try {
+      const isContract = async a => { const code = await rpc("eth_getCode", [a, "latest"]); return !!code && code !== "0x"; };
+      const c = await countHolders(cohort, isContract);
+      writeFileSync(join(root, "public/base-holders.json"), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), block: newLast, ...c, source: "Alchemy transfer replay (balance > 0, contracts among the top 200 removed)" }) + "\n");
+      console.log(`base-alchemy: ${c.holders} Base holders (${c.nonzero} non-zero − ${c.contracts} contracts)`);
+    } catch (e) { console.warn("base-alchemy: holder count skipped —", e.message); }
   }
 
   const holders = [...cohort.values()].filter(r => r.status === "holder" && r.bal >= THRESH).length;

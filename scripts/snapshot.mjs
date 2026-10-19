@@ -109,48 +109,36 @@ const SOL_SPX = process.env.SOL_SPX || "J3NKxxXZcnNiMjKw9hYb2K4LUxgwB6t1FtPtQVsv
 const SOL_RPC = process.env.SOL_RPC || "https://api.mainnet-beta.solana.com"; // override if the public node rate-limits getProgramAccounts
 const SPL_TOKEN_PROGRAM = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 
-// Base holders — FREE via Blockscout (the same number the Basescan token page shows;
-// Basescan's own tokenholdercount API is pro-only). No key needed. We SUBTRACT contract
-// addresses (the Wormhole bridge lock, LP pools, routers) — they're not people, and they
-// are always the LARGEST holders, so scanning the top pages catches them. BASE_EXCLUDE
-// (comma-separated addresses) pins any the is_contract flag misses.
+// Base holders — counted by OURSELVES from the Alchemy transfer replay (build-base-alchemy.mjs, in the
+// 05:23 on-chain refresh → public/base-holders.json): wallets with a balance > 0, minus contracts among
+// the top 200 (bridge lock, pools, routers). Blockscout was the source until it started answering with
+// a Cloudflare challenge on 2026-10-07. This cron runs at 00:17, so it banks the previous refresh's
+// count; older than 3 days → null (the chain-wallets series carries Base forward, flagged).
 export async function baseHolders() {
   try {
-    const j = await getJson(`https://base.blockscout.com/api/v2/tokens/${BASE_SPX}`,
-      { label: "base holders", headers: { Accept: "application/json" } });
-    if (!j) return null;
-    let n = parseInt(j?.holders ?? j?.holders_count, 10);
-    if (!(Number.isFinite(n) && n > 0)) return null;
-
-    const exclude = new Set((process.env.BASE_EXCLUDE || "").toLowerCase().split(",").map(s => s.trim()).filter(Boolean));
-    let contracts = 0, query = "";
-    for (let page = 0; page < 3; page++) { // top ~150 holders — where every contract sits
-      const hr = await fetch(`https://base.blockscout.com/api/v2/tokens/${BASE_SPX}/holders${query}`, { headers: { Accept: "application/json" } });
-      if (!hr.ok) break;
-      const hj = await hr.json();
-      for (const it of (hj?.items || [])) {
-        const addr = it?.address?.hash?.toLowerCase();
-        if (it?.address?.is_contract || (addr && exclude.has(addr))) contracts++;
-      }
-      if (!hj?.next_page_params) break;
-      query = "?" + new URLSearchParams(hj.next_page_params).toString();
-    }
-    n -= contracts;
-    if (contracts) console.log(`base holders: -${contracts} contract address(es) removed`);
-    return n > 0 ? n : null;
+    const j = JSON.parse(await readFile("public/base-holders.json", "utf8"));
+    const age = (Date.now() - Date.parse(j?.updated)) / 86400000;
+    const n = Number(j?.holders);
+    return Number.isFinite(n) && n > 0 && age <= 3 ? n : null;
   } catch (e) { console.warn("base holders:", e.message); return null; }
 }
 
-// Base SPX supply (tokens bridged to Base) — from the SAME Blockscout token endpoint
-// (total_supply + decimals). × price = the VALUE on Base, for the value-by-chain donut.
+// Base SPX supply (tokens bridged to Base) — totalSupply() straight from a public Base node, keyless.
+// × price = the VALUE on Base, for the value-by-chain donut. BASE_RPC overrides the node.
+const BASE_RPC = process.env.BASE_RPC || "https://mainnet.base.org";
 export async function baseSupply() {
   try {
-    const j = await getJson(`https://base.blockscout.com/api/v2/tokens/${BASE_SPX}`,
-      { label: "base supply", headers: { Accept: "application/json" } });
-    if (!j) return null;
-    const raw = j?.total_supply, dec = parseInt(j?.decimals, 10);
-    if (raw == null || !Number.isFinite(dec)) return null;
-    const v = Number(raw) / 10 ** dec;
+    const call = async data => {
+      const j = await getJson(BASE_RPC, {
+        label: "base supply", method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to: BASE_SPX, data }, "latest"] }),
+      });
+      return j?.result && j.result !== "0x" ? BigInt(j.result) : null;
+    };
+    const [raw, dec] = await Promise.all([call("0x18160ddd"), call("0x313ce567")]);   // totalSupply(), decimals()
+    if (raw == null || dec == null) return null;
+    const v = Number(raw) / 10 ** Number(dec);
     return v > 0 ? v : null;
   } catch (e) { console.warn("base supply:", e.message); return null; }
 }
@@ -301,7 +289,8 @@ async function main() {
     d: new Date().toISOString().slice(0, 10),
     p,
     holders: oc?.holders ?? null, // ETH-native, FIFO reconstruction (was HolderScan) — supply/tier/MVRV base
-    holdersBase: baseH, // Base (bridged) headcount, Blockscout
+    holdersBase: baseH, // Base (bridged) headcount — our own Alchemy replay (Blockscout until 2026-10-06)
+    holdersBaseSrc: baseH != null ? "alchemy" : null, // tells build-chain-wallets which definition this is
     holdersSol: solH,   // Solana (Wormhole) headcount, public Solana RPC
     supplyBase: baseSup, // SPX tokens bridged to Base (× price = value on Base)
     supplySol: solSup,   // SPX tokens bridged to Solana (× price = value on Solana)
