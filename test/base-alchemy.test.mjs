@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { applyTransfers, rawToStr, strToRaw, decodeTransfer, loadCohort, dumpCohort } from "../scripts/build-base-alchemy.mjs";
+import { applyTransfers, rawToStr, strToRaw, decodeTransfer, loadCohort, dumpCohort, loadAll, dumpAll, mergeAll, countHolders } from "../scripts/build-base-alchemy.mjs";
 
 const ZERO = "0x0000000000000000000000000000000000000000";
 const raw = n => BigInt(n) * 100000000n;
@@ -47,4 +47,31 @@ test("loadCohort/dumpCohort: round-trips with the lastBlock header", () => {
   assert.equal(lastBlock, 12345678);
   assert.equal(cohort.get("0xb").bal, raw(9000));
   assert.equal(cohort.get("0xa").first, "2024-01-01");
+});
+
+test("every-wallet balances round-trip, carry sub-5k wallets forward, and count holders minus contracts", async () => {
+  const U = 100000000n, day = "2026-10-20";
+  const cohort = applyTransfers(new Map(), [
+    { from: "0x0000000000000000000000000000000000000000", to: "0xpool", value: 1000000n * U, day },
+    { from: "0xpool", to: "0xwhale", value: 9000n * U, day },
+    { from: "0xpool", to: "0xsmall", value: 300n * U, day },
+    { from: "0xpool", to: "0xgone", value: 50n * U, day },
+    { from: "0xgone", to: "0xsmall", value: 50n * U, day },
+  ]);
+  const text = dumpAll(cohort, 123);
+  assert.ok(!text.includes("0xgone"));                       // zero balance → not stored
+  const { bal, lastBlock } = loadAll(text);
+  assert.equal(lastBlock, 123);
+  assert.equal(bal.get("0xsmall"), 350n * U);
+
+  // next day: the cohort CSV only knows the ≥5k wallets; merging restores the small one
+  const { cohort: c2 } = loadCohort(dumpCohort(cohort, 123));
+  assert.ok(!c2.has("0xsmall"));
+  mergeAll(c2, bal);
+  applyTransfers(c2, [{ from: "0xsmall", to: "0xnew", value: 100n * U, day: "2026-10-21" }]);
+  assert.equal(c2.get("0xsmall").bal, 250n * U);
+  assert.equal(c2.get("0xwhale").status, "holder");          // cohort row kept its ≥5k state
+
+  const r = await countHolders(c2, async a => a === "0xpool");
+  assert.deepEqual(r, { holders: 3, nonzero: 4, contracts: 1 });   // whale, small, new (pool removed)
 });

@@ -4,7 +4,7 @@
 // NO DUNE, ZERO CREDITS. The historical series (launch → the bundle's last week) is the
 // validated one-time Dune reconstruction src/chain-wallets.js. From that seam forward we
 // simply append the daily chain counts snapshot.mjs already banks for FREE — ETH via
-// HolderScan, Base via Blockscout, Solana via a public RPC — so the chart keeps growing
+// our FIFO engine, Base via our Alchemy replay (Blockscout until 2026-10-06), Solana via a public RPC — so the chart keeps growing
 // on its own with no query executions. Runs inside the daily snapshot workflow.
 //
 // SEAM SPLICE: the snapshot's Base source (Blockscout, ~127k) sits ~12.6k ABOVE the
@@ -21,30 +21,42 @@ const OUT = "public/chain-wallets.json";
 const HIST = "public/history.json";
 
 // Pure, unit-testable: bundle (past) + rebased daily snapshots (forward).
+//
+// BASE SOURCE SWITCH (2026-10): Blockscout (our Base count until 2026-10-06) started answering with a
+// Cloudflare challenge; Base is now counted by our own Alchemy replay (history rows carry
+// holdersBaseSrc:"alchemy"). The two count differently, so on a source change the new source is
+// rebased to the last Base value we had — the line stays continuous and carries the new source's real
+// day-over-day moves. A day with no Base count (feed down) carries the last value forward, flagged
+// `baseFill: true`, so ETH and Solana keep updating instead of the whole series freezing.
 export function extendForward(bundle, history) {
   if (!bundle?.length) return [];
   const seam = bundle[bundle.length - 1];
   const seamDate = seam.d;
 
-  // snapshot series from history.json — only fully-populated multi-chain days.
+  // snapshot series from history.json — ETH + Solana required; Base may be missing.
   const snaps = (history || [])
-    .map(r => ({ d: r?.d, eth: r?.holders, base: r?.holdersBase, sol: r?.holdersSol }))
-    .filter(r => r.d && Number.isFinite(r.eth) && Number.isFinite(r.base) && Number.isFinite(r.sol));
+    .map(r => ({ d: r?.d, eth: r?.holders, base: r?.holdersBase, sol: r?.holdersSol, src: r?.holdersBaseSrc || "blockscout" }))
+    .filter(r => r.d && Number.isFinite(r.eth) && Number.isFinite(r.sol));
 
-  // per-chain offset at the seam (latest snapshot on or before the bundle's last date).
-  const at = [...snaps].reverse().find(r => r.d <= seamDate);
+  // per-chain offset at the seam (latest fully-populated snapshot on or before the bundle's last date).
+  const at = [...snaps].reverse().find(r => r.d <= seamDate && Number.isFinite(r.base));
   const off = at
     ? { eth: seam.eth - at.eth, base: seam.base - at.base, sol: seam.sol - at.sol }
     : { eth: 0, base: 0, sol: 0 };
 
-  const fwd = snaps
-    .filter(r => r.d > seamDate)
-    .map(r => ({
-      d: r.d,
-      eth: Math.round(r.eth + off.eth),
-      base: Math.round(r.base + off.base),
-      sol: Math.round(r.sol + off.sol),
-    }));
+  let src = at?.src || "blockscout", baseOff = off.base, lastBase = at ? seam.base : null;
+  const fwd = [];
+  for (const r of snaps.filter(r => r.d > seamDate)) {
+    const row = { d: r.d, eth: Math.round(r.eth + off.eth), sol: Math.round(r.sol + off.sol) };
+    if (Number.isFinite(r.base)) {
+      if (r.src !== src) { if (lastBase != null) baseOff = lastBase - r.base; src = r.src; }
+      lastBase = Math.round(r.base + baseOff);
+      row.base = lastBase;
+    } else if (lastBase != null) {
+      row.base = lastBase; row.baseFill = true;
+    } else continue;
+    fwd.push({ d: row.d, eth: row.eth, base: row.base, sol: row.sol, ...(row.baseFill ? { baseFill: true } : {}) });
+  }
 
   return [...bundle, ...fwd];
 }

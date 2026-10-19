@@ -6,6 +6,14 @@
   improvements, don't spend compute on extras. The daily crons (snapshot, onchain, longshort, whale-campaigns, the monthly
   BTC/alt/coin pulls, and SPX_CITY_2.0's roster refresh, which now also rebuilds the city layout) are the self-healing loop.
 
+- **BASE COUNT + SUPPLY OFF BLOCKSCOUT (2026-10-19).** Blockscout's Base API went behind a Cloudflare challenge on
+  2026-10-07, which froze `chain-wallets.json` at 10-06. Now: **Base supply** = `totalSupply()` from the public Base node
+  (`BASE_RPC`, keyless, in snapshot.mjs); **Base holders** = our own count — `build-base-alchemy.mjs` keeps every wallet's
+  balance in `dune/out/spx6900_base_all.csv` (same lastBlock as the cohort; missing/out of step → one full rebuild from
+  genesis) and writes `public/base-holders.json` (balance > 0 minus contracts in the top 200). snapshot.mjs banks it
+  (`holdersBaseSrc:"alchemy"`, ≤3 days old). `build-chain-wallets.mjs` rebases a source switch to the last Base value and
+  carries Base forward on missing days (`baseFill:true`) so ETH/Solana never freeze again.
+
 ## ⭐⭐ NORTH STAR — RADICAL TRANSPARENCY IS THE MOAT (owner affirmed 2026-07-19)
 - **The strategy is to be COMPLETELY OPEN about the project.** Not secret alpha — the durable edge is being the
   transparent, SPX-native, REPRODUCIBLE on-chain analytics source. Every number must be checkable; methodology is
