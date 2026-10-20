@@ -1,15 +1,15 @@
 {
-  "date": "2026-10-19",
+  "date": "2026-10-20",
   "signals": [
     {
       "type": "underwater-holding",
       "emoji": "💎",
       "title": "Holders ~27% underwater — and still not selling",
-      "detail": "MVRV 0.73: price is 27% below the crowd's avg on-chain cost basis ($0.5). Yet 56% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.98→0.73 over ~30d.",
+      "detail": "MVRV 0.73: price is 27% below the crowd's avg on-chain cost basis ($0.5). Yet 56% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.93→0.73 over ~30d.",
       "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
       "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
       "card": "breakeven",
-      "score": 1.6993707670600697
+      "score": 1.6957031370009341
     },
     {
       "type": "drawdown",
