@@ -1,15 +1,15 @@
 {
-  "date": "2026-10-30",
+  "date": "2026-10-31",
   "signals": [
     {
       "type": "underwater-holding",
       "emoji": "💎",
-      "title": "Holders ~26% underwater — and still not selling",
-      "detail": "MVRV 0.74: price is 26% below the crowd's avg on-chain cost basis ($0.479). Yet 55% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.85→0.74 over ~30d.",
+      "title": "Holders ~25% underwater — and still not selling",
+      "detail": "MVRV 0.75: price is 25% below the crowd's avg on-chain cost basis ($0.479). Yet 55% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.92→0.75 over ~30d.",
       "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
       "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
       "card": "breakeven",
-      "score": 1.6678167946447733
+      "score": 1.6461075786348776
     },
     {
       "type": "drawdown",
@@ -24,12 +24,12 @@
     {
       "type": "mvrv-vs-btc",
       "emoji": "₿",
-      "title": "SPX's MVRV 0.83 = 5th percentile of Bitcoin's history",
-      "detail": "SPX's MVRV of 0.83 sits at the 5th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
-      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 5th percentile. BTC was only this cheap at major bottoms.",
+      "title": "SPX's MVRV 0.74 = 2th percentile of Bitcoin's history",
+      "detail": "SPX's MVRV of 0.74 sits at the 2th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
+      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 2th percentile. BTC was only this cheap at major bottoms.",
       "note": "A position on BTC's map, not a date-match forecast.",
       "card": "mvrvbtc",
-      "score": 1.375
+      "score": 1.4
     }
   ]
 }
