@@ -1,5 +1,5 @@
 {
- "checked": "2026-11-01",
+ "checked": "2026-11-02",
  "ok": 40,
  "warn": 0,
  "fail": 6,
@@ -9,17 +9,17 @@
  "priceGaps": [
   {
    "label": "onchain.json spot",
-   "date": "2026-10-31",
-   "value": 0.36092,
-   "live": 0.36092,
+   "date": "2026-11-01",
+   "value": 0.353222,
+   "live": 0.353222,
    "gapPct": 0,
    "stale": false
   },
   {
    "label": "city-history.json price",
-   "date": "2026-10-31",
-   "value": 0.36092,
-   "live": 0.36092,
+   "date": "2026-11-01",
+   "value": 0.353222,
+   "live": 0.353222,
    "gapPct": 0,
    "stale": false
   }
@@ -32,12 +32,10 @@
    "status": "fail",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": [
     "upnl: stopped arriving",
-    "rpnl: stopped arriving",
-    "holdersBase: 1 of 14 recent rows null",
-    "supplyBase: 1 of 14 recent rows null"
+    "rpnl: stopped arriving"
    ]
   },
   {
@@ -47,7 +45,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": []
   },
   {
@@ -57,7 +55,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": []
   },
   {
@@ -67,7 +65,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": []
   },
   {
@@ -77,7 +75,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": []
   },
   {
@@ -87,7 +85,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -97,7 +95,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -107,7 +105,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -117,7 +115,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -127,7 +125,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": [
     "no rows"
    ]
@@ -139,7 +137,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -149,7 +147,7 @@
    "status": "fail",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": [
     "no rows"
    ]
@@ -161,7 +159,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -171,7 +169,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -181,7 +179,7 @@
    "status": "ok",
    "age": 0,
    "cadence": 2,
-   "date": "2026-11-01",
+   "date": "2026-11-02",
    "notes": []
   },
   {
@@ -191,7 +189,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -199,9 +197,9 @@
    "by": "btc-mvrv.yml",
    "what": "Bitcoin's MVRV, for the comparison chart",
    "status": "ok",
-   "age": 32,
+   "age": 2,
    "cadence": 40,
-   "date": "2026-09-30",
+   "date": "2026-10-31",
    "notes": []
   },
   {
@@ -211,7 +209,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -221,7 +219,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 2,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -229,9 +227,9 @@
    "by": "aeon.yml",
    "what": "AEON ownership, holder age, concentration",
    "status": "ok",
-   "age": 2,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-10-30",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -239,11 +237,11 @@
    "by": "onchain-dune.yml",
    "what": "what active wallets DO: router, accumulator, drainer",
    "status": "fail",
-   "age": 42,
+   "age": 43,
    "cadence": 3,
    "date": "2026-09-20",
    "notes": [
-    "42d old, cadence allows 3d"
+    "43d old, cadence allows 3d"
    ]
   },
   {
@@ -251,9 +249,9 @@
    "by": "aeon-ledger.yml (dispatch)",
    "what": "AEON Ledger: every AEON owner's SPX record, held vs sold",
    "status": "ok",
-   "age": 7,
+   "age": 1,
    "cadence": 35,
-   "date": "2026-10-25",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -261,9 +259,9 @@
    "by": "aeon-ledger.yml (dispatch)",
    "what": "AEON Ledger: each owner's SPX trades (for the per-owner chart)",
    "status": "ok",
-   "age": 7,
+   "age": 1,
    "cadence": 35,
-   "date": "2026-10-25",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -271,11 +269,11 @@
    "by": "aeon.yml",
    "what": "AEON owner clusters, holding vs selling",
    "status": "fail",
-   "age": 42,
+   "age": 43,
    "cadence": 3,
    "date": "2026-09-20",
    "notes": [
-    "42d old, cadence allows 3d"
+    "43d old, cadence allows 3d"
    ]
   },
   {
@@ -285,7 +283,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -293,9 +291,9 @@
    "by": "aeon.yml",
    "what": "AEON marketplace trades",
    "status": "ok",
-   "age": 2,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-10-30",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -305,7 +303,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -315,7 +313,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -325,7 +323,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -335,7 +333,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -345,7 +343,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -355,7 +353,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -365,7 +363,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -375,7 +373,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -385,7 +383,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -395,7 +393,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -405,7 +403,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -415,7 +413,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -425,7 +423,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -435,7 +433,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -443,9 +441,9 @@
    "by": "aeon.yml",
    "what": "AEON per-wallet realized P&L",
    "status": "ok",
-   "age": 2,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-10-30",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -455,7 +453,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 3,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -463,7 +461,7 @@
    "by": "aeon.yml (once)",
    "what": "AEON trait rarity (static once built)",
    "status": "ok",
-   "age": 100,
+   "age": 101,
    "cadence": 400,
    "date": "2026-07-24",
    "notes": []
@@ -473,9 +471,9 @@
    "by": "aeon.yml",
    "what": "AEON sales heartbeat (newest sales DATA date — decoded from the chain; Dune optional)",
    "status": "ok",
-   "age": 2,
+   "age": 1,
    "cadence": 3,
-   "date": "2026-10-30",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -485,7 +483,7 @@
    "status": "ok",
    "age": 1,
    "cadence": 9,
-   "date": "2026-10-31",
+   "date": "2026-11-01",
    "notes": []
   },
   {
@@ -493,11 +491,11 @@
    "by": "onchain-dune.yml (step)",
    "what": "whale-cohort move candidates",
    "status": "fail",
-   "age": 98,
+   "age": 99,
    "cadence": 9,
    "date": "2026-07-26",
    "notes": [
-    "98d old, cadence allows 9d",
+    "99d old, cadence allows 9d",
     "signals: empty (allowed, but worth knowing)"
    ]
   }
