@@ -3,7 +3,6 @@ import { ResponsiveContainer, ComposedChart, Area, Bar, Line, XAxis, YAxis, Tool
 import { loadSmartMoney, loadEntities } from "./history-data.js";
 import { SANS, MONO, MAX_W, Metric, TipBox, Explain, ViewTabs } from "./chart-ui.jsx";
 import { useDailyTier } from "./DailyTier.jsx";
-import { TERMINAL_KEY } from "./terminal-gate-key.js";
 
 // Coarsen the daily series to one point per calendar month for the free tier: held + price are the
 // month's LAST value (a level), net flow is the month's SUM (a flow). Daily is the members view.
@@ -200,7 +199,7 @@ export default function SmartMoneyChart({ isMobile, initialView }) {
   const [view, setView] = useState(() => ["holdings", "flow", "newq"].includes(initialView) ? initialView : "holdings");   // "holdings" | "flow"
   // Two-layer reveal: the public sees "Wallet 1/2/3" anonymized; a Deep Field member (TERMINAL_KEY set)
   // sees the real addresses, daily/7d/30d balance, ROI and a link into each wallet's P&L page.
-  const [unlocked] = useState(() => { try { return localStorage.getItem(TERMINAL_KEY) === "1"; } catch { return false; } });
+  const unlocked = true;   // open to everyone (owner, 2026-11-06)
   const [ent, setEnt] = useState(null);   // entities.json — for the "clusters" dropdown
   useEffect(() => { let off = false; loadSmartMoney().then(d => { if (!off) setData(d || { empty: true }); }); return () => { off = true; }; }, []);
   useEffect(() => { let off = false; loadEntities().then(d => { if (!off) setEnt(d || { entities: [] }); }); return () => { off = true; }; }, []);

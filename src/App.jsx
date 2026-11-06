@@ -42,7 +42,7 @@ function UnderConstruction({ title, preview }) {
       <h3 style={{ fontFamily: "var(--sans)", fontSize: 27, fontWeight: 800, color: "var(--tx)", margin: "0 0 16px", textTransform: "uppercase", letterSpacing: "-.01em" }}>{title || "Members chart"}</h3>
       <div style={{ height: 3, width: 190, maxWidth: "62%", margin: "0 auto 20px", borderRadius: 2, background: "var(--rainbow)" }} />
       <p style={{ color: "var(--dim)", fontSize: 15, lineHeight: 1.7, margin: "0 auto", maxWidth: 400 }}>
-        This members chart is being polished — it&apos;s releasing soon. Follow <a href="https://x.com/SPX6900Rainbow" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>@SPX6900Rainbow</a> to catch the drop.
+        This members chart is being polished — it&apos;s releasing soon. Follow <a href="https://x.com/lanternlabsmain" target="_blank" rel="noopener" style={{ color: "var(--live)" }}>@lanternlabsmain</a> to catch the drop.
       </p>
     </div>
   );
@@ -79,8 +79,11 @@ function recBypass() {
 }
 // A drip chart is either UNRELEASED (under construction, everyone) or RELEASED (members-only). It never
 // renders its stripped/granular data to a signed-out visitor. The OWNER bypasses BOTH gates (every chart,
-// released or not) so @SPX6900Rainbow always sees everything.
-function ReleaseGate({ id, preview, title, children }) {
+// released or not) so the owner always sees everything.
+function ReleaseGate({ children }) {
+  return children;   // every chart is open to everyone (owner, 2026-11-06)
+}
+function ReleaseGateClosed({ id, preview, title, children }) {   // eslint-disable-line no-unused-vars
   const [rel, setRel] = useState(null);   // null = loading · Set = released ids
   const [me, setMe] = useState(undefined); // undefined = loading · null/object
   useEffect(() => { let off = false; loadReleases().then(s => { if (!off) setRel(s); }); loadMe().then(m => { if (!off) setMe(m); }); return () => { off = true; }; }, []);
@@ -129,8 +132,6 @@ import FavoritesLauncher from "./FavoritesLauncher.jsx";
 import { gcolFor } from "./terminal-colors.js";
 import { track } from "./track.js";
 const HolderscanDashboard = lazy(() => import("./HolderscanDashboard.jsx"));
-import XNotice from "./XNotice.jsx";
-import NewChartNotice from "./NewChartNotice.jsx";
 const CasesPage = lazy(() => import("./CasesPage.jsx"));
 const RiskChart = lazy(() => import("./RiskChart.jsx"));
 const DrawdownChart = lazy(() => import("./DrawdownChart.jsx"));
@@ -277,7 +278,7 @@ const fT = v => {
 };
 
 // Socials & donations
-const X_URL = "https://x.com/SPX6900Rainbow";
+const X_URL = "https://x.com/lanternlabsmain";
 
 const fD = s => new Date(s).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 const dateToTs = dateStr => new Date(dateStr).getTime();
@@ -996,7 +997,7 @@ export default function App() {
   });
   const navActions = (
     <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-      <a className="pill" href={X_URL} target="_blank" rel="noopener noreferrer" title="@SPX6900Rainbow" style={navIcon("255, 255, 255", "rgba(226,232,240,0.5)")}>
+      <a className="pill" href={X_URL} target="_blank" rel="noopener noreferrer" title="@lanternlabsmain" style={navIcon("255, 255, 255", "rgba(226,232,240,0.5)")}>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
       </a>
     </div>
@@ -1587,10 +1588,6 @@ export default function App() {
       </div>
       )}
       </div>{/* end content */}
-
-      {/* "Follow us on X" card — once per session, easy to close (XNotice.jsx) */}
-      <XNotice />
-      <NewChartNotice hold={route === "terminal"} />
     </div>
   );
 }

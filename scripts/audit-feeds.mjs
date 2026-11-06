@@ -92,6 +92,8 @@ export const FEEDS = [
   // full ETH/Solana parity. cadence 9 mirrors the others. Current holders under `.wallets`.
   { file: "base-onchain.json", cadence: 9, by: "onchain-dune.yml", what: "SPX-on-Base ≥5k cohort (ages/exits/survival)",
     nonEmpty: ["wallets"] },
+  { file: "base-holders.json", cadence: 3, by: "onchain-dune.yml (Base step)", what: "Base holder count from our own Alchemy replay",
+    require: ["holders"] },
 
   // ── other schedules ─────────────────────────────────────────────────────────
   { file: "price-history.json", cadence: 2, by: "price-history.yml", what: "the dense daily price line" },   // now DAILY (was weekly → the floor-model freeze); ≤2d

@@ -55,7 +55,7 @@ export const CHART_GROUPS = [
       { id: "bagsprofile", title: "Cost Basis vs Price", desc: "A volume-profile: the price line, and where the bags were bought as bars on the price axis, live." },
       { id: "urpdage", title: "Cost Basis × Age", post: "urpdage", desc: "The walls of supply mapped by holder age: same price, different conviction." },
       { id: "urpdterrain", title: "Cost Basis Terrain (3D)", desc: "The cost-basis distribution as a landscape deforming week by week, with price sweeping through it." },
-      { id: "costbasisladder", title: "Cost Basis Distribution", locked: true, desc: "Holders' entry prices as a percentile ladder over time, with price woven through — the rainbow's on-chain cousin, bands are real cost basis. Supply- or cointime-weighted." },
+      { id: "costbasisladder", title: "Cost Basis Distribution", desc: "Holders' entry prices as a percentile ladder over time, with price woven through — the rainbow's on-chain cousin, bands are real cost basis. Supply- or cointime-weighted." },
       { id: "supplyprofit", title: "Supply in Profit", post: "supplyprofit", desc: "Share of supply held above its on-chain cost basis." },
       { id: "mvrv", title: "MVRV & Realized Price", post: "breakeven", desc: "Price vs the crowd's cost basis: MVRV and its Z-score." },
       { id: "mvrvbtc", title: "MVRV vs Bitcoin", desc: "SPX6900's MVRV on Bitcoin's decade of MVRV: are we down similarly?" },
@@ -72,18 +72,18 @@ export const CHART_GROUPS = [
     desc: "Who owns what: the biggest wallets, the clusters behind them, and who's still here.",
     charts: [
       { id: "concentration", title: "Holder Concentration", post: "concentration", desc: "The largest wallets' share of supply over time." },
-      { id: "entities", title: "Wallet Clusters", locked: true, desc: "Who owns what: the addresses one owner controls, linked into a single entity from on-chain SPX flows." },
-      { id: "clustercity", title: "Cluster City", locked: true, desc: "A 3D city where every owner is a district of wallet towers — beams show which are buying (green) or selling (red)." },
+      { id: "entities", title: "Wallet Clusters", desc: "Who owns what: the addresses one owner controls, linked into a single entity from on-chain SPX flows." },
+      { id: "clustercity", title: "Cluster City", desc: "A 3D city where every owner is a district of wallet towers — beams show which are buying (green) or selling (red)." },
       { id: "whales", title: "Whale Supply", post: "whales", desc: "What the biggest wallets hold, and whether there are more of them." },
       { id: "whalecohorts", title: "Whale Counts Over Time", post: "whalecensus", desc: "How many wallets sit in each size cohort, week by week: the base broadened, the mega-whales thinned." },
       { id: "walletwaves", title: "Wallet-Size Waves", post: "walletwaves", desc: "Supply by how big the wallet is: HODL waves cut by size, not age." },
       { id: "wealthwaves", title: "The Wealth Ladder", post: "wealthwaves", desc: "How many holders sit in each dollar bracket, week by week." },
-      { id: "whaleentry", title: "When Whales Bought", post: "whaleentry", locked: true, desc: "Every wallet over 100k SPX as a glowing orb on the price curve where it bought — green in profit, red underwater. Most bought high, not early." },
+      { id: "whaleentry", title: "When Whales Bought", post: "whaleentry", desc: "Every wallet over 100k SPX as a glowing orb on the price curve where it bought — green in profit, red underwater. Most bought high, not early." },
       { id: "survivorship", title: "Who's Still Here", post: "survivorship", desc: "Of everyone who ever held SPX, who remains: by the era they first bought." },
       { id: "exitflow", title: "How Holders Left", post: "exitmap", desc: "Of everyone who left, when they sold and whether they left in profit or at a loss: over the price." },
       { id: "smartmoney", title: "Smart Money", post: "smartmoney", desc: "The live cohort of proven top-timers (ROI ≥5×, still holding): aggregate holdings and net-flow." },
       { id: "holderchange", title: "Holder Change Breakdown", desc: "Daily change in wallets by dollar bracket — are the bigger wallets accumulating or leaving? A Deep Field members chart." },
-      { id: "whaleswatching", title: "Whales Watching", post: "whalebehaviour", locked: true, desc: "Every wallet over 100k SPX: a 3D city of towers or a live board pulsing green/red as they buy and sell." },
+      { id: "whaleswatching", title: "Whales Watching", post: "whalebehaviour", desc: "Every wallet over 100k SPX: a 3D city of towers or a live board pulsing green/red as they buy and sell." },
       // City Lab stays `dev` (hidden, direct-link only ?chart=citylab): the internal A/B page. It lives in a
       // gallery group (dev-filtered out of the gallery) rather than CITY_GROUPS, because the City nav (CITY_MENU
       // in App.jsx) does NOT filter dev: putting it there leaked it into the SPX City dropdown.

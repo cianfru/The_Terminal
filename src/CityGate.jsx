@@ -53,7 +53,7 @@ const Row = ({ swatch, children }) => (
 // straight away and the copy says "password protected" rather than "not ready". Same gate, same
 // honest scope (client-side, not real security); only the presentation differs.
 export default function CityGate({ title, accent = "#5eead4", unit = "holder", locked = false, guide = null, blurb = null, children }) {
-  const [ok, setOk] = useState(() => { try { return localStorage.getItem(KEY) === "1"; } catch { return false; } });
+  const [ok, setOk] = useState(true);   // open to everyone (owner, 2026-11-06)
   const [pw, setPw] = useState("");
   const [bad, setBad] = useState(false);
   const [reveal, setReveal] = useState(locked);   // a declared password wall shows the field at once
