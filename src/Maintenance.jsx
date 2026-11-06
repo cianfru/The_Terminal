@@ -10,7 +10,7 @@ import { useState } from "react";
 // the way of casual visitors, nothing more.
 
 const LOGO = "/logo_rainbow_128.png";
-const X_URL = "https://x.com/SPX6900Rainbow";
+const X_URL = "https://x.com/lanternlabsmain";
 const RAINBOW = "linear-gradient(90deg,#7c3aed,#2563eb,#06b6d4,#10b981,#a3e635,#fde047,#fb923c,#ef4444)";
 
 export default function Maintenance({ token }) {
@@ -53,7 +53,7 @@ export default function Maintenance({ token }) {
         fontFamily: "'Geist Mono',ui-monospace,monospace", fontSize: 13, letterSpacing: ".04em",
       }}>
         <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
-        Follow @SPX6900Rainbow for updates
+        Follow @lanternlabsmain for updates
       </a>
 
       {/* subtle team-access unlock, owner enters the preview token to view the live redesign */}

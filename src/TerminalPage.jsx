@@ -7,7 +7,6 @@ import { fetchPrivate } from "./history-data.js";
 import { classifyFlow } from "./whale-flow.js";
 import { DF_CHARTS } from "./deep-field-charts.js";
 import { useFavs } from "./favs.js";
-import DeepFieldLoginNotice from "./DeepFieldLoginNotice.jsx";
 
 // THE TERMINAL (/terminal) — the owner's daily intel one-pager, kept SEPARATE from the post-control
 // panel so the "what's happening on-chain today" read isn't tangled up with the "which card to fire"
@@ -199,7 +198,6 @@ function Gate({ onPass, isMobile }) {
   // remounts on each keystroke — the notice would pop straight back up.
   if (phase === "login") return (
     <>
-    <DeepFieldLoginNotice onClose={() => document.querySelector('input[aria-label="Invite code"]')?.focus()} />
     <Wrap>
       <p className="dfgate-lede">The granular on-chain layer — wallet clusters, whale flows, and per-wallet P&amp;L.</p>
       <form onSubmit={codeSubmit} style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
@@ -358,7 +356,7 @@ export default function TerminalPage({ isMobile }) {
   // localStorage flag from the old passphrase must NOT grant access once X-login is live (else a
   // one-time passphrase user keeps access forever, ignoring membership/revocation). The Gate re-grants
   // the legacy localStorage path only when auth is NOT configured.
-  const [ok, setOk] = useState(false);
+  const [ok, setOk] = useState(true);   // Deep Field is open to everyone (owner, 2026-11-06)
   const [data, setData] = useState(undefined);   // undefined loading · null failed · object ok
   const [sm, setSm] = useState(undefined);       // smart-money.json (per-wallet detail — terminal only)
   const [ent, setEnt] = useState(undefined);     // entities.json (wallet clusters — terminal reveals members)

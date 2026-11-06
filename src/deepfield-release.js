@@ -5,7 +5,8 @@
 // SPX City is PUBLIC (the flagship showpiece + its per-building Zerion cards stay open to everyone).
 // The walled members set is the granular ANALYTICAL charts only.
 export const DRIP_CHARTS = ["entities", "clustercity", "whaleentry", "whaleswatching", "smartmoney", "urpdterrain", "holderchange", "costbasisladder"];
-export const isDripChart = id => DRIP_CHARTS.includes(id);
+// Every chart is open to everyone since 2026-11-06 (owner), so none is a walled "drip" chart any more.
+export const isDripChart = () => false;
 let _p;
 export function loadReleases() {
   if (!_p) _p = fetch("/deepfield-releases.json", { cache: "no-store" })

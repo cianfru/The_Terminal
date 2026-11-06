@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadEntities, loadPriceHistory } from "./history-data.js";
 import PositionDetail, { shortAddr } from "./PositionDetail.jsx";
-import { TERMINAL_KEY } from "./terminal-gate-key.js";
 
 // CLUSTER PAGE (terminal-tier, ?view=cluster&id=0x…). The WHOLE owner as one position — where the
 // cluster (all its member wallets combined) bought & sold, its live P&L, realized-PnL curve — rendered
@@ -13,7 +12,7 @@ const fBal = v => v >= 1e6 ? (v / 1e6).toFixed(2) + "M" : v >= 1e3 ? (v / 1e3).t
 export default function ClusterDetail({ id, price, isMobile }) {
   const [ent, setEnt] = useState(undefined);
   const [px, setPx] = useState(null);
-  const unlocked = (() => { try { return localStorage.getItem(TERMINAL_KEY) === "1"; } catch { return false; } })();
+  const unlocked = true;   // open to everyone (owner, 2026-11-06)
 
   useEffect(() => { if (unlocked) loadEntities().then(d => setEnt(Array.isArray(d?.entities) ? d.entities : (Array.isArray(d) ? d : null))); }, [unlocked]);
   useEffect(() => { if (unlocked) loadPriceHistory().then(setPx); }, [unlocked]);

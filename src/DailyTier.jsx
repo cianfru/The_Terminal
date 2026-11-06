@@ -18,7 +18,7 @@ const HASH = 1883603724;                 // FNV-1a of "admin123" (the single sit
 const KEY = "spx-data-tier1";
 const fnv = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
 export const passOk = pw => fnv(String(pw).trim().toLowerCase()) === HASH;
-export const dataUnlocked = () => { try { return localStorage.getItem(KEY) === "1"; } catch { return false; } };
+export const dataUnlocked = () => true;   // open to everyone (owner, 2026-11-06)
 export const unlockData = () => { try { localStorage.setItem(KEY, "1"); } catch { /* private mode */ } };
 
 // Hook: returns `daily` (whether to show the daily series) + `controls` (a Monthly / Daily segmented

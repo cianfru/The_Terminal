@@ -12,15 +12,7 @@ let browser;
 let rawContext;
 before(async () => {
   browser = await chromium.launch({ executablePath: process.env.E2E_CHROME || undefined });
-  // The "follow us on X" card (src/XNotice.jsx) opens once per browser session and covers the
-  // page, so every test context starts with it already seen. The popup itself is tested at the end,
-  // through rawContext — a fresh session, exactly as a first-time visitor gets it.
   rawContext = browser.newContext.bind(browser);
-  browser.newContext = async o => {
-    const c = await rawContext(o);
-    await c.addInitScript(() => { try { sessionStorage.setItem("spx-new-account-seen", "1"); localStorage.setItem("spx-newchart-spxcity", "1"); } catch { /* ok */ } });
-    return c;
-  };
 });
 after(async () => { await browser?.close(); });
 
@@ -602,31 +594,6 @@ test("390px: no request leaves the site for a font", async () => {
   await ctx.close();
 });
 
-test("390px: the 'follow us on X' card fits, points at the new handle, and closes easily", async () => {
-  const ctx = await rawContext(phone(390));
-  const page = await ctx.newPage();
-  await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
-  const box = await geom(page, ".xn");
-  assert.ok(box, "card shows on a first visit");
-  assert.ok(box.l >= 0 && box.r <= box.vw, `card inside the viewport (${box.l}..${box.r} of ${box.vw})`);
-  assert.equal(await page.locator(".xn-go").getAttribute("href"), "https://x.com/lanternlabsmain");
-  const later = await page.locator(".xn-later").boundingBox();
-  assert.ok(later.y + later.height <= 844, `"Not now" is on screen without scrolling (${Math.round(later.y)}px)`);
-  assert.ok(later.height >= 40, "a real tap target");
-  await page.keyboard.press("Escape");
-  assert.equal(await page.locator(".xn").count(), 0, "Esc closes it");
-  await page.goto(BASE + "/?chart=hodlwaves", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".xn").count(), 0, "does not reopen in the same session");
-  assert.deepEqual(await overflow(page).then(o => o.sw <= o.cw), true, "no horizontal overflow");
-  await ctx.close();
-  const ctx2 = await rawContext(phone(390));
-  const p2 = await ctx2.newPage();
-  await p2.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
-  await p2.tap(".xn-x");
-  assert.equal(await p2.locator(".xn").count(), 0, "the corner × closes it");
-  await ctx2.close();
-});
-
 test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both inside the screen", async () => {
   const ctx = await browser.newContext(phone(390));
   const page = await ctx.newPage();
@@ -655,24 +622,13 @@ test("390px AEON Ledger: picture rows open the gallery and the owner sheet, both
   await ctx.close();
 });
 
-test("390px: after the follow-us-on-X card, a card says spxcity.com is live and links to it", async () => {
+test("390px: a first-time visitor gets no pop-ups — the page opens clean", async () => {
   const ctx = await rawContext(phone(390));
   const page = await ctx.newPage();
   await page.goto(BASE + "/?view=charts", { waitUntil: "networkidle" });
-  assert.equal(await page.locator(".nc").count(), 0, "not stacked on top of the popup");
-  await page.locator(".xn-later").scrollIntoViewIfNeeded();
-  await page.locator(".xn-later").tap();
-  await page.locator(".nc").waitFor({ timeout: 5000 });
-  const box = await geom(page, ".nc");
-  assert.ok(box.l >= 0 && box.r <= box.vw, "card inside the viewport");
-  const go = page.getByRole("link", { name: "Open spxcity.com →" });
-  assert.equal(await go.getAttribute("href"), "https://spxcity.com");
-  assert.equal(await go.getAttribute("target"), "_blank");
-  await page.locator(".nc-later").tap();
-  assert.equal(await page.locator(".nc").count(), 0, "gone once dismissed");
-  await page.reload({ waitUntil: "networkidle" });
-  await page.waitForTimeout(1600);
-  assert.equal(await page.locator(".nc").count(), 0, "shown once per browser");
+  await page.waitForTimeout(2000);   // the old cards appeared ~0.5–1.2s after load
+  assert.equal(await page.getByRole("dialog").count(), 0, "no dialog on load");
+  assert.equal(await page.locator(".xn, .nc").count(), 0, "no follow-us or announcement card");
   await ctx.close();
 });
 

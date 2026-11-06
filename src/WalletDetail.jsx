@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { loadSmartMoney, loadWhaleLots, loadPriceHistory } from "./history-data.js";
 import PositionDetail, { shortAddr } from "./PositionDetail.jsx";
-import { TERMINAL_KEY } from "./terminal-gate-key.js";
 
 // PER-WALLET PAGE (terminal-tier, ?view=wallet&addr=0x…). A wallet's position: where it bought (green
 // orbs) / sold (red), live P&L, realized-PnL curve — rendered by the shared PositionDetail. Data = the
@@ -12,7 +11,7 @@ export default function WalletDetail({ wallet, price, isMobile }) {
   const [sm, setSm] = useState(undefined);
   const [wl, setWl] = useState(undefined);
   const [px, setPx] = useState(null);
-  const unlocked = (() => { try { return localStorage.getItem(TERMINAL_KEY) === "1"; } catch { return false; } })();
+  const unlocked = true;   // open to everyone (owner, 2026-11-06)
 
   useEffect(() => { if (unlocked) loadSmartMoney().then(d => setSm(d || null)); }, [unlocked]);
   useEffect(() => { if (unlocked) loadWhaleLots().then(d => setWl(d || null)); }, [unlocked]);

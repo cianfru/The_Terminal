@@ -14,6 +14,14 @@
   (`holdersBaseSrc:"alchemy"`, ≤3 days old). `build-chain-wallets.mjs` rebases a source switch to the last Base value and
   carries Base forward on missing days (`baseFill:true`) so ETH/Solana never freeze again.
 
+- **SITE FULLY OPEN, NO POP-UPS (owner, 2026-11-06).** Removed the three pop-ups (`XNotice` follow-us card,
+  `NewChartNotice` spxcity card, `DeepFieldLoginNotice`) — files deleted. Every gate is open: Deep Field renders with no
+  sign-in (`TerminalPage` `ok` starts true), `ReleaseGate` and `isDripChart` pass everything, no `locked` tiles in
+  charts-catalog, `CityGate`/`DailyTier`/per-wallet pages always unlocked, and `api/auth?action=data` serves the KV feeds
+  (entities, smart-money, whale-entry, whale-lots) to anyone. `CasesPage` (case-study drafts) is deliberately still gated.
+  Every X link on the site points to **@lanternlabsmain** (was @SPX6900Rainbow). The sections below that describe the
+  pop-ups, invite-code wall and members-only charts are history.
+
 ## ⭐⭐ NORTH STAR — RADICAL TRANSPARENCY IS THE MOAT (owner affirmed 2026-07-19)
 - **The strategy is to be COMPLETELY OPEN about the project.** Not secret alpha — the durable edge is being the
   transparent, SPX-native, REPRODUCIBLE on-chain analytics source. Every number must be checkable; methodology is

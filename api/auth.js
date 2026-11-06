@@ -159,7 +159,8 @@ export default async function handler(req, res) {
     let member = !!s;
     if (member && kvConnected()) { try { const u = await getJSON("auth:user:" + s.uid); if (u && u.banned) member = false; } catch { /* trust token */ } }
     if (s && (isOwnerHandle(s.un) || s.own)) member = true;   // owner always gets the private feeds
-    if (!member) return send(res, 403, { ok: false, err: "members only" });
+    // Open to everyone since 2026-11-06 (owner): the feeds are public on-chain data. `member` is kept for logs only.
+    void member;
     if (!kvConnected()) return send(res, 503, { ok: false, err: "store not connected" });
     const raw = await cmd("GET", "feed:" + name);
     if (raw == null) return send(res, 404, { ok: false, err: "feed not published yet" });

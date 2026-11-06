@@ -19,7 +19,7 @@ import { CITY_KEY } from "./city-gate-key.js";
 // carries a live chart id and drives the app's own routing. Scoped under .tzone.
 
 const LOGO = "/logo_rainbow_128.png";   // 34px display, 3x DPR — the 1408px master was 217KB
-const X_URL = "https://x.com/SPX6900Rainbow";
+const X_URL = "https://x.com/lanternlabsmain";
 const KRAKEN_URL = "https://proinvite.kraken.com/9f1e/8985jw0l";
 
 const TYPE_SPEED = 60;   // ms/char, the landing's deliberate terminal cadence
@@ -576,7 +576,7 @@ function MobileSpringboard({ open, onClose, openRainbow, openGallery, openAeon, 
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><path d="M10 17l5-5-5-5" /><path d="M15 12H3" /></svg>
           </a>
         )}
-        <a className="tsbdocki" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="SPX6900Rainbow on X">
+        <a className="tsbdocki" href={X_URL} target="_blank" rel="noopener noreferrer" aria-label="lanternlabsmain on X">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
         </a>
         <a className="tsbdocki krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" aria-label="Trade on Kraken (affiliate)">
@@ -694,7 +694,7 @@ export default function TerminalNav({ onHome, openRainbow, openGallery, openAeon
             {/* X + Kraken are secondary: on phones they live in the springboard dock (.tsocial-ext is
                 hidden ≤760px) so the bar keeps room for the brand, the account chip and ☰ Explore. */}
             <span className="tsocial-ext">
-            <a className="siclink" href={X_URL} target="_blank" rel="noopener noreferrer" title="@SPX6900Rainbow on X" aria-label="SPX6900Rainbow on X">
+            <a className="siclink" href={X_URL} target="_blank" rel="noopener noreferrer" title="@lanternlabsmain on X" aria-label="lanternlabsmain on X">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.66l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" /></svg>
             </a>
             <a className="siclink krk" href={KRAKEN_URL} target="_blank" rel="noopener noreferrer sponsored" title="Trade on Kraken, affiliate" aria-label="Trade on Kraken (affiliate)">
