@@ -1,15 +1,25 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "signals": [
     {
       "type": "underwater-holding",
       "emoji": "💎",
-      "title": "Holders ~24% underwater — and still not selling",
-      "detail": "MVRV 0.76: price is 24% below the crowd's avg on-chain cost basis ($0.477). Yet 56% of supply is in the longest-held tier — the float isn't moving.",
+      "title": "Holders ~22% underwater — and still not selling",
+      "detail": "MVRV 0.78: price is 22% below the crowd's avg on-chain cost basis ($0.477). Yet 56% of supply is in the longest-held tier — the float isn't moving.",
       "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
       "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
       "card": "breakeven",
-      "score": 1.6448623599442822
+      "score": 1.610360234229466
+    },
+    {
+      "type": "capitulation-cluster",
+      "emoji": "🧊",
+      "title": "-86% below trend AND fear at 29",
+      "detail": "Deep in the Fire Sale band (-86% vs the power-law fair value $2.707) with Fear & Greed at 29. Valuation and sentiment bottoming together.",
+      "framing": "Where value and fear overlap — historically the account's best-resonating zone.",
+      "note": "Honest \"cheap + fearful\", never \"guaranteed bounce\".",
+      "card": "riskcolor",
+      "score": 1.545455267117797
     },
     {
       "type": "drawdown",
@@ -20,16 +30,6 @@
       "note": "It's deep and unrecovered NOW; don't imply it always recovers.",
       "card": "underwater",
       "score": 1.5
-    },
-    {
-      "type": "mvrv-vs-btc",
-      "emoji": "₿",
-      "title": "SPX's MVRV 0.71 = 2th percentile of Bitcoin's history",
-      "detail": "SPX's MVRV of 0.71 sits at the 2th percentile of Bitcoin's entire MVRV history — as cheap as BTC's generational bottoms.",
-      "framing": "MVRV is unitless, so it's comparable: SPX today is at BTC's 2th percentile. BTC was only this cheap at major bottoms.",
-      "note": "A position on BTC's map, not a date-match forecast.",
-      "card": "mvrvbtc",
-      "score": 1.4
     }
   ]
 }
