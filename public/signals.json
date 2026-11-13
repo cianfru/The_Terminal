@@ -1,35 +1,36 @@
 {
-  "date": "2026-11-12",
+  "date": "2026-11-13",
   "signals": [
     {
-      "type": "underwater-holding",
-      "emoji": "💎",
-      "title": "Holders ~26% underwater — and still not selling",
-      "detail": "MVRV 0.74: price is 26% below the crowd's avg on-chain cost basis ($0.477). Yet 56% of supply is in the longest-held tier — the float isn't moving.",
-      "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
-      "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
-      "card": "breakeven",
-      "score": 1.6695197069780279
+      "type": "fng-extreme",
+      "severity": 2,
+      "emoji": "🧊",
+      "title": "Fear & Greed at 20 — extreme fear",
+      "detail": "The market mood just hit extreme fear.",
+      "framing": "Crypto Fear & Greed at 20 (extreme fear) — historically the zone the patient get rewarded. Pairs with the Fire Sale / valuation cards.",
+      "note": "",
+      "card": "fngdial",
+      "score": 2
     },
     {
       "type": "capitulation-cluster",
       "emoji": "🧊",
-      "title": "-87% below trend AND fear at 28",
-      "detail": "Deep in the Fire Sale band (-87% vs the power-law fair value $2.715) with Fear & Greed at 28. Valuation and sentiment bottoming together.",
+      "title": "-88% below trend AND fear at 20",
+      "detail": "Deep in the Fire Sale band (-88% vs the power-law fair value $2.724) with Fear & Greed at 20. Valuation and sentiment bottoming together.",
       "framing": "Where value and fear overlap — historically the account's best-resonating zone.",
       "note": "Honest \"cheap + fearful\", never \"guaranteed bounce\".",
       "card": "riskcolor",
-      "score": 1.5795080454771797
+      "score": 1.7527480717782509
     },
     {
-      "type": "drawdown",
-      "emoji": "📉",
-      "title": "-84% below its all-time high",
-      "detail": "Deepest drawdown on record was -92%; it has made new highs after every prior one so far.",
-      "framing": "Deep drawdowns are the toll — it's paid them before (no recovery promise).",
-      "note": "It's deep and unrecovered NOW; don't imply it always recovers.",
-      "card": "underwater",
-      "score": 1.5
+      "type": "underwater-holding",
+      "emoji": "💎",
+      "title": "Holders ~29% underwater — and still not selling",
+      "detail": "MVRV 0.71: price is 29% below the crowd's avg on-chain cost basis ($0.476). Yet 56% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.74→0.71 over ~30d.",
+      "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
+      "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
+      "card": "breakeven",
+      "score": 1.7256218235547485
     }
   ]
 }
