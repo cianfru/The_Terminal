@@ -1,31 +1,31 @@
 {
-  "date": "2026-11-22",
+  "date": "2026-11-23",
   "signals": [
     {
       "type": "capitulation-cluster",
       "emoji": "🧊",
       "title": "-90% below trend AND fear at 11",
-      "detail": "Deep in the Fire Sale band (-90% vs the power-law fair value $2.802) with Fear & Greed at 11. Valuation and sentiment bottoming together.",
+      "detail": "Deep in the Fire Sale band (-90% vs the power-law fair value $2.811) with Fear & Greed at 11. Valuation and sentiment bottoming together.",
       "framing": "Where value and fear overlap — historically the account's best-resonating zone.",
       "note": "Honest \"cheap + fearful\", never \"guaranteed bounce\".",
       "card": "riskcolor",
-      "score": 1.9783313201584973
+      "score": 1.9783356340870974
     },
     {
       "type": "underwater-holding",
       "emoji": "💎",
       "title": "Holders ~40% underwater — and still not selling",
-      "detail": "MVRV 0.6: price is 40% below the crowd's avg on-chain cost basis ($0.474). Yet 55% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.73→0.6 over ~30d.",
+      "detail": "MVRV 0.6: price is 40% below the crowd's avg on-chain cost basis ($0.473). Yet 55% of supply is in the longest-held tier — the float isn't moving. MVRV has slipped 0.72→0.6 over ~30d.",
       "framing": "Maximum financial pain, minimal capitulation — conviction being tested and, so far, holding.",
       "note": "Describe the divergence, NOT a bottom call. \"Not selling\", not \"buy\".",
       "card": "breakeven",
-      "score": 1.8985781925971303
+      "score": 1.8956380016443668
     },
     {
       "type": "nupl",
       "emoji": "🩸",
-      "title": "NUPL -0.68 — capitulation",
-      "detail": "Net unrealised profit/loss is -0.68 (from MVRV 0.6) — the market sits in the capitulation zone.",
+      "title": "NUPL -0.67 — capitulation",
+      "detail": "Net unrealised profit/loss is -0.67 (from MVRV 0.6) — the market sits in the capitulation zone.",
       "framing": "Aggregate holder profitability. Below zero = the crowd is underwater, historically an accumulation zone.",
       "note": "A position read, not a signal.",
       "card": "nupl",
